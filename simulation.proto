@@ -1,0 +1,17 @@
+syntax = "proto2";
+
+package pb;
+
+message Observables {
+    required double stamp = 1;
+    required uint32 representative_state = 2;
+    repeated uint64 state_count = 3;
+    required float magnetization = 4;
+}
+
+message Simulation {
+    repeated uint32 shape = 1;
+    required float prob = 2;
+    required uint32 measure_every = 3;
+    repeated Observables observables = 4;
+}
