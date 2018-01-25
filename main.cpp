@@ -76,6 +76,18 @@ void ToProtobuf(const Arguments &args, pb::Simulation *sim) {
     sim->set_measure_every(args.measureEvery);
 }
 
+void ToProtobuf(const std::vector<size_t> &waveNumbers,
+                const std::array<Eigen::MatrixXf, 2> &ftTables,
+                pb::Simulation *sim) {
+    auto metadata = sim->mutable_ft2d_metadata();
+    auto wn = metadata->mutable_wave_numbers();
+    for (size_t k : waveNumbers) {
+        wn->Add(k);
+    }
+    metadata->set_n_rows(ftTables[0].cols());
+    metadata->set_n_cols(ftTables[1].cols());
+}
+
 void AppendToProtobuf(const Observables &obs, double stamp,
                       pb::Simulation *sim) {
     pb::Observables *pb_obs = sim->add_observables();
@@ -85,6 +97,10 @@ void AppendToProtobuf(const Observables &obs, double stamp,
         pb_obs->add_state_count(c);
     }
     pb_obs->set_magnetization(obs.magnetization);
+    const float *ft2dData = obs.fourierTransform2d.data();
+    for (Eigen::Index i = 0; i < obs.fourierTransform2d.size(); ++i) {
+        pb_obs->add_ft2d(ft2dData[i]);
+    }
 }
 
 bool AtomicallyAcquired(Node *node) {
@@ -162,10 +178,6 @@ template <size_t nDim> void run(const Arguments &args) {
 
     std::mt19937 rng;
 
-    pb::Simulation simulationPb;
-    ToProtobuf(args, &simulationPb);
-    Serialize(simulationPb, args.outputFileName);
-
     Index<nDim> shape;
     for (size_t i = 0; i < nDim; ++i) {
         shape[i] = args.shape.at(i);
@@ -187,6 +199,11 @@ template <size_t nDim> void run(const Arguments &args) {
     for (size_t i = 0; i < 2; ++i) {
         MakeFourierTable(shape[i], waveNumbers, &ftTables[i]);
     }
+
+    pb::Simulation simulationPb;
+    ToProtobuf(args, &simulationPb);
+    ToProtobuf(waveNumbers, ftTables, &simulationPb);
+    Serialize(simulationPb, args.outputFileName);
 
     while (std::chrono::steady_clock::now() - startTime <
            std::chrono::seconds(args.runFor)) {

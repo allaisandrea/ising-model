@@ -2,16 +2,25 @@ syntax = "proto2";
 
 package pb;
 
+message FT2dMetadata {
+    required uint32 n_rows = 1; 
+    required uint32 n_cols = 2;
+    repeated uint32 wave_numbers = 3;
+};
+
 message Observables {
     required double stamp = 1;
     required uint32 representative_state = 2;
     repeated uint64 state_count = 3;
     required float magnetization = 4;
+    // Column major
+    repeated float ft2d = 5;
 }
 
 message Simulation {
     repeated uint32 shape = 1;
     required float prob = 2;
     required uint32 measure_every = 3;
-    repeated Observables observables = 4;
+    required FT2dMetadata ft2d_metadata = 4;
+    repeated Observables observables = 104;
 }
