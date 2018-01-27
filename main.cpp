@@ -15,9 +15,11 @@ struct Arguments {
     std::string outputFileName;
     std::vector<size_t> shape;
     double prob;
+    size_t seed;
     size_t measureEvery;
     size_t runFor;
     size_t saveEvery;
+    std::string tag;
 };
 
 std::ostream &operator<<(std::ostream &os, const Arguments &args) {
@@ -29,9 +31,11 @@ std::ostream &operator<<(std::ostream &os, const Arguments &args) {
     std::cout << std::endl;
 
     std::cout << "prob: " << args.prob << std::endl;
+    std::cout << "seed: " << args.seed << std::endl;
     std::cout << "measureEvery: " << args.measureEvery << std::endl;
     std::cout << "runFor: " << args.runFor << std::endl;
     std::cout << "saveEvery: " << args.saveEvery << std::endl;
+    std::cout << "tag: " << args.tag << std::endl;
 
     return os;
 }
@@ -45,9 +49,11 @@ bool ParseArgs(int argc, const char *argv[], Arguments *args) {
         "shape",
         value<std::vector<size_t>>(&(args->shape))->required()->multitoken())(
         "prob", value<double>(&(args->prob))->required())(
+        "seed", value<size_t>(&(args->seed))->required())(
         "measure-every", value<size_t>(&(args->measureEvery))->required())(
         "run-for", value<size_t>(&(args->runFor))->required())(
-        "save-every", value<size_t>(&(args->saveEvery))->required());
+        "save-every", value<size_t>(&(args->saveEvery))->required())(
+        "tag", value<std::string>(&(args->tag))->required());
 
     variables_map vm;
     store(parse_command_line(argc, argv, description), vm);
@@ -73,7 +79,10 @@ void ToProtobuf(const Arguments &args, pb::Simulation *sim) {
         sim->add_shape(shape_i);
     }
     sim->set_prob(args.prob);
+    sim->set_seed(args.seed);
+    sim->set_tag(args.tag);
     sim->set_measure_every(args.measureEvery);
+    
 }
 
 void ToProtobuf(const std::vector<size_t> &waveNumbers,
@@ -88,10 +97,13 @@ void ToProtobuf(const std::vector<size_t> &waveNumbers,
     metadata->set_n_cols(ftTables[1].cols());
 }
 
-void AppendToProtobuf(const Observables &obs, double stamp,
-                      pb::Simulation *sim) {
+void AppendToProtobuf(const Observables &obs, pb::Simulation *sim) {
     pb::Observables *pb_obs = sim->add_observables();
-    pb_obs->set_stamp(stamp);
+    pb_obs->set_stamp(obs.stamp);
+    pb_obs->set_update_duration(obs.updateDuration);
+    pb_obs->set_measure_duration(obs.measureDuration);
+    pb_obs->set_cumulative_cluster_size(obs.cumulativeClusterSize);
+    pb_obs->set_n_clusters(obs.nClusters);
     pb_obs->set_representative_state(obs.representativeState);
     for (const auto &c : obs.stateCount) {
         pb_obs->add_state_count(c);
@@ -172,11 +184,12 @@ bool Serialize(const pb::Simulation &simulationPb,
     return true;
 }
 
+
 template <size_t nDim> void run(const Arguments &args) {
     std::cout << "Arguments: " << std::endl;
     std::cout << args << std::endl;
 
-    std::mt19937 rng;
+    std::mt19937 rng(args.seed);
 
     Index<nDim> shape;
     for (size_t i = 0; i < nDim; ++i) {
@@ -208,19 +221,31 @@ template <size_t nDim> void run(const Arguments &args) {
     while (std::chrono::steady_clock::now() - startTime <
            std::chrono::seconds(args.runFor)) {
 
-        size_t clusterSize = 0;
-        while (clusterSize < args.measureEvery * nodes.size()) {
+        auto time1 = std::chrono::high_resolution_clock::now();
+    
+        size_t cumulativeClusterSize = 0;
+        size_t nClusters = 0;
+        while (cumulativeClusterSize < args.measureEvery * nodes.size()) {
             GetRandomIndex(shape, &i0, &rng);
-            FlipCluster(args.prob, i0, shape, nodes.data(), &clusterSize, &rng,
+            FlipCluster(args.prob, i0, shape, nodes.data(), &cumulativeClusterSize, &rng,
                         &queue);
             ClearVisitedFlag(nodes.data(), nodes.data() + nodes.size());
+            ++nClusters;
         }
+        
+        auto time2 = std::chrono::high_resolution_clock::now();
+        
         Measure(shape, nodes.data(), ftTables, &observables, &measureWorkspace);
+        
+        auto time3 = std::chrono::high_resolution_clock::now();
+        
+        observables.stamp = (time3 - hiResStartTime).count();
+        observables.updateDuration = (time2 - time1).count();
+        observables.measureDuration = (time3 - time2).count();
+        observables.cumulativeClusterSize = cumulativeClusterSize;
+        observables.nClusters = nClusters;
 
-        double stamp = (std::chrono::high_resolution_clock::now() -
-                        hiResStartTime).count();
-
-        AppendToProtobuf(observables, stamp, &simulationPb);
+        AppendToProtobuf(observables, &simulationPb);
 
         auto now = std::chrono::steady_clock::now();
         if (now - timeOfLastSave > std::chrono::seconds(args.saveEvery)) {

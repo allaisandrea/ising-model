@@ -5,6 +5,11 @@
 #include <vector>
 
 struct Observables {
+    uint64_t stamp;
+    uint64_t updateDuration;
+    uint64_t measureDuration;
+    uint64_t cumulativeClusterSize;
+    uint32_t nClusters;
     uint32_t representativeState;
     std::vector<uint64_t> stateCount;
     float magnetization;
