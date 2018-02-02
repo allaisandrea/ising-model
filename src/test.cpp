@@ -95,7 +95,7 @@ void MakeLaplacianMatrix(const size_t period, Eigen::MatrixXf* K) {
 
 bool TestMakeFourierTable(size_t period) {
     
-    std::vector<size_t> waveNumbers;
+    std::vector<uint32_t> waveNumbers;
     for (size_t i = 1; i < period; ++i) {
         waveNumbers.emplace_back(i);
     }
@@ -148,7 +148,7 @@ bool TestMeasure(MeasureWorkspace* work, Observables* obs) {
         }
     }
     
-    std::vector<size_t> waveNumbers(10); 
+    std::vector<uint32_t> waveNumbers(10); 
     std::iota(waveNumbers.begin(), waveNumbers.end(), 1);
     std::array<Eigen::MatrixXf, 2> ftTables;
     for (size_t i = 0; i < 2; ++i) {
@@ -205,6 +205,15 @@ bool TestMeasure() {
 
 template <typename T> void TypeOf();
 
+struct C {
+    C() {
+        std::cout << "Constructor" << std::endl;
+    }
+    ~C() {
+        std::cout << "Destructor" << std::endl;
+    }    
+};
+
 int main() {
     if (!TestIndexConversion<2>()) {
         std::cerr << "Failed TestIndexConversion<2>" << std::endl;
@@ -259,6 +268,11 @@ int main() {
     int64_t idelta = delta.count();
     
     std::cout << idelta << std::endl;
+    
+    C c;
+    for(size_t i = 0; i < 1000; ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
     return 0;
 
 }

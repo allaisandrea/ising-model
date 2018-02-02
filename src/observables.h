@@ -5,13 +5,14 @@
 #include <vector>
 
 struct Observables {
-    uint64_t stamp;
-    uint64_t updateDuration;
+    uint64_t flipClusterDuration;
+    uint64_t clearFlagDuration;
     uint64_t measureDuration;
+    uint64_t serializeDuration;
     uint64_t cumulativeClusterSize;
-    uint32_t nClusters;
-    uint32_t representativeState;
-    std::vector<uint64_t> stateCount;
+    uint64_t nClusters;
+    uint64_t representativeState;
+    std::vector<uint32_t> stateCount;
     float magnetization;
     Eigen::MatrixXf fourierTransform2d;
 };
@@ -56,7 +57,7 @@ void Measure(const Index<nDim> &shape, const Node *nodes,
     obs->fourierTransform2d.noalias() = work->partialFT * fourierTables[1];
 }
 
-void MakeFourierTable(size_t period, const std::vector<size_t> &waveNumbers,
+void MakeFourierTable(size_t period, const std::vector<uint32_t> &waveNumbers,
                       Eigen::MatrixXf *table) {
     const auto &wn = waveNumbers;
 
