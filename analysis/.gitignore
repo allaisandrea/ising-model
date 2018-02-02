@@ -1,2 +1,2 @@
 notebook.ipynb
-*.pyc
+.ipynb_checkpoints
