@@ -97,7 +97,7 @@ def read_observables_v1(file):
         cumulative_cluster_size = numpy.array(obs.cumulative_cluster_size),
         n_clusters              = numpy.array(obs.n_clusters             ),
         magnetization           = numpy.array(obs.magnetization          ),
-        fourier_transform_2d    = numpy.stack(obs.fourier_transform_2d   ))
+        fourier_transform_2d    = None   )
     
     return obs
     

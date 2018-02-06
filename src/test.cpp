@@ -1,4 +1,5 @@
 #include "lattice.h"
+#include "Queue.h"
 #include "observables.h"
 #include <random>
 #include <iostream>
@@ -6,26 +7,24 @@
 #include <map>
 #include <chrono>
 #include <thread>
+#include <queue>
 
 std::mt19937 rng;
 
-template<size_t nDim>
-void GetRandomShape(typename Index<nDim>::value_type min, 
-                    typename Index<nDim>::value_type max, 
-                    Index<nDim>* shape) {
+template <size_t nDim>
+void GetRandomShape(typename Index<nDim>::value_type min,
+                    typename Index<nDim>::value_type max, Index<nDim> *shape) {
     std::uniform_int_distribution<size_t> rand_int(min, max);
-    
+
     for (size_t d = 0; d < nDim; ++d) {
         (*shape)[d] = rand_int(rng);
     }
 }
 
-
-template<size_t nDim>
-bool TestIndexConversion() {
+template <size_t nDim> bool TestIndexConversion() {
 
     std::uniform_int_distribution<size_t> rand_int;
-    
+
     Index<nDim> shape;
     Index<nDim> j;
 
@@ -45,33 +44,32 @@ bool TestIndexConversion() {
     return true;
 }
 
-template<size_t nDim>
-bool TestGetFirstNeighbors() {
-    
+template <size_t nDim> bool TestGetFirstNeighbors() {
+
     Index<nDim> shape;
     Index<nDim> i;
     std::array<Index<nDim>, 2 * nDim> n1;
     std::array<Index<nDim>, 2 * nDim> n2;
-    
-    for(size_t it1 = 0; it1 < 10; ++it1) {
+
+    for (size_t it1 = 0; it1 < 10; ++it1) {
         GetRandomShape(2, 6, &shape);
         const size_t size = GetSize(shape);
-        for(size_t si = 0; si < size; ++si) {
+        for (size_t si = 0; si < size; ++si) {
             GetVectorIndex(si, shape, &i);
             GetFirstNeighbors(i, shape, &n1);
-            for (const auto& j : n1) {
+            for (const auto &j : n1) {
                 GetFirstNeighbors(j, shape, &n2);
                 if (std::find(n2.begin(), n2.end(), i) == n2.end()) {
                     std::cout << "i: " << i << std::endl;
                     std::cout << "j: " << j << std::endl;
                     std::cout << "shape: " << shape << std::endl;
                     std::cout << "n1: " << std::endl;
-                    for (const auto& k : n1) {
+                    for (const auto &k : n1) {
                         std::cout << k << std::endl;
                     }
                     std::cout << std::endl;
                     std::cout << "n2: " << std::endl;
-                    for (const auto& k : n2) {
+                    for (const auto &k : n2) {
                         std::cout << k << std::endl;
                     }
                     std::cout << std::endl;
@@ -83,57 +81,56 @@ bool TestGetFirstNeighbors() {
     return true;
 }
 
-void MakeLaplacianMatrix(const size_t period, Eigen::MatrixXf* K) {
+void MakeLaplacianMatrix(const size_t period, Eigen::MatrixXf *K) {
     K->resize(period, period);
     K->setZero();
     for (size_t i = 0; i < period; ++i) {
-        (*K)(i, i) = - 2.0f;
+        (*K)(i, i) = -2.0f;
         (*K)(i, (i + 1) % period) = 1.0f;
         (*K)((i + 1) % period, i) = 1.0f;
     }
 }
 
 bool TestMakeFourierTable(size_t period) {
-    
+
     std::vector<uint32_t> waveNumbers;
     for (size_t i = 1; i < period; ++i) {
         waveNumbers.emplace_back(i);
     }
-    
+
     Eigen::MatrixXf t;
     MakeFourierTable(period, waveNumbers, &t);
     Eigen::MatrixXf K;
     MakeLaplacianMatrix(period, &K);
-    
+
     Eigen::MatrixXf s = t.transpose() * t;
     s -= Eigen::MatrixXf::Identity(s.rows(), s.cols());
-    
+
     Eigen::MatrixXf w = t.transpose() * K * t;
     w.diagonal().setZero();
-    
+
     return s.norm() < 1.0e-5 && w.norm() < 1.0e-5;
 }
-
 
 bool TestMakeFourierTable() {
     for (size_t period = 3; period < 10; ++period) {
         if (!TestMakeFourierTable(period)) {
-            std::cout << "TestMakeFourierTable failed at " << period << std::endl;
+            std::cout << "TestMakeFourierTable failed at " << period
+                      << std::endl;
             return false;
         }
     }
     return true;
 }
 
-
-bool TestMeasure(MeasureWorkspace* work, Observables* obs) {
+bool TestMeasure(MeasureWorkspace *work, Observables *obs) {
     Index<3> shape;
     GetRandomShape(3, 8, &shape);
     const size_t size = GetSize(shape);
     std::vector<Node> nodes(size, 0);
-    
+
     std::map<Index<2>, Node, IndexLess<2>> indexMap;
-    
+
     size_t nFlipped = 0;
     for (size_t it = 0; it < size / 2; ++it) {
         Index<3> i;
@@ -147,17 +144,17 @@ bool TestMeasure(MeasureWorkspace* work, Observables* obs) {
             ++nFlipped;
         }
     }
-    
-    std::vector<uint32_t> waveNumbers(10); 
+
+    std::vector<uint32_t> waveNumbers(10);
     std::iota(waveNumbers.begin(), waveNumbers.end(), 1);
     std::array<Eigen::MatrixXf, 2> ftTables;
     for (size_t i = 0; i < 2; ++i) {
         MakeFourierTable(shape[i], waveNumbers, &ftTables[i]);
     }
-    
+
     Measure(shape, nodes.data(), ftTables, obs, work);
-    
-    for (const auto& pair : indexMap) {
+
+    for (const auto &pair : indexMap) {
         const Index<2> i = pair.first;
         const size_t sum = pair.second;
         if (sum != work->slice2dSum(i[0], i[1])) {
@@ -170,26 +167,26 @@ bool TestMeasure(MeasureWorkspace* work, Observables* obs) {
         std::cerr << "Failed slice2dSum (2)" << std::endl;
         return false;
     }
-    
-    Eigen::MatrixXf M = 
-        ftTables[0].transpose() * work->slice2dMagnetization * ftTables[1] - 
+
+    Eigen::MatrixXf M =
+        ftTables[0].transpose() * work->slice2dMagnetization * ftTables[1] -
         obs->fourierTransform2d;
     if (M.norm() > 1.0e-7) {
         std::cerr << "Failed fourierTransform2d (1)" << std::endl;
         return false;
     }
-    
+
     if (std::abs(2.0 * nFlipped / size - 1.0 - obs->magnetization) > 1.0e-5) {
         std::cerr << "Failed magnetization" << std::endl;
         return false;
     }
-    
-    if (std::abs(2.0 * nFlipped / size - 1.0 - obs->fourierTransform2d(0, 0)) > 1.0e-5) {
+
+    if (std::abs(2.0 * nFlipped / size - 1.0 - obs->fourierTransform2d(0, 0)) >
+        1.0e-5) {
         std::cerr << "Failed fourierTransform2d (2)" << std::endl;
         return false;
     }
     return true;
-    
 }
 
 bool TestMeasure() {
@@ -203,16 +200,35 @@ bool TestMeasure() {
     return true;
 }
 
-template <typename T> void TypeOf();
+bool TestQueue() {
+    for (size_t it = 0; it < 100; ++it) {
 
-struct C {
-    C() {
-        std::cout << "Constructor" << std::endl;
+        Queue<int64_t> queue1(1 + std::rand() % 32);
+        std::queue<int64_t> queue2;
+
+        for (size_t i = 0; i < 16; ++i) {
+            const int64_t x = std::rand();
+            queue1.emplace(x);
+            queue2.emplace(x);
+        }
+
+        while (!queue1.empty()) {
+            if (queue1.front() != queue2.front()) {
+                return false;
+            }
+            queue1.pop();
+            queue2.pop();
+        }
+
+        if (!queue2.empty()) {
+            while (!queue2.empty()) {
+                queue2.pop();
+            }
+            return false;
+        }
     }
-    ~C() {
-        std::cout << "Destructor" << std::endl;
-    }    
-};
+    return true;
+}
 
 int main() {
     if (!TestIndexConversion<2>()) {
@@ -220,7 +236,7 @@ int main() {
     } else {
         std::cerr << "Passed TestIndexConversion<2>" << std::endl;
     }
-    
+
     if (!TestIndexConversion<3>()) {
         std::cerr << "Failed TestIndexConversion<3>" << std::endl;
     } else {
@@ -232,13 +248,13 @@ int main() {
     } else {
         std::cerr << "Passed TestIndexConversion<4>" << std::endl;
     }
-    
+
     if (!TestGetFirstNeighbors<2>()) {
         std::cerr << "Failed TestGetFirstNeighbors<2>" << std::endl;
     } else {
         std::cerr << "Passed TestGetFirstNeighbors<2>" << std::endl;
     }
-    
+
     if (!TestGetFirstNeighbors<3>()) {
         std::cerr << "Failed TestGetFirstNeighbors<3>" << std::endl;
     } else {
@@ -256,23 +272,17 @@ int main() {
     } else {
         std::cerr << "Passed TestMakeFourierTable" << std::endl;
     }
-    
+
     if (!TestMeasure()) {
         std::cerr << "Failed TestMeasure" << std::endl;
     } else {
         std::cerr << "Passed TestMeasure" << std::endl;
     }
-    
-    auto now = std::chrono::high_resolution_clock::now();
-    auto delta = std::chrono::high_resolution_clock::now() - now;
-    int64_t idelta = delta.count();
-    
-    std::cout << idelta << std::endl;
-    
-    C c;
-    for(size_t i = 0; i < 1000; ++i) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    if (!TestQueue()) {
+        std::cerr << "Failed TestQueue" << std::endl;
+    } else {
+        std::cerr << "Passed TestQueue" << std::endl;
     }
     return 0;
-
 }

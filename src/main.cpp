@@ -40,75 +40,66 @@ std::ostream &operator<<(std::ostream &os, const Arguments &args) {
     return os;
 }
 
-
-template <typename T>
-bool Serialize(const T& x, std::ofstream* file) {
-    file->write((const char*)(&x), sizeof(T));
+template <typename T> bool Serialize(const T &x, std::ofstream *file) {
+    file->write((const char *)(&x), sizeof(T));
     if (!file->good()) {
         return false;
     }
     return true;
 }
 
-
 template <typename T>
-bool Serialize(const T* v, uint64_t n, std::ofstream* file) {
-    if(!Serialize<uint64_t>(n, file)) {
+bool Serialize(const T *v, uint64_t n, std::ofstream *file) {
+    if (!Serialize<uint64_t>(n, file)) {
         return false;
     }
-    file->write((const char*)(v), n * sizeof(T));
+    file->write((const char *)(v), n * sizeof(T));
     if (!file->good()) {
         return false;
     }
     return true;
 }
 
-
 template <typename T>
-bool Serialize(const T* v, uint64_t n1, uint64_t n2, std::ofstream* file) {
-    if(!Serialize<uint64_t>(n1, file)) {
+bool Serialize(const T *v, uint64_t n1, uint64_t n2, std::ofstream *file) {
+    if (!Serialize<uint64_t>(n1, file)) {
         return false;
     }
-    if(!Serialize<uint64_t>(n2, file)) {
+    if (!Serialize<uint64_t>(n2, file)) {
         return false;
     }
-    file->write((const char*)(v), n1 * n2 * sizeof(T));
+    file->write((const char *)(v), n1 * n2 * sizeof(T));
     if (!file->good()) {
         return false;
     }
     return true;
 }
 
-
-bool Serialize(const Arguments& args, std::ofstream* file) {
+bool Serialize(const Arguments &args, std::ofstream *file) {
     const uint64_t version = 1;
-    return 
-        Serialize(version, file) &&
-        Serialize(args.shape.data(), args.shape.size(), file) &&
-        Serialize(args.prob, file) &&
-        Serialize(args.seed, file) &&
-        Serialize(args.waveNumbers.data(), args.waveNumbers.size(), file) &&
-        Serialize(args.measureEvery, file) &&
-        Serialize(args.nMeasure, file) &&
-        Serialize(args.tag.data(), args.tag.size(), file);
+    return Serialize(version, file) &&
+           Serialize(args.shape.data(), args.shape.size(), file) &&
+           Serialize(args.prob, file) && Serialize(args.seed, file) &&
+           Serialize(args.waveNumbers.data(), args.waveNumbers.size(), file) &&
+           Serialize(args.measureEvery, file) &&
+           Serialize(args.nMeasure, file) &&
+           Serialize(args.tag.data(), args.tag.size(), file);
 }
 
-
-bool Serialize(const Observables& obs, std::ofstream* file) { 
-    return
-        Serialize(obs.flipClusterDuration, file) &&
-        Serialize(obs.clearFlagDuration, file) &&
-        Serialize(obs.measureDuration, file) &&
-        Serialize(obs.serializeDuration, file) &&
-        Serialize(obs.cumulativeClusterSize, file) &&
-        Serialize(obs.nClusters, file) &&
-        Serialize(obs.representativeState, file) &&
-        Serialize(obs.stateCount.data(), obs.stateCount.size(), file) &&
-        Serialize(obs.magnetization, file) &&
-        Serialize(obs.fourierTransform2d.data(), obs.fourierTransform2d.rows(), obs.fourierTransform2d.cols(), file);
-    
+bool Serialize(const Observables &obs, std::ofstream *file) {
+    return Serialize(obs.flipClusterDuration, file) &&
+           Serialize(obs.clearFlagDuration, file) &&
+           Serialize(obs.measureDuration, file) &&
+           Serialize(obs.serializeDuration, file) &&
+           Serialize(obs.cumulativeClusterSize, file) &&
+           Serialize(obs.nClusters, file) &&
+           Serialize(obs.representativeState, file) &&
+           Serialize(obs.stateCount.data(), obs.stateCount.size(), file) &&
+           Serialize(obs.magnetization, file) &&
+           Serialize(obs.fourierTransform2d.data(),
+                     obs.fourierTransform2d.rows(),
+                     obs.fourierTransform2d.cols(), file);
 }
-
 
 bool ParseArgs(int argc, const char *argv[], Arguments *args) {
     using namespace boost::program_options;
@@ -141,7 +132,6 @@ bool ParseArgs(int argc, const char *argv[], Arguments *args) {
     return true;
 }
 
-
 bool AtomicallyAcquired(Node *node) {
     return __sync_fetch_and_or(node, 128) & 128;
 }
@@ -156,15 +146,15 @@ bool Parallel(Node node1, Node node2) { return ((node1 ^ node2) & 1) == 0; }
 
 void Flip(Node *node) { (*node) ^= 1; }
 
-template <size_t nDim, typename Generator>
+template <size_t nDim, typename Generator, typename Queue>
 void FlipCluster(double prob, const Index<nDim> &i0, const Index<nDim> &shape,
                  Node *nodes, size_t *clusterSize, Generator *rng,
-                 std::queue<Index<nDim>> *queue) {
+                 Queue *queue) {
 
     const typename Generator::result_type iProb =
         rng->min() +
         typename Generator::result_type(prob * (rng->max() - rng->min()));
-    
+
     queue->emplace(i0);
     MarkVisited(nodes + GetScalarIndex(i0, shape));
 
@@ -193,29 +183,54 @@ void FlipCluster(double prob, const Index<nDim> &i0, const Index<nDim> &shape,
     }
 }
 
+template <size_t nDim, typename Queue>
+void ClearVisitedFlag(const Index<nDim> &i0, const Index<nDim> &shape,
+                      Node *nodes, Queue *queue) {
+
+    queue->emplace(i0);
+    ClearVisitedFlag(nodes + GetScalarIndex(i0, shape));
+
+    while (!queue->empty()) {
+        Index<nDim> &i = queue->front();
+        for (size_t d = 0; d < nDim; ++d) {
+            const typename Index<nDim>::value_type i_d = i[d];
+            const typename Index<nDim>::value_type s_d = shape[d];
+            for (size_t dir = 0; dir < 4; dir += 2) {
+                i[d] = (i_d + s_d + dir - 1) % s_d;
+                Node *node1 = nodes + GetScalarIndex(i, shape);
+                if (Visited(*node1)) {
+                    queue->emplace(i);
+                    ClearVisitedFlag(node1);
+                }
+            }
+            i[d] = i_d;
+        }
+        queue->pop();
+    }
+}
+
 void ClearVisitedFlag(Node *begin, Node *end) {
     for (Node *node = begin; node < end; ++node) {
         ClearVisitedFlag(node);
     }
 }
 
-size_t Sum(const std::vector<Node>& nodes) {
+size_t Sum(const std::vector<Node> &nodes) {
     size_t res = 0;
-    for (const auto& node : nodes) {
+    for (const auto &node : nodes) {
         res += node;
     }
     return res;
 }
 
-std::atomic<bool> quit(false);    // signal flag
-
+std::atomic<bool> quit(false); // signal flag
 
 template <size_t nDim> void run(const Arguments &args) {
     std::cout << "Arguments: " << std::endl;
     std::cout << args << std::endl;
 
     std::mt19937 rng(args.seed);
-    
+
     Index<nDim> shape;
     for (size_t i = 0; i < nDim; ++i) {
         shape[i] = args.shape.at(i);
@@ -225,6 +240,9 @@ template <size_t nDim> void run(const Arguments &args) {
     std::queue<Index<nDim>> queue;
     Observables observables;
 
+    for (size_t i = 0; i < nodes.size(); ++i) {
+        nodes[i] = uint32_t(1664525ul * i + 1013904223ul) & 1u;
+    }
 
     MeasureWorkspace measureWorkspace;
 
@@ -233,78 +251,80 @@ template <size_t nDim> void run(const Arguments &args) {
         MakeFourierTable(shape[i], args.waveNumbers, &ftTables[i]);
     }
 
-    std::ofstream outFile(args.outputFileName, std::ios_base::trunc | std::ios_base::binary);
+    std::ofstream outFile(args.outputFileName,
+                          std::ios_base::trunc | std::ios_base::binary);
     if (!outFile.good()) {
-        std::cerr << "Unable to open \"" << args.outputFileName << "\" for output." << std::endl;
+        std::cerr << "Unable to open \"" << args.outputFileName
+                  << "\" for output." << std::endl;
         return;
     }
     if (!Serialize(args, &outFile)) {
-        std::cerr << "Unable to serialize arguments to \"" << args.outputFileName << "\"." << std::endl;
+        std::cerr << "Unable to serialize arguments to \""
+                  << args.outputFileName << "\"." << std::endl;
         return;
     }
     outFile.flush();
-    
+
+    std::cout << "Begin simulation" << std::endl;
     auto time0 = std::chrono::high_resolution_clock::now();
-    for(uint64_t it = 0; it < args.nMeasure && !quit.load(); ++it) {
-        size_t cumulativeClusterSize = 0;
-        size_t nClusters = 0;
+    for (uint64_t it = 0; it < args.nMeasure; ++it) {
+        auto time1 = std::chrono::high_resolution_clock::now();
+
+        auto time2 = time1;
         std::chrono::high_resolution_clock::duration flipClusterDuration(0);
         std::chrono::high_resolution_clock::duration clearFlagDuration(0);
-        auto time1 = std::chrono::high_resolution_clock::now();
-        for(uint64_t it1 = 0; it1 < args.measureEvery; ++it1) {
+        size_t cumulativeClusterSize = 0;
+        size_t nClusters = 0;
+        for (uint64_t it1 = 0; it1 < args.measureEvery && !quit.load(); ++it1) {
             GetRandomIndex(shape, &i0, &rng);
-            FlipCluster(args.prob, i0, shape, nodes.data(), 
+            FlipCluster(args.prob, i0, shape, nodes.data(),
                         &cumulativeClusterSize, &rng, &queue);
-            auto time2 = std::chrono::high_resolution_clock::now();
-            flipClusterDuration += time2 - time1;
-            
-            ClearVisitedFlag(nodes.data(), nodes.data() + nodes.size());
+            auto time3 = std::chrono::high_resolution_clock::now();
+            flipClusterDuration += time3 - time2;
+
+            ClearVisitedFlag(i0, shape, nodes.data(), &queue);
             ++nClusters;
-            time1 = std::chrono::high_resolution_clock::now();
-            clearFlagDuration += time1 - time2;
+            time2 = std::chrono::high_resolution_clock::now();
+            clearFlagDuration += time2 - time3;
         }
-        
-        auto time2 = std::chrono::high_resolution_clock::now();
+        if (quit.load())
+            break;
+
+        auto time4 = std::chrono::high_resolution_clock::now();
         Measure(shape, nodes.data(), ftTables, &observables, &measureWorkspace);
+
+        time0 = std::chrono::high_resolution_clock::now();
         observables.cumulativeClusterSize = cumulativeClusterSize;
         observables.nClusters = nClusters;
         observables.flipClusterDuration = flipClusterDuration.count();
         observables.clearFlagDuration = clearFlagDuration.count();
         observables.serializeDuration = (time1 - time0).count();
-        auto time3 = std::chrono::high_resolution_clock::now();
-        
-        observables.measureDuration = (time3 - time2).count();
+        observables.measureDuration = (time0 - time4).count();
 
         if (!Serialize(observables, &outFile)) {
             std::cerr << "Unable to serialize observables" << std::endl;
         }
-        
-        time0 = std::chrono::high_resolution_clock::now();
-    };
+        std::cout << "Iteration " << it + 1 << " done" << std::endl;
+    }
+    std::cout << "End" << std::endl;
 }
 
-
-void HandleSignal(int signal)
-{
-    std::cerr << "Caught signal " << signal << std::endl; 
+void HandleSignal(int signal) {
+    std::cerr << "Caught signal " << signal << std::endl;
     quit.store(true);
 }
 
-
 void RegisterSignalCallback() {
     struct sigaction sa;
-    memset( &sa, 0, sizeof(sa) );
+    memset(&sa, 0, sizeof(sa));
     sa.sa_handler = &HandleSignal;
     sigfillset(&sa.sa_mask);
-    sigaction(SIGINT,&sa,NULL);
+    sigaction(SIGINT, &sa, NULL);
 }
-
-
 
 int main(int argc, const char *argv[]) {
     RegisterSignalCallback();
-    
-    
+
     Arguments args;
     bool success = ParseArgs(argc, argv, &args);
     if (!success) {
