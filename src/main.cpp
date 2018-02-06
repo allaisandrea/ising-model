@@ -209,20 +209,6 @@ void ClearVisitedFlag(const Index<nDim> &i0, const Index<nDim> &shape,
     }
 }
 
-void ClearVisitedFlag(Node *begin, Node *end) {
-    for (Node *node = begin; node < end; ++node) {
-        ClearVisitedFlag(node);
-    }
-}
-
-size_t Sum(const std::vector<Node> &nodes) {
-    size_t res = 0;
-    for (const auto &node : nodes) {
-        res += node;
-    }
-    return res;
-}
-
 std::atomic<bool> quit(false); // signal flag
 
 template <size_t nDim> void run(const Arguments &args) {
@@ -301,7 +287,7 @@ template <size_t nDim> void run(const Arguments &args) {
         observables.measureDuration = (time5 - time4).count();
         observables.serializeDuration = (time1 - time0).count();
         time0 = time5;
-        
+
         if (!Serialize(observables, &outFile)) {
             std::cerr << "Unable to serialize observables" << std::endl;
         }
