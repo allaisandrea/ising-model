@@ -293,14 +293,15 @@ template <size_t nDim> void run(const Arguments &args) {
         auto time4 = std::chrono::high_resolution_clock::now();
         Measure(shape, nodes.data(), ftTables, &observables, &measureWorkspace);
 
-        time0 = std::chrono::high_resolution_clock::now();
+        auto time5 = std::chrono::high_resolution_clock::now();
         observables.cumulativeClusterSize = cumulativeClusterSize;
         observables.nClusters = nClusters;
         observables.flipClusterDuration = flipClusterDuration.count();
         observables.clearFlagDuration = clearFlagDuration.count();
+        observables.measureDuration = (time5 - time4).count();
         observables.serializeDuration = (time1 - time0).count();
-        observables.measureDuration = (time0 - time4).count();
-
+        time0 = time5;
+        
         if (!Serialize(observables, &outFile)) {
             std::cerr << "Unable to serialize observables" << std::endl;
         }
