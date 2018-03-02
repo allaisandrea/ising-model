@@ -134,8 +134,29 @@ def get_metadata_table(input_path):
     for file_name in file_names:
         with open(file_name) as in_file:
             metadata = read_metadata(in_file)
+        statinfo = os.stat(file_name)
         metadata = tuple(getattr(metadata, tag) for tag in metadata_fields)
-        metadata_list.append((os.path.basename(file_name),) + metadata)
+        base_name = os.path.basename(file_name)
+        metadata_list.append((base_name, statinfo.st_size) + metadata)
 
-    column_names = ("file_name",) + tuple(metadata_fields)
+    column_names = ("file_name", "file_size") + tuple(metadata_fields)
     return pd.DataFrame(metadata_list, columns=column_names)
+
+
+def find_duplicates(metadata_table):
+    unique_field_names = ["shape", "prob", "seed"]
+    def get_unique_fields(item):
+        return [getattr(item, name) for name in unique_field_names]
+
+    sorted_table = metadata_table.sort_values(unique_field_names)
+    duplicates = list()
+    previous_item = None
+    for item in sorted_table.itertuples():
+        unique_fields = get_unique_fields(item)
+        if previous_item is not None:
+            previous_unique_fields = get_unique_fields(previous_item)
+            if unique_fields == previous_unique_fields:
+                duplicates.append(previous_item)
+                duplicates.append(item)
+        previous_item = item
+    return pd.DataFrame(duplicates)
