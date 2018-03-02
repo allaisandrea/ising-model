@@ -125,26 +125,36 @@ def read_file(file):
     return (metadata, observables)
 
 
+def get_shape_field_names():
+    return ("shape0", "shape1",  "shape2", "shape3", "shape4")
+
+
 def get_metadata_table(input_path):
     file_names = glob.glob(os.path.join(input_path, "*.bin"))
     metadata_fields =list(Metadata1._fields)
     metadata_fields.remove('wave_numbers')
-
+    metadata_fields.remove('shape')
+    shape_fiels = get_shape_field_names()
     metadata_list = list()
     for file_name in file_names:
         with open(file_name) as in_file:
             metadata = read_metadata(in_file)
         statinfo = os.stat(file_name)
-        metadata = tuple(getattr(metadata, tag) for tag in metadata_fields)
         base_name = os.path.basename(file_name)
-        metadata_list.append((base_name, statinfo.st_size) + metadata)
+        shape = [0] * 5
+        for i, shape_i in enumerate(metadata.shape):
+            shape[i] = shape_i
+        metadata = tuple(getattr(metadata, tag) for tag in metadata_fields)
+        metadata_list.append((base_name, statinfo.st_size) +
+                             tuple(shape) + metadata)
 
-    column_names = ("file_name", "file_size") + tuple(metadata_fields)
+    column_names = ("file_name", "file_size")
+    column_names += shape_fiels + tuple(metadata_fields)
     return pd.DataFrame(metadata_list, columns=column_names)
 
 
 def find_duplicates(metadata_table):
-    unique_field_names = ["shape", "prob", "seed"]
+    unique_field_names = list(get_shape_field_names() + ("prob", "seed"))
     def get_unique_fields(item):
         return [getattr(item, name) for name in unique_field_names]
 
