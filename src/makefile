@@ -1,5 +1,5 @@
 BIN_DIR=../bin/
-all: run test
+all: integral
 # 	clang-format -i lattice.h main.cpp Node.h observables.h test.cpp
 
 run: makefile main.cpp lattice.h observables.h Node.h
@@ -9,3 +9,7 @@ run: makefile main.cpp lattice.h observables.h Node.h
 test: makefile test.cpp lattice.h observables.h Node.h 
 	g++ test.cpp -o $(BIN_DIR)/test -std=c++11  -Wall -Wextra -Werror \
 	-Wpedantic 
+
+integral: makefile integral.cpp 
+	g++ integral.cpp -o $(BIN_DIR)/integral -std=c++11  -Wall -Wextra -Werror \
+	-Wpedantic -O3

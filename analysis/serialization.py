@@ -4,11 +4,14 @@ from __future__ import division
 import struct
 from collections import namedtuple
 import numpy
+import os
+import glob
+import pandas as pd
 
 
-Metadata1 = namedtuple('Metadata1', 
+Metadata1 = namedtuple('Metadata1',
                        ['version',
-                        'shape', 
+                        'shape',
                         'prob',
                         'seed',
                         'wave_numbers',
@@ -17,7 +20,7 @@ Metadata1 = namedtuple('Metadata1',
                         'tag'])
 
 
-Observables1 = namedtuple('Observables1', 
+Observables1 = namedtuple('Observables1',
                           ['flip_cluster_duration',
                            'clear_flag_duration',
                            'measure_duration',
@@ -72,8 +75,8 @@ def read_observables(version, file):
     else:
         print("Unsupported version {}.".format(version))
         return None
-        
-        
+
+
 def read_observables_v1(file):
     obs = Observables1(
         flip_cluster_duration=list(),
@@ -89,6 +92,10 @@ def read_observables_v1(file):
             read_observable_v1(file, obs)
         except struct.error:
             break
+    return obs
+
+
+def convert_observables_to_numpy(obs):
     return Observables1(
         flip_cluster_duration   = numpy.array(obs.flip_cluster_duration  ),
         clear_flag_duration     = numpy.array(obs.clear_flag_duration    ),
@@ -98,10 +105,7 @@ def read_observables_v1(file):
         n_clusters              = numpy.array(obs.n_clusters             ),
         magnetization           = numpy.array(obs.magnetization          ),
         fourier_transform_2d    = None   )
-    
-    return obs
-    
-    
+
 def read_observable_v1(file, obs):
     obs.flip_cluster_duration.extend(read('<Q', file))
     obs.clear_flag_duration.extend(read('<Q', file))
@@ -112,10 +116,26 @@ def read_observable_v1(file, obs):
     read('<Q', file) # representative_state
     read_vector('L', file) # stateCount
     obs.magnetization.extend(read('f', file))
-    obs.fourier_transform_2d.append(read_matrix('f', file))
+    read_matrix('f', file) # fourier_transform_2d
 
-    
+
 def read_file(file):
     metadata = read_metadata(file)
     observables = read_observables(metadata.version, file)
     return (metadata, observables)
+
+
+def get_metadata_table(input_path):
+    file_names = glob.glob(os.path.join(input_path, "*.bin"))
+    metadata_fields =list(Metadata1._fields)
+    metadata_fields.remove('wave_numbers')
+
+    metadata_list = list()
+    for file_name in file_names:
+        with open(file_name) as in_file:
+            metadata = read_metadata(in_file)
+        metadata = tuple(getattr(metadata, tag) for tag in metadata_fields)
+        metadata_list.append((os.path.basename(file_name),) + metadata)
+
+    column_names = ("file_name",) + tuple(metadata_fields)
+    return pd.DataFrame(metadata_list, columns=column_names)

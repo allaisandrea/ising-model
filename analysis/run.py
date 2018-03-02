@@ -3,6 +3,7 @@
 import subprocess
 import numpy as np
 import signal
+import uuid
 
 current_process = None
 
@@ -19,7 +20,7 @@ def format_options(shape, prob, seed, measure_every, n_measure, tag):
                '--measure-every', str(measure_every), 
                '--n-measure', str(n_measure),
                '--tag', str(tag)]
-    file_name = 'pb' + '_'.join(options) + '.bin'
+    file_name = uuid.uuid1().hex + '.bin'
     options += ['--output', file_name]
     return options
     
@@ -28,21 +29,24 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
     executable = '../bin/run'
     prob = 0.645
-    for L, n_measure in [
-        #(  16, 1024), 
-        #(  32, 1024),
-        #(  64, 1024),
-        #( 128, 1024),
-        #( 256, 1024),
-        #( 512, 1024),
-        (512, 1024 * 1024),
-        #(2048, 1024)
+    for L, measure_every, n_measure in [
+        #(8,            64,  16 * 1024),
+        #(12,           64,  16 * 1024),
+        #(16,          128,  16 * 1024),
+        #(24,          128,  16 * 1024),
+        #(32,          256, 1024 * 1024),
+        #(48,          256,  1024 * 1024),
+        #(64,          512,  1024 * 1024),
+        (128,    2 * 1024,  1024 * 1024),
+        #(256,    8 * 1024,   32 * 1024),
+        #(512,   32 * 1024,    8 * 1024),
+        #(1024, 512 * 1024,   4 * 1024),
         ]:
         options = format_options(
             shape=[L, L, L],
             prob=prob,
-            seed=0,
-            measure_every=256 * 1024,
+            seed=6,
+            measure_every=measure_every,
             n_measure=n_measure,
             tag='autocorrelation-1')
         command = [executable] + options
