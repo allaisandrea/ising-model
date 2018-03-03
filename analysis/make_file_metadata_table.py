@@ -11,7 +11,7 @@ import pandas as pd
 
 
 def main(input_path):
-    metadata_table = serialization.get_metadata_table(input_path)
+    metadata_table = serialization.get_file_metadata_table(input_path)
     duplicates = serialization.find_duplicates(metadata_table)
     if len(duplicates) > 0:
         sys.stderr.write("Found duplicate files\n")

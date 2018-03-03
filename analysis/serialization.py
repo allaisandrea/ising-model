@@ -129,7 +129,7 @@ def get_shape_field_names():
     return ("shape0", "shape1",  "shape2", "shape3", "shape4")
 
 
-def get_metadata_table(input_path):
+def get_file_metadata_table(input_path):
     file_names = glob.glob(os.path.join(input_path, "*.bin"))
     metadata_fields =list(Metadata1._fields)
     metadata_fields.remove('wave_numbers')
@@ -153,12 +153,12 @@ def get_metadata_table(input_path):
     return pd.DataFrame(metadata_list, columns=column_names)
 
 
-def find_duplicates(metadata_table):
+def find_duplicates(file_metadata_table):
     unique_field_names = list(get_shape_field_names() + ("prob", "seed"))
     def get_unique_fields(item):
         return [getattr(item, name) for name in unique_field_names]
 
-    sorted_table = metadata_table.sort_values(unique_field_names)
+    sorted_table = file_metadata_table.sort_values(unique_field_names)
     duplicates = list()
     previous_item = None
     for item in sorted_table.itertuples():
@@ -170,3 +170,13 @@ def find_duplicates(metadata_table):
                 duplicates.append(item)
         previous_item = item
     return pd.DataFrame(duplicates)
+
+
+def get_group_unique_field_names():
+    return get_shape_field_names() + ("prob", "measure_every")
+
+
+def get_metadata_table(file_metadata_table):
+    field_names = list(get_group_unique_field_names())
+    table = file_metadata_table[field_names]
+    return table.groupby(field_names[:-1])['measure_every'].max()
