@@ -30,6 +30,16 @@ Observables1 = namedtuple('Observables1',
                            'magnetization',
                            'fourier_transform_2d'])
 
+def make_new_observables1():
+    return Observables1(
+        flip_cluster_duration=list(),
+        clear_flag_duration=list(),
+        measure_duration=list(),
+        serialize_duration=list(),
+        cumulative_cluster_size=list(),
+        n_clusters=list(),
+        magnetization=list(),
+        fourier_transform_2d=list())
 
 def read(format, file):
     size = struct.calcsize(format)
@@ -78,33 +88,13 @@ def read_observables(version, file):
 
 
 def read_observables_v1(file):
-    obs = Observables1(
-        flip_cluster_duration=list(),
-        clear_flag_duration=list(),
-        measure_duration=list(),
-        serialize_duration=list(),
-        cumulative_cluster_size=list(),
-        n_clusters=list(),
-        magnetization=list(),
-        fourier_transform_2d=list())
+    obs = make_new_observables1()
     while True:
         try:
             read_observable_v1(file, obs)
         except struct.error:
             break
     return obs
-
-
-def convert_observables_to_numpy(obs):
-    return Observables1(
-        flip_cluster_duration   = numpy.array(obs.flip_cluster_duration  ),
-        clear_flag_duration     = numpy.array(obs.clear_flag_duration    ),
-        measure_duration        = numpy.array(obs.measure_duration       ),
-        serialize_duration      = numpy.array(obs.serialize_duration     ),
-        cumulative_cluster_size = numpy.array(obs.cumulative_cluster_size),
-        n_clusters              = numpy.array(obs.n_clusters             ),
-        magnetization           = numpy.array(obs.magnetization          ),
-        fourier_transform_2d    = None   )
 
 def read_observable_v1(file, obs):
     obs.flip_cluster_duration.extend(read('<Q', file))
@@ -116,7 +106,7 @@ def read_observable_v1(file, obs):
     read('<Q', file) # representative_state
     read_vector('L', file) # stateCount
     obs.magnetization.extend(read('f', file))
-    read_matrix('f', file) # fourier_transform_2d
+    obs.fourier_transform_2d.append(read_matrix('f', file)) # fourier_transform_2d
 
 
 def read_file(file):
@@ -125,58 +115,3 @@ def read_file(file):
     return (metadata, observables)
 
 
-def get_shape_field_names():
-    return ("shape0", "shape1",  "shape2", "shape3", "shape4")
-
-
-def get_file_metadata_table(input_path):
-    file_names = glob.glob(os.path.join(input_path, "*.bin"))
-    metadata_fields =list(Metadata1._fields)
-    metadata_fields.remove('wave_numbers')
-    metadata_fields.remove('shape')
-    shape_fiels = get_shape_field_names()
-    metadata_list = list()
-    for file_name in file_names:
-        with open(file_name) as in_file:
-            metadata = read_metadata(in_file)
-        statinfo = os.stat(file_name)
-        base_name = os.path.basename(file_name)
-        shape = [0] * 5
-        for i, shape_i in enumerate(metadata.shape):
-            shape[i] = shape_i
-        metadata = tuple(getattr(metadata, tag) for tag in metadata_fields)
-        metadata_list.append((base_name, statinfo.st_size) +
-                             tuple(shape) + metadata)
-
-    column_names = ("file_name", "file_size")
-    column_names += shape_fiels + tuple(metadata_fields)
-    return pd.DataFrame(metadata_list, columns=column_names)
-
-
-def find_duplicates(file_metadata_table):
-    unique_field_names = list(get_shape_field_names() + ("prob", "seed"))
-    def get_unique_fields(item):
-        return [getattr(item, name) for name in unique_field_names]
-
-    sorted_table = file_metadata_table.sort_values(unique_field_names)
-    duplicates = list()
-    previous_item = None
-    for item in sorted_table.itertuples():
-        unique_fields = get_unique_fields(item)
-        if previous_item is not None:
-            previous_unique_fields = get_unique_fields(previous_item)
-            if unique_fields == previous_unique_fields:
-                duplicates.append(previous_item)
-                duplicates.append(item)
-        previous_item = item
-    return pd.DataFrame(duplicates)
-
-
-def get_group_unique_field_names():
-    return get_shape_field_names() + ("prob", "measure_every")
-
-
-def get_metadata_table(file_metadata_table):
-    field_names = list(get_group_unique_field_names())
-    table = file_metadata_table[field_names]
-    return table.groupby(field_names[:-1])['measure_every'].max()
