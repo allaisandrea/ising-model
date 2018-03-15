@@ -2,7 +2,7 @@
 #include "lattice.h"
 #include "observables.h"
 #include <boost/program_options.hpp>
-#include <Eigen/Core>
+#include <eigen3/Eigen/Core>
 #include <iostream>
 #include <fstream>
 #include <vector>

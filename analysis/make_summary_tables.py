@@ -63,13 +63,19 @@ def find_duplicates(file_metadata_table):
 
 AccumulatedObservables = namedtuple(
     'AccumulatedObservables',
-    ['wave_numbers',
+    ['flip_cluster_duration',
+     'clear_flag_duration',
+     'measure_duration',
+     'wave_numbers',
      'magnetization',
      'fourier_transform_2d'])
 
 
 def make_new_accumulated_observables():
     return AccumulatedObservables(
+        flip_cluster_duration=list(),
+        clear_flag_duration=list(),
+        measure_duration=list(),
         wave_numbers=list(),
         magnetization=list(),
         fourier_transform_2d=list())
@@ -93,10 +99,11 @@ def append_observables(path,
         print("Skipping file {}: too few observables".format(
             file_metadata.file_name))
         return
-    accumulated_observables.magnetization.extend(
-        observables.magnetization[skip * step:-1:step])
-    accumulated_observables.fourier_transform_2d.extend(
-        observables.fourier_transform_2d[skip * step:-1:step])
+    field_names = set(accumulated_observables._fields)
+    field_names.remove('wave_numbers')
+    for field_name in field_names:
+        getattr(accumulated_observables, field_name).extend(
+            getattr(observables, field_name)[skip * step:-1:step])
     if len(accumulated_observables.wave_numbers) == 0:
         accumulated_observables.wave_numbers.extend(metadata.wave_numbers)
     elif accumulated_observables.wave_numbers != list(metadata.wave_numbers):
@@ -106,16 +113,24 @@ def append_observables(path,
             metadata.wave_numbers))
 
 def append_summary(unique_fields, observables, scalars_list, momenta_list):
-    def compute_Phi2_inv(phi2):
-        return 1.0 / np.mean(phi2)
-    def compute_Phi2_2(phi2):
-        return np.square(np.mean(phi2))
-    def compute_Phi4(phi2):
-        return np.mean(np.square(phi2))
-    def compute_lambdaR(phi2):
-        Phi2 = np.mean(phi2)
+    def compute_chi(m_arr):
+        m2 = np.mean(np.square(m_arr))
+        abs_m_2 = np.square(np.mean(np.abs(m_arr)))
+        return m2 - abs_m_2
+    def compute_U(m2_arr):
+        m4 = np.mean(np.square(m2_arr))
+        m2_2 = np.square(np.mean(m2_arr))
+        return 1.0 - m4 / (3 * m2_2)
+    def compute_Phi2_inv(Phi2_arr):
+        return 1.0 / np.mean(Phi2_arr)
+    def compute_Phi2_2(Phi2_arr):
+        return np.square(np.mean(Phi2_arr))
+    def compute_Phi4(Phi2_arr):
+        return np.mean(np.square(Phi2_arr))
+    def compute_lambdaR(Phi2_arr):
+        Phi2 = np.mean(Phi2_arr)
         Phi2_2 = np.square(Phi2)
-        Phi4 = np.mean(np.square(phi2))
+        Phi4 = np.mean(np.square(Phi2_arr))
         return  (3.0 * Phi2_2 - Phi4) / np.power(Phi2, 4.0)
 
     shape = unique_fields[1:6]
@@ -123,17 +138,32 @@ def append_summary(unique_fields, observables, scalars_list, momenta_list):
     for L in shape:
         volume *= L
 
-    m = np.array(observables.magnetization)
-    m2 = np.square(m)
-    m2_ac = cross_validate(lambda x: autocorrelation(x, 1), m2, 16)
-    Phi2_arr = volume * m2;
-    Phi2_inv = cross_validate(compute_Phi2_inv, Phi2_arr, 16)
-    Phi2_2 = cross_validate(compute_Phi2_2, Phi2_arr, 16)
-    Phi4 = cross_validate(compute_Phi4, Phi2_arr, 16)
+    n_cv = 16
+    m_arr = np.array(observables.magnetization)
+    m2_arr = np.square(m_arr)
+    Phi2_arr = volume * m2_arr;
+    m2_ac = cross_validate(lambda x: autocorrelation(x, 1), m2_arr, n_cv)
+    m2 = cross_validate(np.mean, m2_arr, n_cv)
+    chi = cross_validate(compute_chi, m_arr, n_cv)
+    U = cross_validate(compute_U, m2_arr, n_cv)
+    Phi2_inv = cross_validate(compute_Phi2_inv, Phi2_arr, n_cv)
+    Phi2_2 = cross_validate(compute_Phi2_2, Phi2_arr, n_cv)
+    Phi4 = cross_validate(compute_Phi4, Phi2_arr, n_cv)
     lambdaR = volume * cross_validate(compute_lambdaR, Phi2_arr, 16)
+    update_duration = 1.0e-6 * (
+        np.mean(observables.flip_cluster_duration) +
+        np.mean(observables.clear_flag_duration))
+    measure_duration = 1.0e-6 * np.mean(observables.measure_duration)
+    count = len(observables.magnetization)
     scalars = list(unique_fields)
+    scalars.append(count)
+    scalars.append(update_duration)
+    scalars.append(measure_duration)
     scalars.append(m2_ac[0])
     scalars.append(np.abs(m2_ac[0]) / m2_ac[1])
+    scalars.extend(m2)
+    scalars.extend(chi)
+    scalars.extend(U)
     scalars.extend(Phi2_inv)
     scalars.extend(Phi2_2)
     scalars.extend(Phi4)
@@ -166,8 +196,17 @@ def get_momenta_column_names():
 
 def get_scalars_column_names():
     return [
+        "count",
+        "update_duration",
+        "measure_duration",
         "m2_ac",
         "m2_ac_s",
+        "m2",
+        "m2_s",
+        "chi",
+        "chi_s",
+        "U",
+        "U_s",
         "Phi2_inv",
         "Phi2_inv_s",
         "Phi2_2",
