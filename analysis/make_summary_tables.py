@@ -132,7 +132,8 @@ def append_summary(unique_fields, observables, scalars_list, momenta_list):
         Phi2_2 = np.square(Phi2)
         Phi4 = np.mean(np.square(Phi2_arr))
         return  (3.0 * Phi2_2 - Phi4) / np.power(Phi2, 4.0)
-
+    if len(observables.magnetization) < 16:
+            return
     shape = unique_fields[1:6]
     volume = 1
     for L in shape:
@@ -160,7 +161,7 @@ def append_summary(unique_fields, observables, scalars_list, momenta_list):
     scalars.append(update_duration)
     scalars.append(measure_duration)
     scalars.append(m2_ac[0])
-    scalars.append(np.abs(m2_ac[0]) / m2_ac[1])
+    scalars.append(m2_ac[1])
     scalars.extend(m2)
     scalars.extend(chi)
     scalars.extend(U)
@@ -248,10 +249,11 @@ def main(path):
                          for field_name in unique_field_names]
         if unique_fields != previous_unique_fields:
             if previous_unique_fields is not None:
-                append_summary(previous_unique_fields,
-                               accumulated_observables,
-                               scalars_list,
-                               momenta_list)
+                append_summary(
+                    previous_unique_fields,
+                    accumulated_observables,
+                    scalars_list,
+                    momenta_list)
                 accumulated_observables = make_new_accumulated_observables()
             measure_every = file_metadata.measure_every
         append_observables(path,
@@ -260,10 +262,12 @@ def main(path):
                            accumulated_observables)
         previous_unique_fields = unique_fields
 
-    append_summary(previous_unique_fields,
-                   accumulated_observables,
-                   scalars_list,
-                   momenta_list)
+
+    append_summary(
+        previous_unique_fields,
+        accumulated_observables,
+        scalars_list,
+        momenta_list)
 
     scalars_table = pd.DataFrame(
         scalars_list,
