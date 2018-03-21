@@ -13,6 +13,7 @@ struct Observables {
     uint64_t nClusters;
     uint64_t representativeState;
     std::vector<uint32_t> stateCount;
+    uint64_t parallelCount;
     float magnetization;
     Eigen::MatrixXf fourierTransform2d;
 };
@@ -37,11 +38,24 @@ void Measure(const Index<nDim> &shape, const Node *nodes,
     work->slice2dSum.setZero();
     uint_fast32_t *slice2dSum = work->slice2dSum.data();
     obs->stateCount.assign(2, 0);
+    obs->parallelCount = 0;
     for (size_t si = 0; si < size; ++si) {
         Node node = nodes[si];
         ++(obs->stateCount[node]);
         const size_t j = si % sliceSize;
         slice2dSum[j] += node;
+
+        Index<nDim> i;
+        GetVectorIndex(si, shape, &i);
+        for (size_t d = 0; d < nDim; ++d) {
+            const typename Index<nDim>::value_type i_d = i[d];
+            i[d] = (i_d + 1) % shape[d];
+            Node node1 = nodes[GetScalarIndex(i, shape)];
+            if (Parallel(node, node1)) {
+                ++obs->parallelCount;
+            }
+            i[d] = i_d;
+        }
     }
 
     obs->magnetization =

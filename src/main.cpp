@@ -76,7 +76,7 @@ bool Serialize(const T *v, uint64_t n1, uint64_t n2, std::ofstream *file) {
 }
 
 bool Serialize(const Arguments &args, std::ofstream *file) {
-    const uint64_t version = 1;
+    const uint64_t version = 2;
     return Serialize(version, file) &&
            Serialize(args.shape.data(), args.shape.size(), file) &&
            Serialize(args.prob, file) && Serialize(args.seed, file) &&
@@ -96,6 +96,7 @@ bool Serialize(const Observables &obs, std::ofstream *file) {
            Serialize(obs.representativeState, file) &&
            Serialize(obs.stateCount.data(), obs.stateCount.size(), file) &&
            Serialize(obs.magnetization, file) &&
+           Serialize(obs.parallelCount, file) &&
            Serialize(obs.fourierTransform2d.data(),
                      obs.fourierTransform2d.rows(),
                      obs.fourierTransform2d.cols(), file);
@@ -141,8 +142,6 @@ bool Visited(Node node) { return node & 128; }
 void MarkVisited(Node *node) { (*node) |= 128; }
 
 void ClearVisitedFlag(Node *node) { (*node) &= (~128); }
-
-bool Parallel(Node node1, Node node2) { return ((node1 ^ node2) & 1) == 0; }
 
 void Flip(Node *node) { (*node) ^= 1; }
 
