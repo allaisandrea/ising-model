@@ -92,10 +92,7 @@ bool Serialize(const Observables &obs, std::ofstream *file) {
            Serialize(obs.measureDuration, file) &&
            Serialize(obs.serializeDuration, file) &&
            Serialize(obs.cumulativeClusterSize, file) &&
-           Serialize(obs.nClusters, file) &&
-           Serialize(obs.representativeState, file) &&
-           Serialize(obs.stateCount.data(), obs.stateCount.size(), file) &&
-           Serialize(obs.magnetization, file) &&
+           Serialize(obs.upCount, file) &&
            Serialize(obs.parallelCount, file) &&
            Serialize(obs.fourierTransform2d.data(),
                      obs.fourierTransform2d.rows(),
@@ -259,7 +256,6 @@ template <size_t nDim> void run(const Arguments &args) {
         std::chrono::high_resolution_clock::duration flipClusterDuration(0);
         std::chrono::high_resolution_clock::duration clearFlagDuration(0);
         size_t cumulativeClusterSize = 0;
-        size_t nClusters = 0;
         for (uint64_t it1 = 0; it1 < args.measureEvery && !quit.load(); ++it1) {
             GetRandomIndex(shape, &i0, &rng);
             FlipCluster(args.prob, i0, shape, nodes.data(),
@@ -268,7 +264,6 @@ template <size_t nDim> void run(const Arguments &args) {
             flipClusterDuration += time3 - time2;
 
             ClearVisitedFlag(i0, shape, nodes.data(), &queue);
-            ++nClusters;
             time2 = std::chrono::high_resolution_clock::now();
             clearFlagDuration += time2 - time3;
         }
@@ -280,7 +275,6 @@ template <size_t nDim> void run(const Arguments &args) {
 
         auto time5 = std::chrono::high_resolution_clock::now();
         observables.cumulativeClusterSize = cumulativeClusterSize;
-        observables.nClusters = nClusters;
         observables.flipClusterDuration = flipClusterDuration.count();
         observables.clearFlagDuration = clearFlagDuration.count();
         observables.measureDuration = (time5 - time4).count();

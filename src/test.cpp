@@ -176,7 +176,7 @@ bool TestMeasure(MeasureWorkspace *work, Observables *obs) {
         return false;
     }
 
-    if (std::abs(2.0 * nFlipped / size - 1.0 - obs->magnetization) > 1.0e-5) {
+    if (std::abs(nFlipped - obs->upCount) > 1.0e-5) {
         std::cerr << "Failed magnetization" << std::endl;
         return false;
     }

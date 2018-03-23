@@ -26,7 +26,7 @@ Observables1 = namedtuple('Observables1',
                            'measure_duration',
                            'serialize_duration',
                            'cumulative_cluster_size',
-                           'n_clusters',
+                           'parallel_count',
                            'magnetization',
                            'fourier_transform_2d'])
 
@@ -37,7 +37,7 @@ def make_new_observables1():
         measure_duration=list(),
         serialize_duration=list(),
         cumulative_cluster_size=list(),
-        n_clusters=list(),
+        parallel_count=list(),
         magnetization=list(),
         fourier_transform_2d=list())
 
@@ -60,16 +60,16 @@ def read_matrix(type, file):
 
 def read_metadata(file):
     version, = read('<Q', file)
-    if version == 1:
-        return read_metadata_v1(file)
+    if version == 1 or version == 2:
+        return read_metadata_v1_2(version, file)
     else:
         print("Unsupported version {}.".format(version))
         return None
 
 
-def read_metadata_v1(file):
+def read_metadata_v1_2(version, file):
     return Metadata1(
-        version=1,
+        version=version,
         shape=read_vector('L', file),
         prob=read('d',file)[0],
         seed=read('<Q',file)[0],
@@ -79,21 +79,27 @@ def read_metadata_v1(file):
         tag=str(bytearray(read_vector('B',file))))
 
 
-def read_observables(version, file):
-    if version == 1:
-        return read_observables_v1(file)
+def read_observables(metadata, file):
+    if metadata.version == 1:
+        read_observable = read_observable_v1
+    elif metadata.version == 2:
+        read_observable = read_observable_v2
     else:
-        print("Unsupported version {}.".format(version))
+        print("Unsupported version {}.".format(metadata.version))
         return None
 
-
-def read_observables_v1(file):
     obs = make_new_observables1()
     while True:
         try:
-            read_observable_v1(file, obs)
+            read_observable(file, obs)
         except struct.error:
             break
+    if metadata.version == 2:
+        volume = 1
+        for side in metadata.shape:
+            volume *= side
+        for i in range(len(obs.magnetization)):
+            obs.magnetization[i] = (2.0 * obs.magnetization[i]) / volume - 1.0
     return obs
 
 def read_observable_v1(file, obs):
@@ -102,16 +108,27 @@ def read_observable_v1(file, obs):
     obs.measure_duration.extend(read('<Q', file))
     obs.serialize_duration.extend(read('<Q', file))
     obs.cumulative_cluster_size.extend(read('<Q', file))
-    obs.n_clusters.extend(read('<Q', file))
+    read('<Q', file) # n_clusters
     read('<Q', file) # representative_state
     read_vector('L', file) # stateCount
     obs.magnetization.extend(read('f', file))
-    obs.fourier_transform_2d.append(read_matrix('f', file)) # fourier_transform_2d
+    obs.fourier_transform_2d.append(read_matrix('f', file))
+
+
+def read_observable_v2(file, obs):
+    obs.flip_cluster_duration.extend(read('<Q', file))
+    obs.clear_flag_duration.extend(read('<Q', file))
+    obs.measure_duration.extend(read('<Q', file))
+    obs.serialize_duration.extend(read('<Q', file))
+    obs.cumulative_cluster_size.extend(read('<Q', file))
+    obs.magnetization.extend(read('<Q', file))
+    obs.parallel_count.extend(read('<Q', file))
+    obs.fourier_transform_2d.append(read_matrix('f', file))
 
 
 def read_file(file):
     metadata = read_metadata(file)
-    observables = read_observables(metadata.version, file)
+    observables = read_observables(metadata, file)
     return (metadata, observables)
 
 

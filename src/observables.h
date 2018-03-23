@@ -10,11 +10,8 @@ struct Observables {
     uint64_t measureDuration;
     uint64_t serializeDuration;
     uint64_t cumulativeClusterSize;
-    uint64_t nClusters;
-    uint64_t representativeState;
-    std::vector<uint32_t> stateCount;
+    uint64_t upCount;
     uint64_t parallelCount;
-    float magnetization;
     Eigen::MatrixXf fourierTransform2d;
 };
 
@@ -28,7 +25,6 @@ template <size_t nDim>
 void Measure(const Index<nDim> &shape, const Node *nodes,
              const std::array<Eigen::MatrixXf, 2> fourierTables,
              Observables *obs, MeasureWorkspace *work) {
-    obs->representativeState = nodes[0];
 
     const size_t size = GetSize(shape);
     const size_t sliceSize = shape[0] * shape[1];
@@ -37,11 +33,11 @@ void Measure(const Index<nDim> &shape, const Node *nodes,
     work->slice2dSum.resize(shape[0], shape[1]);
     work->slice2dSum.setZero();
     uint_fast32_t *slice2dSum = work->slice2dSum.data();
-    obs->stateCount.assign(2, 0);
+    obs->upCount = 0;
     obs->parallelCount = 0;
     for (size_t si = 0; si < size; ++si) {
         Node node = nodes[si];
-        ++(obs->stateCount[node]);
+        obs->upCount += node;
         const size_t j = si % sliceSize;
         slice2dSum[j] += node;
 
@@ -57,10 +53,6 @@ void Measure(const Index<nDim> &shape, const Node *nodes,
             i[d] = i_d;
         }
     }
-
-    obs->magnetization =
-        float(int64_t(obs->stateCount[1]) - int64_t(obs->stateCount[0])) /
-        (obs->stateCount[1] + obs->stateCount[0]);
 
     work->slice2dMagnetization = work->slice2dSum.cast<float>();
     work->slice2dMagnetization *= 2.0f / nSlices;
