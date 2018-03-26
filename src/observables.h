@@ -41,8 +41,7 @@ void Measure(const Index<nDim> &shape, const Node *nodes,
         const size_t j = si % sliceSize;
         slice2dSum[j] += node;
 
-        Index<nDim> i;
-        GetVectorIndex(si, shape, &i);
+        Index<nDim> i = GetVectorIndex(si, shape);
         for (size_t d = 0; d < nDim; ++d) {
             const typename Index<nDim>::value_type i_d = i[d];
             i[d] = (i_d + 1) % shape[d];

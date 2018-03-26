@@ -12,28 +12,26 @@
 std::mt19937 rng;
 
 template <size_t nDim>
-void GetRandomShape(typename Index<nDim>::value_type min,
-                    typename Index<nDim>::value_type max, Index<nDim> *shape) {
+Index<nDim> GetRandomShape(
+            typename Index<nDim>::value_type min,
+                    typename Index<nDim>::value_type max) {
     std::uniform_int_distribution<size_t> rand_int(min, max);
-
+    Index<nDim> shape;
     for (size_t d = 0; d < nDim; ++d) {
-        (*shape)[d] = rand_int(rng);
+        shape[d] = rand_int(rng);
     }
+    return shape;
 }
 
+
 template <size_t nDim> bool TestIndexConversion() {
-
     std::uniform_int_distribution<size_t> rand_int;
-
-    Index<nDim> shape;
-    Index<nDim> j;
-
     for (size_t it = 0; it < 10; ++it) {
-        GetRandomShape(2, 6, &shape);
+        const auto shape = GetRandomShape<nDim>(2, 6);
         const size_t size = GetSize(shape);
         for (size_t it2 = 0; it2 < 10; ++it2) {
             const size_t i = rand_int(rng) % size;
-            GetVectorIndex(i, shape, &j);
+            const Index<nDim> j = GetVectorIndex(i, shape);
             const size_t k = GetScalarIndex(j, shape);
             if (i != k) {
                 return false;
@@ -44,21 +42,16 @@ template <size_t nDim> bool TestIndexConversion() {
     return true;
 }
 
+
 template <size_t nDim> bool TestGetFirstNeighbors() {
-
-    Index<nDim> shape;
-    Index<nDim> i;
-    std::array<Index<nDim>, 2 * nDim> n1;
-    std::array<Index<nDim>, 2 * nDim> n2;
-
     for (size_t it1 = 0; it1 < 10; ++it1) {
-        GetRandomShape(2, 6, &shape);
+        const auto shape = GetRandomShape<nDim>(2, 6);
         const size_t size = GetSize(shape);
         for (size_t si = 0; si < size; ++si) {
-            GetVectorIndex(si, shape, &i);
-            GetFirstNeighbors(i, shape, &n1);
+            const Index<nDim> i = GetVectorIndex(si, shape);
+            const auto n1 = GetFirstNeighbors(i, shape);
             for (const auto &j : n1) {
-                GetFirstNeighbors(j, shape, &n2);
+                const auto n2 = GetFirstNeighbors(j, shape);
                 if (std::find(n2.begin(), n2.end(), i) == n2.end()) {
                     std::cout << "i: " << i << std::endl;
                     std::cout << "j: " << j << std::endl;
@@ -124,8 +117,7 @@ bool TestMakeFourierTable() {
 }
 
 bool TestMeasure(MeasureWorkspace *work, Observables *obs) {
-    Index<3> shape;
-    GetRandomShape(3, 8, &shape);
+    const auto shape = GetRandomShape<3>(3, 8);
     const size_t size = GetSize(shape);
     std::vector<Node> nodes(size, 0);
 
@@ -133,8 +125,7 @@ bool TestMeasure(MeasureWorkspace *work, Observables *obs) {
 
     size_t nFlipped = 0;
     for (size_t it = 0; it < size / 2; ++it) {
-        Index<3> i;
-        GetRandomIndex<3, decltype(rng)>(shape, &i, &rng);
+        const Index<3> i = GetRandomIndex<3, decltype(rng)>(shape, &rng);
         const size_t si = GetScalarIndex(i, shape);
         if (nodes[si] == 0) {
             nodes[si] = 1;

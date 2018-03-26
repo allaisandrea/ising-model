@@ -218,7 +218,6 @@ template <size_t nDim> void run(const Arguments &args) {
         shape[i] = args.shape.at(i);
     }
     std::vector<Node> nodes(GetSize(shape), 0);
-    Index<nDim> i0;
     std::queue<Index<nDim>> queue;
     Observables observables;
 
@@ -257,7 +256,7 @@ template <size_t nDim> void run(const Arguments &args) {
         std::chrono::high_resolution_clock::duration clearFlagDuration(0);
         size_t cumulativeClusterSize = 0;
         for (uint64_t it1 = 0; it1 < args.measureEvery && !quit.load(); ++it1) {
-            GetRandomIndex(shape, &i0, &rng);
+            const auto i0 = GetRandomIndex(shape, &rng);
             FlipCluster(args.prob, i0, shape, nodes.data(),
                         &cumulativeClusterSize, &rng, &queue);
             auto time3 = std::chrono::high_resolution_clock::now();
