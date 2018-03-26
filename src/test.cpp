@@ -113,7 +113,7 @@ bool TestMakeFourierTable() {
     return true;
 }
 
-bool TestMeasure(MeasureWorkspace *work, Observables *obs) {
+bool TestMeasure(Observables *obs) {
     const auto shape = GetRandomShape<3>(3, 8);
     const size_t size = GetSize(shape);
     std::vector<Node> nodes(size, 0);
@@ -140,29 +140,7 @@ bool TestMeasure(MeasureWorkspace *work, Observables *obs) {
         MakeFourierTable(shape[i], waveNumbers, &ftTables[i]);
     }
 
-    Measure(shape, nodes.data(), ftTables, obs, work);
-
-    for (const auto &pair : indexMap) {
-        const Index<2> i = pair.first;
-        const size_t sum = pair.second;
-        if (sum != work->slice2dSum(i[0], i[1])) {
-            std::cerr << "Failed slice2dSum (1)" << std::endl;
-            return false;
-        }
-        work->slice2dSum(i[0], i[1]) = 0;
-    }
-    if (work->slice2dSum.norm() > 1.0e-7) {
-        std::cerr << "Failed slice2dSum (2)" << std::endl;
-        return false;
-    }
-
-    Eigen::MatrixXf M =
-        ftTables[0].transpose() * work->slice2dMagnetization * ftTables[1] -
-        obs->fourierTransform2d;
-    if (M.norm() > 1.0e-7) {
-        std::cerr << "Failed fourierTransform2d (1)" << std::endl;
-        return false;
-    }
+    Measure(shape, nodes.data(), ftTables, obs);
 
     if (std::abs(nFlipped - obs->upCount) > 1.0e-5) {
         std::cerr << "Failed magnetization" << std::endl;
@@ -178,10 +156,9 @@ bool TestMeasure(MeasureWorkspace *work, Observables *obs) {
 }
 
 bool TestMeasure() {
-    MeasureWorkspace work;
     Observables obs;
     for (size_t i = 0; i < 5; ++i) {
-        if (!TestMeasure(&work, &obs)) {
+        if (!TestMeasure(&obs)) {
             return false;
         }
     }

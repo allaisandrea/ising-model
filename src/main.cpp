@@ -224,8 +224,6 @@ template <size_t nDim> void run(const Arguments &args) {
         nodes[i] = uint32_t(1664525ul * i + 1013904223ul) & 1u;
     }
 
-    MeasureWorkspace measureWorkspace;
-
     std::array<Eigen::MatrixXf, 2> ftTables;
     for (size_t i = 0; i < 2; ++i) {
         MakeFourierTable(shape[i], args.waveNumbers, &ftTables[i]);
@@ -269,7 +267,7 @@ template <size_t nDim> void run(const Arguments &args) {
             break;
 
         auto time4 = std::chrono::high_resolution_clock::now();
-        Measure(shape, nodes.data(), ftTables, &observables, &measureWorkspace);
+        Measure(shape, nodes.data(), ftTables, &observables);
 
         auto time5 = std::chrono::high_resolution_clock::now();
         observables.cumulativeClusterSize = cumulativeClusterSize;

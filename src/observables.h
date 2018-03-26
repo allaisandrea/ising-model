@@ -15,31 +15,30 @@ struct Observables {
     Eigen::MatrixXf fourierTransform2d;
 };
 
-struct MeasureWorkspace {
-    Eigen::Matrix<uint_fast32_t, Eigen::Dynamic, Eigen::Dynamic> slice2dSum;
-    Eigen::MatrixXf slice2dMagnetization;
-    Eigen::MatrixXf partialFT;
-};
-
 template <size_t nDim>
 void Measure(const Index<nDim> &shape, const Node *nodes,
              const std::array<Eigen::MatrixXf, 2> fourierTables,
-             Observables *obs, MeasureWorkspace *work) {
+             Observables *obs) {
 
     const size_t size = GetSize(shape);
     const size_t sliceSize = shape[0] * shape[1];
     const size_t nSlices = size / sliceSize;
 
-    work->slice2dSum.resize(shape[0], shape[1]);
-    work->slice2dSum.setZero();
-    uint_fast32_t *slice2dSum = work->slice2dSum.data();
+    thread_local Eigen::Matrix<uint_fast32_t, Eigen::Dynamic, Eigen::Dynamic>
+        slice2dSum;
+    thread_local Eigen::MatrixXf slice2dMagnetization;
+    thread_local Eigen::MatrixXf partialFT;
+
+    slice2dSum.resize(shape[0], shape[1]);
+    slice2dSum.setZero();
+    uint_fast32_t *slice2dSumData = slice2dSum.data();
     obs->upCount = 0;
     obs->parallelCount = 0;
     for (size_t si = 0; si < size; ++si) {
         Node node = nodes[si];
         obs->upCount += node;
         const size_t j = si % sliceSize;
-        slice2dSum[j] += node;
+        slice2dSumData[j] += node;
 
         Index<nDim> i = GetVectorIndex(si, shape);
         for (size_t d = 0; d < nDim; ++d) {
@@ -53,13 +52,12 @@ void Measure(const Index<nDim> &shape, const Node *nodes,
         }
     }
 
-    work->slice2dMagnetization = work->slice2dSum.cast<float>();
-    work->slice2dMagnetization *= 2.0f / nSlices;
-    work->slice2dMagnetization.array() -= 1.0f;
-    work->slice2dMagnetization /= std::sqrt(sliceSize);
-    work->partialFT.noalias() =
-        fourierTables[0].transpose() * work->slice2dMagnetization;
-    obs->fourierTransform2d.noalias() = work->partialFT * fourierTables[1];
+    slice2dMagnetization = slice2dSum.cast<float>();
+    slice2dMagnetization *= 2.0f / nSlices;
+    slice2dMagnetization.array() -= 1.0f;
+    slice2dMagnetization /= std::sqrt(sliceSize);
+    partialFT.noalias() = fourierTables[0].transpose() * slice2dMagnetization;
+    obs->fourierTransform2d.noalias() = partialFT * fourierTables[1];
 }
 
 void MakeFourierTable(size_t period, const std::vector<uint32_t> &waveNumbers,
