@@ -34,9 +34,8 @@ size_t GetScalarIndex(const Index<nDim> &j, const Index<nDim> &shape) {
 }
 
 template <size_t nDim>
-std::array<Index<nDim>, 2 * nDim> GetFirstNeighbors(
-        const Index<nDim> &i,
-        const Index<nDim> &shape) {
+std::array<Index<nDim>, 2 * nDim> GetFirstNeighbors(const Index<nDim> &i,
+                                                    const Index<nDim> &shape) {
     std::array<Index<nDim>, 2 * nDim> neighbors;
     for (size_t d = 0; d < nDim; ++d) {
         neighbors[d] = i;

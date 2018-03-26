@@ -1,16 +1,16 @@
 #include "Node.h"
 #include "lattice.h"
 #include "observables.h"
+#include <atomic>
 #include <boost/program_options.hpp>
+#include <chrono>
 #include <eigen3/Eigen/Core>
-#include <iostream>
 #include <fstream>
-#include <vector>
+#include <iostream>
 #include <queue>
 #include <random>
-#include <chrono>
 #include <signal.h>
-#include <atomic>
+#include <vector>
 
 struct Arguments {
     std::string outputFileName;
@@ -92,8 +92,7 @@ bool Serialize(const Observables &obs, std::ofstream *file) {
            Serialize(obs.measureDuration, file) &&
            Serialize(obs.serializeDuration, file) &&
            Serialize(obs.cumulativeClusterSize, file) &&
-           Serialize(obs.upCount, file) &&
-           Serialize(obs.parallelCount, file) &&
+           Serialize(obs.upCount, file) && Serialize(obs.parallelCount, file) &&
            Serialize(obs.fourierTransform2d.data(),
                      obs.fourierTransform2d.rows(),
                      obs.fourierTransform2d.cols(), file);

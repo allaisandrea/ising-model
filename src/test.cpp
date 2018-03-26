@@ -1,20 +1,19 @@
-#include "lattice.h"
 #include "Queue.h"
+#include "lattice.h"
 #include "observables.h"
-#include <random>
-#include <iostream>
 #include <algorithm>
-#include <map>
 #include <chrono>
-#include <thread>
+#include <iostream>
+#include <map>
 #include <queue>
+#include <random>
+#include <thread>
 
 std::mt19937 rng;
 
 template <size_t nDim>
-Index<nDim> GetRandomShape(
-            typename Index<nDim>::value_type min,
-                    typename Index<nDim>::value_type max) {
+Index<nDim> GetRandomShape(typename Index<nDim>::value_type min,
+                           typename Index<nDim>::value_type max) {
     std::uniform_int_distribution<size_t> rand_int(min, max);
     Index<nDim> shape;
     for (size_t d = 0; d < nDim; ++d) {
@@ -22,7 +21,6 @@ Index<nDim> GetRandomShape(
     }
     return shape;
 }
-
 
 template <size_t nDim> bool TestIndexConversion() {
     std::uniform_int_distribution<size_t> rand_int;
@@ -41,7 +39,6 @@ template <size_t nDim> bool TestIndexConversion() {
 
     return true;
 }
-
 
 template <size_t nDim> bool TestGetFirstNeighbors() {
     for (size_t it1 = 0; it1 < 10; ++it1) {
