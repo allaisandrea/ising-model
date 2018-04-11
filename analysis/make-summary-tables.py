@@ -95,16 +95,15 @@ def extrapolate_prob(prob, ref_prob, parallel_count, magnetization, n_batches):
     chi = m2 - np.square(abs_m)
     U = 1.0 - m4 / (3.0 * np.square(m2))
 
-    autocorr.sort()
-    m2.sort()
-    chi.sort()
-    U.sort()
-
     return {
-        "ac": extract_quantiles(autocorr),
-        "m2": extract_quantiles(m2),
-        "chi": extract_quantiles(chi),
-        "U": extract_quantiles(U)}
+        "ac": np.mean(autocorr, axis=-1),
+        "ac_s": np.std(autocorr, axis=-1) / np.sqrt(n_batches),
+        "m2": np.mean(m2, axis=-1),
+        "m2_s": np.std(m2, axis=-1) / np.sqrt(n_batches),
+        "chi": np.mean(chi, axis=-1),
+        "chi_s": np.std(chi, axis=-1) / np.sqrt(n_batches),
+        "U": np.mean(U, axis=-1),
+        "U_s": np.std(U, axis=-1) / np.sqrt(n_batches)}
 
 
 def append_observables_from_file(
@@ -176,9 +175,7 @@ def process_group(group, i_prob, shape0, ref_i_prob, path):
         'n_measure': len(observables['magnetization'])}
 
     for observable_name, observable in aggregate_observables.iteritems():
-        for i, quantile in enumerate(['10', '50', '90']):
-            column_name = observable_name + '_' + quantile
-            column_dict[column_name] = observable[i]
+        column_dict[observable_name] = observable
 
     return pd.DataFrame(column_dict)
 
