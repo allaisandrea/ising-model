@@ -17,7 +17,7 @@ template <typename T> class Queue {
             _end = _data;
         if (_end == _begin) {
             const std::size_t newCapacity = 3 * (_dataEnd - _data) / 2;
-            cout T *const newData = new T[newCapacity];
+            T *const newData = new T[newCapacity];
             _end = std::copy(_data, _end, std::copy(_begin, _dataEnd, newData));
             delete[] _data;
             _data = newData;
