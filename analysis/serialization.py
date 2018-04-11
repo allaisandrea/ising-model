@@ -12,7 +12,7 @@ import pandas as pd
 Metadata1 = namedtuple('Metadata1',
                        ['version',
                         'shape',
-                        'prob',
+                        'i_prob',
                         'seed',
                         'wave_numbers',
                         'measure_every',
@@ -71,7 +71,7 @@ def read_metadata_v1_2(version, file):
     return Metadata1(
         version=version,
         shape=read_vector('L', file),
-        prob=read('d',file)[0],
+        i_prob=read('<Q',file)[0],
         seed=read('<Q',file)[0],
         wave_numbers=read_vector('L', file),
         measure_every=read('<Q', file)[0],
