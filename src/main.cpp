@@ -15,8 +15,8 @@
 struct Arguments {
     std::string outputFileName;
     std::vector<uint32_t> shape;
-    double prob;
-    uint64_t seed;
+    std::mt19937::result_type iProb;
+    std::mt19937::result_type seed;
     std::vector<uint32_t> waveNumbers;
     uint64_t measureEvery;
     uint64_t nMeasure;
@@ -31,8 +31,8 @@ std::ostream &operator<<(std::ostream &os, const Arguments &args) {
     }
     std::cout << std::endl;
 
-    std::cout << "prob: " << args.prob << std::endl;
-    std::cout << "seed: " << args.seed << std::endl;
+    std::cout << "iProb: " << std::hex << args.iProb << std::dec << std::endl;
+    std::cout << "seed: " << std::hex << args.seed << std::dec << std::endl;
     std::cout << "measureEvery: " << args.measureEvery << std::endl;
     std::cout << "nMeasure: " << args.nMeasure << std::endl;
     std::cout << "tag: " << args.tag << std::endl;
@@ -77,13 +77,16 @@ bool Serialize(const T *v, uint64_t n1, uint64_t n2, std::ofstream *file) {
 
 bool Serialize(const Arguments &args, std::ofstream *file) {
     const uint64_t version = 2;
+    // clang-format off
     return Serialize(version, file) &&
            Serialize(args.shape.data(), args.shape.size(), file) &&
-           Serialize(args.prob, file) && Serialize(args.seed, file) &&
+           Serialize<uint64_t>(args.iProb, file) &&
+           Serialize<uint64_t>(args.seed, file) &&
            Serialize(args.waveNumbers.data(), args.waveNumbers.size(), file) &&
            Serialize(args.measureEvery, file) &&
            Serialize(args.nMeasure, file) &&
            Serialize(args.tag.data(), args.tag.size(), file);
+    // clang-format on
 }
 
 bool Serialize(const Observables &obs, std::ofstream *file) {
@@ -98,16 +101,29 @@ bool Serialize(const Observables &obs, std::ofstream *file) {
                      obs.fourierTransform2d.cols(), file);
 }
 
+bool ProbabilityStringIsValid(const std::string& probStr) {
+    if (probStr.empty() || probStr.size() > std::mt19937::word_size / 4) {
+        return false;
+    }
+    for (const auto& c : probStr) {
+        if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'))) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool ParseArgs(int argc, const char *argv[], Arguments *args) {
     using namespace boost::program_options;
 
+    std::string probStr;
     options_description description{"Options"};
     description.add_options()("help,h", "Show usage")(
         "output", value<std::string>(&(args->outputFileName))->required())(
         "shape",
         value<std::vector<uint32_t>>(&(args->shape))->required()->multitoken())(
-        "prob", value<double>(&(args->prob))->required())(
-        "seed", value<uint64_t>(&(args->seed))->required())(
+        "i-prob", value<std::string>(&(probStr))->required())(
+        "seed", value<std::mt19937::result_type>(&(args->seed))->required())(
         "measure-every", value<uint64_t>(&(args->measureEvery))->required())(
         "n-measure", value<uint64_t>(&(args->nMeasure))->required())(
         "tag", value<std::string>(&(args->tag))->required());
@@ -126,6 +142,15 @@ bool ParseArgs(int argc, const char *argv[], Arguments *args) {
         std::cout << description << std::endl;
         return false;
     }
+
+    if (!ProbabilityStringIsValid(probStr)) {
+        std::cout << "Unable to parse \"" << probStr <<
+                     "\" as probability" << std::endl;
+        return false;
+    }
+
+    probStr.resize(std::mt19937::word_size / 4, '0');
+    args->iProb = std::stoull(probStr, 0, 16);
     return true;
 }
 
@@ -142,13 +167,9 @@ void ClearVisitedFlag(Node *node) { (*node) &= (~128); }
 void Flip(Node *node) { (*node) ^= 1; }
 
 template <size_t nDim, typename Generator, typename Queue>
-void FlipCluster(double prob, const Index<nDim> &i0, const Index<nDim> &shape,
+void FlipCluster(typename Generator::result_type iProb, const Index<nDim> &i0, const Index<nDim> &shape,
                  Node *nodes, size_t *clusterSize, Generator *rng,
                  Queue *queue) {
-
-    const typename Generator::result_type iProb =
-        rng->min() +
-        typename Generator::result_type(prob * (rng->max() - rng->min()));
 
     queue->emplace(i0);
     MarkVisited(nodes + GetScalarIndex(i0, shape));
@@ -254,7 +275,7 @@ template <size_t nDim> void run(const Arguments &args) {
         size_t cumulativeClusterSize = 0;
         for (uint64_t it1 = 0; it1 < args.measureEvery && !quit.load(); ++it1) {
             const auto i0 = GetRandomIndex(shape, &rng);
-            FlipCluster(args.prob, i0, shape, nodes.data(),
+            FlipCluster(args.iProb, i0, shape, nodes.data(),
                         &cumulativeClusterSize, &rng, &queue);
             auto time3 = std::chrono::high_resolution_clock::now();
             flipClusterDuration += time3 - time2;
