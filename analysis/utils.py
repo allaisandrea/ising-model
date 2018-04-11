@@ -21,3 +21,10 @@ def cross_validate(f, v, n):
     v1 = numpy.array([f(v), numpy.std(v1, axis=0) / numpy.sqrt(n)])
     v1 = numpy.transpose(v1, range(1, len(v1.shape)) + [0])
     return v1
+
+def short_hex(x):
+    return hex(x)[2:].rstrip('L').rstrip('0')
+
+
+def int_from_short_hex(x):
+    return int(x.ljust(8, '0'), 16)
