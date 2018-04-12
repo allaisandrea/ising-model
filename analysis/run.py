@@ -80,7 +80,7 @@ if __name__ == '__main__':
         '--n-dims', type=int, default=4, help='number of dimensions')
     parser.add_argument(
         '--executable', type=str,
-        default='/home/andrea/Dropbox/Documents/rg_ising/bin/run',
+        default='../build/run',
         help='Path to executable')
     args = parser.parse_args()
     main(**vars(args))

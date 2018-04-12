@@ -165,7 +165,7 @@ def process_group(group, i_prob, shape0, ref_i_prob, path):
         ref_prob=ref_i_prob,
         parallel_count=observables['parallel_count'],
         magnetization=observables['magnetization'],
-        n_batches=9)
+        n_batches=16)
 
     column_dict = {
         'shape0': shape0,

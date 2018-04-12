@@ -4,7 +4,6 @@
 #include <atomic>
 #include <boost/program_options.hpp>
 #include <chrono>
-#include <eigen3/Eigen/Core>
 #include <fstream>
 #include <iostream>
 #include <queue>

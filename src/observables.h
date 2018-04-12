@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Node.h"
-#include <eigen3/Eigen/Core>
+#include <Eigen/Core>
 #include <vector>
 
 struct Observables {
