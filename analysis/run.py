@@ -8,28 +8,29 @@ import uuid
 import random
 import argparse
 import yaml
+import time
 from collections import namedtuple
 
 
-current_process = None
+processes = []
 keep_running = True
 
 def sigint_handler(signum, frame):
-    global current_process, keep_running
+    global processes, keep_running
     keep_running = False
-    if current_process is not None:
-        current_process.send_signal(signum)
+    for process in processes:
+        process.send_signal(signum)
 
 
 def format_options(shape, i_prob, seed, measure_every,
-                   n_measure, tag, output_path):
+                   n_measure, tag, output_path, task_id):
     options = ['--shape'] + map(str, shape) + [
                '--i-prob', i_prob,
                '--seed', str(seed),
                '--measure-every', str(measure_every),
                '--n-measure', str(n_measure),
                '--tag', str(tag)]
-    file_name = os.path.join(output_path, uuid.uuid1().hex + '.bin')
+    file_name = os.path.join(output_path, task_id + '.bin')
     options += ['--output', file_name]
     return options
 
@@ -49,13 +50,10 @@ def read_tasks(task_file):
     return tasks
 
 
-def main(task_file, output_path, n_dims, executable):
-    global current_process, keep_running
-    tasks = read_tasks(task_file)
-    signal.signal(signal.SIGINT, sigint_handler)
+def make_commands(tasks, executable, n_dims, output_path):
+    commands = []
     for parameters in tasks:
-        if not keep_running:
-            break
+        task_id = uuid.uuid4().hex
         options = format_options(
             shape=([parameters.L] * n_dims),
             i_prob=parameters.i_prob,
@@ -63,11 +61,45 @@ def main(task_file, output_path, n_dims, executable):
             measure_every=parameters.measure_every,
             n_measure=parameters.n_measure,
             tag='',
-            output_path=output_path)
-        command = [executable] + options
-        print(' '.join(command))
-        current_process = subprocess.Popen(command)
-        current_process.wait()
+            output_path=output_path,
+            task_id=task_id)
+        commands.append((task_id, [executable] + options))
+    return commands
+
+
+def main(task_file, output_path, n_dims, executable, n_processes, poweroff):
+    global processes, keep_running
+    signal.signal(signal.SIGINT, sigint_handler)
+    tasks = read_tasks(task_file)
+    commands = make_commands(tasks, executable, n_dims, output_path)
+    log_files = []
+    while keep_running and (len(commands) > 0 or len(processes) > 0):
+        while len(commands) > 0 and len(processes) < n_processes:
+            task_id, command = commands.pop()
+            print('Start task {}'.format(task_id))
+            log_files.append(
+                open(os.path.join(output_path, task_id + ".log"), 'w'))
+            processes.append(subprocess.Popen(
+                command,
+                stdout=log_files[-1],
+                stderr=log_files[-1]))
+        print("Waiting")
+        time.sleep(20)
+        new_processes = []
+        new_log_files = []
+        for i, process in enumerate(processes):
+            if process.poll() is None:
+                new_processes.append(process)
+                new_log_files.append(log_files[i])
+            else:
+                print("One worker complete")
+                log_files[i].close()
+        if len(processes) == len(new_processes):
+            print("All workers busy")
+        processes = new_processes
+        log_files = new_log_files
+    if poweroff:
+        subprocess.call(['sudo', 'poweroff'])
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run simulations.')
@@ -78,8 +110,12 @@ if __name__ == '__main__':
     parser.add_argument(
         '--n-dims', type=int, default=4, help='number of dimensions')
     parser.add_argument(
-        '--executable', type=str,
-        default='../build/run',
+        '--executable', type=str, default='../build/run',
         help='Path to executable')
+    parser.add_argument(
+        '--n-processes', type=int, default=1, help='number of processes')
+    parser.add_argument(
+        '--poweroff', action='store_true', default=False,
+        help='Power off at the end')
     args = parser.parse_args()
     main(**vars(args))
