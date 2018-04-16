@@ -6,6 +6,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <queue>
 #include <random>
 #include <signal.h>
@@ -128,7 +129,13 @@ bool ParseArgs(int argc, const char *argv[], Arguments *args) {
         "tag", value<std::string>(&(args->tag))->required());
 
     variables_map vm;
-    store(parse_command_line(argc, argv, description), vm);
+    try {
+        store(parse_command_line(argc, argv, description), vm);
+    } catch (const std::exception& e) {
+        std::cout << e.what() << std::endl;
+        std::cout << description << std::endl;
+        return false;
+    }
 
     if (vm.count("help") > 0) {
         std::cout << description << std::endl;
@@ -136,7 +143,7 @@ bool ParseArgs(int argc, const char *argv[], Arguments *args) {
     }
     try {
         notify(vm);
-    } catch (std::exception &e) {
+    } catch (const std::exception &e) {
         std::cout << e.what() << std::endl;
         std::cout << description << std::endl;
         return false;
@@ -264,15 +271,16 @@ template <size_t nDim> void run(const Arguments &args) {
     outFile.flush();
 
     std::cout << "Begin simulation" << std::endl;
-    auto time0 = std::chrono::high_resolution_clock::now();
-    for (uint64_t it = 0; it < args.nMeasure; ++it) {
+    const auto start_time = std::chrono::high_resolution_clock::now();
+    auto time0 = start_time;
+    for (uint64_t iStep0 = 0; iStep0 < args.nMeasure; ++iStep0) {
         auto time1 = std::chrono::high_resolution_clock::now();
 
         auto time2 = time1;
         std::chrono::high_resolution_clock::duration flipClusterDuration(0);
         std::chrono::high_resolution_clock::duration clearFlagDuration(0);
         size_t cumulativeClusterSize = 0;
-        for (uint64_t it1 = 0; it1 < args.measureEvery && !quit.load(); ++it1) {
+        for (uint64_t iStep1 = 0; iStep1 < args.measureEvery && !quit.load(); ++iStep1) {
             const auto i0 = GetRandomIndex(shape, &rng);
             FlipCluster(args.iProb, i0, shape, nodes.data(),
                         &cumulativeClusterSize, &rng, &queue);
@@ -300,7 +308,24 @@ template <size_t nDim> void run(const Arguments &args) {
         if (!Serialize(observables, &outFile)) {
             std::cerr << "Unable to serialize observables" << std::endl;
         }
-        std::cout << "Iteration " << it + 1 << " done" << std::endl;
+
+        std::chrono::duration<double> step0MeanDuration = (time5 - start_time) / (iStep0 + 1);
+        std::chrono::duration<double> eta = (args.nMeasure - iStep0 - 1) * step0MeanDuration;
+
+        const auto flags = std::cout.flags();
+        std::cout << std::fixed << std::setprecision(1)
+            << "Step " << iStep0 + 1 << "; "
+            << step0MeanDuration.count() << " seconds per step; ETA ";
+        if (eta.count() < 5 * 60) {
+            std::cout << eta.count() << " seconds." << std::endl;
+        } else if (eta.count() < 5 * 60 * 60) {
+            std::cout << eta.count() / 60 << " minutes." << std::endl;
+        } else if (eta.count() < 2 * 24 * 60 * 60) {
+            std::cout << eta.count() / (60 * 60) << " hours." << std::endl;
+        } else {
+            std::cout << eta.count() / (24 * 60 * 60) << " days." << std::endl;
+        }
+        std::cout.flags(flags);
     }
     std::cout << "End" << std::endl;
 }
