@@ -51,7 +51,8 @@ template <size_t nDim, typename Generator>
 Index<nDim> GetRandomIndex(const Index<nDim> &shape, Generator *rng) {
     Index<nDim> i;
     for (size_t d = 0; d < nDim; ++d) {
-        i[d] = std::uniform_int_distribution<typename Index<nDim>::value_type>(0, shape[d] - 1)(*rng);
+        i[d] = std::uniform_int_distribution<typename Index<nDim>::value_type>(
+            0, shape[d] - 1)(*rng);
     }
     return i;
 }

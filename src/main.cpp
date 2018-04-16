@@ -101,11 +101,11 @@ bool Serialize(const Observables &obs, std::ofstream *file) {
                      obs.fourierTransform2d.cols(), file);
 }
 
-bool ProbabilityStringIsValid(const std::string& probStr) {
+bool ProbabilityStringIsValid(const std::string &probStr) {
     if (probStr.empty() || probStr.size() > std::mt19937::word_size / 4) {
         return false;
     }
-    for (const auto& c : probStr) {
+    for (const auto &c : probStr) {
         if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'))) {
             return false;
         }
@@ -131,7 +131,7 @@ bool ParseArgs(int argc, const char *argv[], Arguments *args) {
     variables_map vm;
     try {
         store(parse_command_line(argc, argv, description), vm);
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::cout << e.what() << std::endl;
         std::cout << description << std::endl;
         return false;
@@ -150,8 +150,8 @@ bool ParseArgs(int argc, const char *argv[], Arguments *args) {
     }
 
     if (!ProbabilityStringIsValid(probStr)) {
-        std::cout << "Unable to parse \"" << probStr <<
-                     "\" as probability" << std::endl;
+        std::cout << "Unable to parse \"" << probStr << "\" as probability"
+                  << std::endl;
         return false;
     }
 
@@ -173,9 +173,9 @@ void ClearVisitedFlag(Node *node) { (*node) &= (~128); }
 void Flip(Node *node) { (*node) ^= 1; }
 
 template <size_t nDim, typename Generator, typename Queue>
-void FlipCluster(typename Generator::result_type iProb, const Index<nDim> &i0, const Index<nDim> &shape,
-                 Node *nodes, size_t *clusterSize, Generator *rng,
-                 Queue *queue) {
+void FlipCluster(typename Generator::result_type iProb, const Index<nDim> &i0,
+                 const Index<nDim> &shape, Node *nodes, size_t *clusterSize,
+                 Generator *rng, Queue *queue) {
 
     queue->emplace(i0);
     MarkVisited(nodes + GetScalarIndex(i0, shape));
@@ -278,7 +278,8 @@ template <size_t nDim> void run(const Arguments &args) {
         std::chrono::high_resolution_clock::duration flipClusterDuration(0);
         std::chrono::high_resolution_clock::duration clearFlagDuration(0);
         size_t cumulativeClusterSize = 0;
-        for (uint64_t iStep1 = 0; iStep1 < args.measureEvery && !quit.load(); ++iStep1) {
+        for (uint64_t iStep1 = 0; iStep1 < args.measureEvery && !quit.load();
+             ++iStep1) {
             const auto i0 = GetRandomIndex(shape, &rng);
             FlipCluster(args.iProb, i0, shape, nodes.data(),
                         &cumulativeClusterSize, &rng, &queue);
@@ -312,14 +313,14 @@ template <size_t nDim> void run(const Arguments &args) {
         if (iStep0 == 0) {
             step0MeanDuration = step0Duration.count();
         } else {
-            step0MeanDuration = 0.95 * step0MeanDuration + 0.05 * step0Duration.count();
+            step0MeanDuration =
+                0.95 * step0MeanDuration + 0.05 * step0Duration.count();
         }
         const double eta = (args.nMeasure - iStep0 - 1) * step0MeanDuration;
 
         const auto flags = std::cout.flags();
-        std::cout << std::fixed << std::setprecision(1)
-            << "Step " << iStep0 + 1 << "; "
-            << step0MeanDuration << " seconds per step; ETA ";
+        std::cout << std::fixed << std::setprecision(1) << "Step " << iStep0 + 1
+                  << "; " << step0MeanDuration << " seconds per step; ETA ";
         if (eta < 5 * 60) {
             std::cout << eta << " seconds." << std::endl;
         } else if (eta < 5 * 60 * 60) {
