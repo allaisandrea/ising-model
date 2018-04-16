@@ -247,9 +247,7 @@ template <size_t nDim> void run(const Arguments &args) {
     std::queue<Index<nDim>> queue;
     Observables observables;
 
-    for (size_t i = 0; i < nodes.size(); ++i) {
-        nodes[i] = uint32_t(1664525ul * i + 1013904223ul) & 1u;
-    }
+    std::memset(nodes.data(), 0, nodes.size());
 
     std::array<Eigen::MatrixXf, 2> ftTables;
     for (size_t i = 0; i < 2; ++i) {
@@ -271,10 +269,10 @@ template <size_t nDim> void run(const Arguments &args) {
     outFile.flush();
 
     std::cout << "Begin simulation" << std::endl;
-    const auto start_time = std::chrono::high_resolution_clock::now();
-    auto time0 = start_time;
+    auto time0 = std::chrono::high_resolution_clock::now();
+    double step0MeanDuration = 0.0;
     for (uint64_t iStep0 = 0; iStep0 < args.nMeasure; ++iStep0) {
-        auto time1 = std::chrono::high_resolution_clock::now();
+        const auto time1 = std::chrono::high_resolution_clock::now();
 
         auto time2 = time1;
         std::chrono::high_resolution_clock::duration flipClusterDuration(0);
@@ -284,7 +282,7 @@ template <size_t nDim> void run(const Arguments &args) {
             const auto i0 = GetRandomIndex(shape, &rng);
             FlipCluster(args.iProb, i0, shape, nodes.data(),
                         &cumulativeClusterSize, &rng, &queue);
-            auto time3 = std::chrono::high_resolution_clock::now();
+            const auto time3 = std::chrono::high_resolution_clock::now();
             flipClusterDuration += time3 - time2;
 
             ClearVisitedFlag(i0, shape, nodes.data(), &queue);
@@ -294,10 +292,12 @@ template <size_t nDim> void run(const Arguments &args) {
         if (quit.load())
             break;
 
-        auto time4 = std::chrono::high_resolution_clock::now();
+        const auto time4 = std::chrono::high_resolution_clock::now();
         Measure(shape, nodes.data(), ftTables, &observables);
 
-        auto time5 = std::chrono::high_resolution_clock::now();
+        const auto time5 = std::chrono::high_resolution_clock::now();
+        const std::chrono::duration<double> step0Duration = (time5 - time0);
+
         observables.cumulativeClusterSize = cumulativeClusterSize;
         observables.flipClusterDuration = flipClusterDuration.count();
         observables.clearFlagDuration = clearFlagDuration.count();
@@ -309,21 +309,25 @@ template <size_t nDim> void run(const Arguments &args) {
             std::cerr << "Unable to serialize observables" << std::endl;
         }
 
-        std::chrono::duration<double> step0MeanDuration = (time5 - start_time) / (iStep0 + 1);
-        std::chrono::duration<double> eta = (args.nMeasure - iStep0 - 1) * step0MeanDuration;
+        if (iStep0 == 0) {
+            step0MeanDuration = step0Duration.count();
+        } else {
+            step0MeanDuration = 0.95 * step0MeanDuration + 0.05 * step0Duration.count();
+        }
+        const double eta = (args.nMeasure - iStep0 - 1) * step0MeanDuration;
 
         const auto flags = std::cout.flags();
         std::cout << std::fixed << std::setprecision(1)
             << "Step " << iStep0 + 1 << "; "
-            << step0MeanDuration.count() << " seconds per step; ETA ";
-        if (eta.count() < 5 * 60) {
-            std::cout << eta.count() << " seconds." << std::endl;
-        } else if (eta.count() < 5 * 60 * 60) {
-            std::cout << eta.count() / 60 << " minutes." << std::endl;
-        } else if (eta.count() < 2 * 24 * 60 * 60) {
-            std::cout << eta.count() / (60 * 60) << " hours." << std::endl;
+            << step0MeanDuration << " seconds per step; ETA ";
+        if (eta < 5 * 60) {
+            std::cout << eta << " seconds." << std::endl;
+        } else if (eta < 5 * 60 * 60) {
+            std::cout << eta / 60 << " minutes." << std::endl;
+        } else if (eta < 2 * 24 * 60 * 60) {
+            std::cout << eta / (60 * 60) << " hours." << std::endl;
         } else {
-            std::cout << eta.count() / (24 * 60 * 60) << " days." << std::endl;
+            std::cout << eta / (24 * 60 * 60) << " days." << std::endl;
         }
         std::cout.flags(flags);
     }
