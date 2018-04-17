@@ -73,32 +73,46 @@ def main(task_file, output_path, n_dims, executable, n_processes, poweroff):
     tasks = read_tasks(task_file)
     commands = make_commands(tasks, executable, n_dims, output_path)
     log_files = []
+    running_commands = []
     while keep_running and (len(commands) > 0 or len(processes) > 0):
+        # Check for completion
+        new_processes = []
+        new_log_files = []
+        new_running_commands = []
+        for i, process in enumerate(processes):
+            return_code = process.poll()
+            if return_code is None:
+                new_processes.append(process)
+                new_log_files.append(log_files[i])
+                new_running_commands.append(running_commands[i])
+            else:
+                task, command = running_commands[i]
+                print("Task {} complete with return code {}:".format(
+                    task, return_code))
+                print(' '.join(command))
+                log_files[i].close()
+        processes = new_processes
+        log_files = new_log_files
+        running_commands = new_running_commands
+
+        # Enqueue new jobs
         while len(commands) > 0 and len(processes) < n_processes:
             task_id, command = commands.pop()
-            print('Start task {}'.format(task_id))
+            print('Start task {}:'.format(task_id))
+            print(' '.join(command))
             log_files.append(
                 open(os.path.join(output_path, task_id + ".log"), 'w'))
             processes.append(subprocess.Popen(
                 command,
                 stdout=log_files[-1],
                 stderr=log_files[-1]))
-        print("Waiting")
-        time.sleep(20)
-        new_processes = []
-        new_log_files = []
-        for i, process in enumerate(processes):
-            if process.poll() is None:
-                new_processes.append(process)
-                new_log_files.append(log_files[i])
-            else:
-                print("One worker complete")
-                log_files[i].close()
-        if len(processes) == len(new_processes):
-            print("All workers busy")
-        processes = new_processes
-        log_files = new_log_files
-    if poweroff:
+            running_commands.append((task_id, command))
+
+        # Wait
+        time.sleep(120)
+
+
+    if poweroff and keep_running:
         subprocess.call(['sudo', 'poweroff'])
 
 if __name__ == '__main__':
