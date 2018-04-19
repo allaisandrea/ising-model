@@ -309,18 +309,14 @@ template <size_t nDim> void run(const Arguments &args) {
         if (!Serialize(observables, &outFile)) {
             std::cerr << "Unable to serialize observables" << std::endl;
         }
+        outFile.flush();
 
-        if (iStep0 == 0) {
-            step0MeanDuration = step0Duration.count();
-        } else {
-            step0MeanDuration =
-                0.95 * step0MeanDuration + 0.05 * step0Duration.count();
-        }
+        step0MeanDuration += (step0Duration.count() - step0MeanDuration) / (iStep0 + 1);
         const double eta = (args.nMeasure - iStep0 - 1) * step0MeanDuration;
 
         const auto flags = std::cout.flags();
         std::cout << std::fixed << std::setprecision(1) << "Step " << iStep0 + 1
-                  << "; " << step0MeanDuration << " seconds per step; ETA ";
+                  << "; " << step0Duration.count() << " seconds per step; ETA ";
         if (eta < 5 * 60) {
             std::cout << eta << " seconds." << std::endl;
         } else if (eta < 5 * 60 * 60) {
