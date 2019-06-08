@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from __future__ import division
 from __future__ import print_function
 
@@ -24,7 +24,7 @@ def get_file_metadata_table(input_path):
     shape_fields = get_shape_field_names()
     metadata_list = list()
     for file_name in file_names:
-        with open(file_name) as in_file:
+        with open(file_name, 'rb') as in_file:
             metadata = serialization.read_metadata(in_file)
         statinfo = os.stat(file_name)
         base_name = os.path.basename(file_name)
@@ -109,7 +109,7 @@ def extrapolate_prob(prob, ref_prob, parallel_count, magnetization, n_batches):
 def append_observables_from_file(
         file_name, max_measure_every, n_skip, destination):
 
-    with open(file_name) as in_file:
+    with open(file_name, 'rb') as in_file:
         metadata, observables = serialization.read_file(in_file)
 
     if max_measure_every % metadata.measure_every != 0:
@@ -122,7 +122,7 @@ def append_observables_from_file(
         print("Skipping file {}: too few observables".format(file_name))
         return
 
-    field_names = destination.keys()
+    field_names = list(destination.keys())
     field_names.pop(field_names.index('wave_numbers'))
     for field_name in field_names:
         destination[field_name].extend(
@@ -174,7 +174,7 @@ def process_group(group, i_prob, shape0, ref_i_prob, path):
         'measure_every': max_measure_every,
         'n_measure': len(observables['magnetization'])}
 
-    for observable_name, observable in aggregate_observables.iteritems():
+    for observable_name, observable in aggregate_observables.items():
         column_dict[observable_name] = observable
 
     return pd.DataFrame(column_dict)
@@ -192,9 +192,13 @@ def main(path, parameters_file_name, metadata_file_name):
         file_metadata_table.to_csv(os.path.join(path, metadata_file_name))
 
     with open(os.path.join(path, parameters_file_name)) as in_file:
-        parameters = yaml.load(in_file)
+        parameters = yaml.safe_load(in_file)
 
-    i_prob_ranges = [[item[0]] + map(utils.int_from_short_hex, item[1:])
+    i_prob_ranges = list()
+    for item in parameters['i_prob_ranges']:
+        i_prob_ranges.append(
+            [item[0]]+[utils.int_from_short_hex(i) for i in item[1:]])
+    i_prob_ranges = [[item[0]] + list(map(utils.int_from_short_hex, item[1:]))
                      for item in parameters['i_prob_ranges']]
 
     scalars_table = pd.DataFrame()
