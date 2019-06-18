@@ -6,4 +6,4 @@ main:  makefile main.cpp Node.h lattice.h observables.h
 	$(CXX) $(COPTS) main.cpp -o $(BUILD_DIR)/main -lboost_program_options
 
 test: makefile test.cpp Node.h lattice.h observables.h
-	$(CXX) $(COPTS)  test.cpp -o $(BUILD_DIR)/test 
+	$(CXX) $(COPTS)  test.cpp -o $(BUILD_DIR)/test -lgtest -lgtest_main 
