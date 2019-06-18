@@ -1,16 +1,18 @@
-#include "Node.h"
-#include "lattice.h"
-#include "observables.h"
 #include <atomic>
-#include <boost/program_options.hpp>
 #include <chrono>
 #include <fstream>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <queue>
 #include <random>
 #include <signal.h>
 #include <vector>
+
+#include <boost/program_options.hpp>
+
+#include "Node.h"
+#include "lattice.h"
+#include "observables.h"
 
 struct Arguments {
     std::string outputFileName;
@@ -311,7 +313,8 @@ template <size_t nDim> void run(const Arguments &args) {
         }
         outFile.flush();
 
-        step0MeanDuration += (step0Duration.count() - step0MeanDuration) / (iStep0 + 1);
+        step0MeanDuration +=
+            (step0Duration.count() - step0MeanDuration) / (iStep0 + 1);
         const double eta = (args.nMeasure - iStep0 - 1) * step0MeanDuration;
 
         const auto flags = std::cout.flags();
