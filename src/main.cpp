@@ -174,10 +174,10 @@ void ClearVisitedFlag(Node *node) { (*node) &= (~128); }
 
 void Flip(Node *node) { (*node) ^= 1; }
 
-template <size_t nDim, typename Generator, typename Queue>
-void FlipCluster(typename Generator::result_type iProb, const Index<nDim> &i0,
+template <size_t nDim>
+void FlipCluster(uint64_t iProb, const Index<nDim> &i0,
                  const Index<nDim> &shape, Node *nodes, size_t *clusterSize,
-                 Generator *rng, Queue *queue) {
+                 std::mt19937 *rng, std::queue<Index<nDim>> *queue) {
 
     queue->emplace(i0);
     MarkVisited(nodes + GetScalarIndex(i0, shape));
@@ -207,9 +207,9 @@ void FlipCluster(typename Generator::result_type iProb, const Index<nDim> &i0,
     }
 }
 
-template <size_t nDim, typename Queue>
+template <size_t nDim>
 void ClearVisitedFlag(const Index<nDim> &i0, const Index<nDim> &shape,
-                      Node *nodes, Queue *queue) {
+                      Node *nodes, std::queue<Index<nDim>> *queue) {
 
     queue->emplace(i0);
     ClearVisitedFlag(nodes + GetScalarIndex(i0, shape));

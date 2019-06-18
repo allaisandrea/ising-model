@@ -47,8 +47,8 @@ std::array<Index<nDim>, 2 * nDim> GetFirstNeighbors(const Index<nDim> &i,
     return neighbors;
 }
 
-template <size_t nDim, typename Generator>
-Index<nDim> GetRandomIndex(const Index<nDim> &shape, Generator *rng) {
+template <size_t nDim>
+Index<nDim> GetRandomIndex(const Index<nDim> &shape, std::mt19937 *rng) {
     Index<nDim> i;
     for (size_t d = 0; d < nDim; ++d) {
         i[d] = std::uniform_int_distribution<typename Index<nDim>::value_type>(
