@@ -5,11 +5,13 @@
 #include <queue>
 #include <random>
 #include <thread>
+#include <unordered_map>
 
 #include <gtest/gtest.h>
 
 #include "lattice.h"
 #include "observables.h"
+#include "wolff_algorithm.h"
 
 std::mt19937 rng;
 
@@ -134,4 +136,60 @@ TEST(Observables, Measure) {
                            obs.fourierTransform2d(0, 0)),
                   1.0e-5);
     }
+}
+
+template <size_t nDim>
+uint64_t ComputeParallelCount(const Index<nDim> &shape, const Node *nodes) {
+    const size_t size = GetSize(shape);
+    uint64_t parallelCount = 0;
+    for (size_t si = 0; si < size; ++si) {
+        Node node = nodes[si];
+        Index<nDim> i = GetVectorIndex(si, shape);
+        for (size_t d = 0; d < nDim; ++d) {
+            const typename Index<nDim>::value_type i_d = i[d];
+            i[d] = (i_d + 1) % shape[d];
+            Node node1 = nodes[GetScalarIndex(i, shape)];
+            if (Parallel(node, node1)) {
+                ++parallelCount;
+            }
+            i[d] = i_d;
+        }
+    }
+    return parallelCount;
+}
+
+template <size_t nDim>
+void TestWolfAlgorithmCorrectDistribution(Index<nDim> shape, uint64_t iProb,
+                                          uint64_t nMeasure,
+                                          uint64_t measureEvery) {
+    std::mt19937 rng;
+    std::vector<Node> nodes(GetSize(shape), 0);
+    std::queue<Index<nDim>> queue;
+    struct ConfigurationStats {
+        uint64_t nVisited;
+        uint64_t nParallel;
+    };
+
+    std::unordered_map<std::string, ConfigurationStats> configurations;
+    for (size_t iStep0 = 0; iStep0 < nMeasure; ++iStep0) {
+        size_t cumulativeClusterSize = 0;
+        for (size_t iStep1 = 0; iStep1 < measureEvery; ++iStep1) {
+            const Index<nDim> i0 = GetRandomIndex(shape, &rng);
+            FlipCluster(iProb, i0, shape, nodes.data(), &cumulativeClusterSize,
+                        &rng, &queue);
+            ClearVisitedFlag(i0, shape, nodes.data(), &queue);
+        }
+        auto pair =
+            configurations.insert({std::string(nodes.begin(), nodes.end()),
+                                   ConfigurationStats{0, 0}});
+        if (pair.second) {
+            pair.first->second.nParallel =
+                ComputeParallelCount(shape, nodes.data());
+        }
+        pair.first->second.nVisited++;
+    }
+}
+
+TEST(WolffAlgorithm, CorrectDistribution) {
+    TestWolfAlgorithmCorrectDistribution(Index<3>{4, 4, 4}, 1, 1000, 1);
 }
