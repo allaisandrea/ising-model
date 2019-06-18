@@ -58,7 +58,7 @@ Index<nDim> GetRandomIndex(const Index<nDim> &shape, Generator *rng) {
 }
 
 template <size_t Dim> struct IndexLess {
-    bool operator()(const Index<Dim> &i1, const Index<Dim> &i2) {
+    bool operator()(const Index<Dim> &i1, const Index<Dim> &i2) const {
         return std::lexicographical_compare(i1.begin(), i1.end(), i2.begin(),
                                             i2.end());
     }

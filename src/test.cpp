@@ -142,7 +142,7 @@ bool TestMeasure(Observables *obs) {
 
     Measure(shape, nodes.data(), ftTables, obs);
 
-    if (std::abs(nFlipped - obs->upCount) > 1.0e-5) {
+    if (std::abs(int64_t(nFlipped) - int64_t(obs->upCount)) > 1.0e-5) {
         std::cerr << "Failed magnetization" << std::endl;
         return false;
     }
