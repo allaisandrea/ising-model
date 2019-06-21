@@ -11,6 +11,7 @@
 
 #include "lattice.h"
 #include "observables.h"
+#include "poisson_distribution.h"
 #include "wolff_algorithm.h"
 
 std::mt19937 rng;
@@ -138,6 +139,19 @@ TEST(Observables, Measure) {
     }
 }
 
+TEST(PoissonDistribution, CDF) {
+    std::mt19937 rng;
+    for (uint64_t i = 0; i < 5; ++i) {
+        const double lambda =
+            std::uniform_real_distribution<double>(0, 8.0)(rng);
+        EXPECT_EQ(PoissonCDF(0, lambda), std::exp(-lambda));
+        const double residual =
+            1.0 - PoissonCDF(std::round(10 * lambda), lambda);
+        EXPECT_GT(residual, -1.0e-15);
+        EXPECT_LT(residual, 1.0e-6);
+    }
+}
+
 template <size_t nDim>
 uint64_t ComputeParallelCount(const Index<nDim> &shape, const Node *nodes) {
     const size_t size = GetSize(shape);
@@ -159,17 +173,24 @@ uint64_t ComputeParallelCount(const Index<nDim> &shape, const Node *nodes) {
 }
 
 template <size_t nDim>
-void TestWolfAlgorithmCorrectDistribution(Index<nDim> shape, uint64_t iProb,
+void TestWolfAlgorithmCorrectDistribution(Index<nDim> shape, double prob,
                                           uint64_t nMeasure,
                                           uint64_t measureEvery) {
+    const std::mt19937::result_type iProb =
+        std::floor(std::pow(2.0, 32) * prob);
     std::mt19937 rng;
     std::vector<Node> nodes(GetSize(shape), 0);
     std::queue<Index<nDim>> queue;
+    constexpr uint64_t nTestingProbabilities = 3;
+    std::array<double, nTestingProbabilities> testingProbabilities = {
+        prob, prob + 0.05, prob - 0.05};
     struct ConfigurationStats {
         uint64_t nVisited;
         uint64_t nParallel;
+        std::array<double, nTestingProbabilities> probabilities;
     };
 
+    uint64_t maxNParallel = 0;
     std::unordered_map<std::string, ConfigurationStats> configurations;
     for (size_t iStep0 = 0; iStep0 < nMeasure; ++iStep0) {
         size_t cumulativeClusterSize = 0;
@@ -181,15 +202,54 @@ void TestWolfAlgorithmCorrectDistribution(Index<nDim> shape, uint64_t iProb,
         }
         auto pair =
             configurations.insert({std::string(nodes.begin(), nodes.end()),
-                                   ConfigurationStats{0, 0}});
+                                   ConfigurationStats{0, 0, {}}});
+        ConfigurationStats &stats = pair.first->second;
         if (pair.second) {
-            pair.first->second.nParallel =
-                ComputeParallelCount(shape, nodes.data());
+            stats.nParallel = ComputeParallelCount(shape, nodes.data());
+            maxNParallel = std::max(maxNParallel, stats.nParallel);
         }
-        pair.first->second.nVisited++;
+        stats.nVisited++;
+    }
+
+    std::array<double, nTestingProbabilities> totalProbabilities{};
+    std::vector<ConfigurationStats> sorted_stats;
+    for (auto &kvp : configurations) {
+        ConfigurationStats &stats = kvp.second;
+        for (uint64_t i = 0; i < nTestingProbabilities; ++i) {
+            stats.probabilities[i] =
+                std::pow(testingProbabilities[i],
+                         double(maxNParallel - stats.nParallel));
+            totalProbabilities[i] += stats.probabilities[i];
+        }
+        sorted_stats.emplace_back(stats);
+    }
+    std::sort(sorted_stats.begin(), sorted_stats.end(),
+              [](const ConfigurationStats &c1, const ConfigurationStats &c2) {
+                  return c1.nVisited > c2.nVisited;
+              });
+
+    std::array<double, nTestingProbabilities> chi_squared{};
+    for (const auto &stats : sorted_stats) {
+        for (uint64_t i = 0; i < nTestingProbabilities; ++i) {
+            const double expectedProbability =
+                stats.probabilities[i] / totalProbabilities[i];
+            const double lambda = expectedProbability * nMeasure;
+            const double pValue = PoissonPValue(stats.nVisited, lambda);
+            chi_squared[i] -= 2.0 * std::log(std::max(pValue, 1.0e-15));
+        }
+    }
+    const double dof = 2.0 * sorted_stats.size();
+    for (uint64_t i = 0; i < nTestingProbabilities; ++i) {
+        const double normal_z = (chi_squared[i] - dof) / std::sqrt(2.0 * dof);
+        if (i == 0) {
+            EXPECT_LT(std::abs(normal_z), 2.0);
+        } else {
+            EXPECT_GT(std::abs(normal_z), 3.0);
+        }
     }
 }
 
 TEST(WolffAlgorithm, CorrectDistribution) {
-    TestWolfAlgorithmCorrectDistribution(Index<3>{4, 4, 4}, 1, 1000, 1);
+    TestWolfAlgorithmCorrectDistribution(Index<3>{2, 2, 2}, 0.641978, 10000,
+                                         10);
 }

@@ -12,7 +12,7 @@ void ClearVisitedFlag(Node *node) { (*node) &= (~128); }
 void Flip(Node *node) { (*node) ^= 1; }
 
 template <size_t nDim>
-void FlipCluster(uint64_t iProb, const Index<nDim> &i0,
+void FlipCluster(std::mt19937::result_type iProb, const Index<nDim> &i0,
                  const Index<nDim> &shape, Node *nodes, size_t *clusterSize,
                  std::mt19937 *rng, std::queue<Index<nDim>> *queue) {
 
