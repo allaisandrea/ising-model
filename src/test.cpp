@@ -149,6 +149,45 @@ TEST(Poission, Pmf) {
     }
 }
 
+template <typename Iterator, typename ValueType>
+bool NextConfiguration(Iterator begin, Iterator end, ValueType min_value,
+                       ValueType max_value) {
+    Iterator it = begin;
+    while (it != end) {
+        ++(*it);
+        if (*it > max_value) {
+            *it = min_value;
+            ++it;
+        } else {
+            return true;
+        }
+    }
+    return false;
+}
+
+TEST(NextConfiguration, NextConfiguration) {
+    using Config = std::array<uint64_t, 3>;
+    // clang-format off
+    std::array<Config, 27> expected_configs = {{
+        {2, 2, 2}, {3, 2, 2}, {4, 2, 2},
+        {2, 3, 2}, {3, 3, 2}, {4, 3, 2},
+        {2, 4, 2}, {3, 4, 2}, {4, 4, 2},
+        {2, 2, 3}, {3, 2, 3}, {4, 2, 3},
+        {2, 3, 3}, {3, 3, 3}, {4, 3, 3},
+        {2, 4, 3}, {3, 4, 3}, {4, 4, 3},
+        {2, 2, 4}, {3, 2, 4}, {4, 2, 4},
+        {2, 3, 4}, {3, 3, 4}, {4, 3, 4},
+        {2, 4, 4}, {3, 4, 4}, {4, 4, 4}}};
+    // clang-format on
+
+    Config config = expected_configs[0];
+    for (size_t i = 1; i < expected_configs.size(); ++i) {
+        EXPECT_TRUE(NextConfiguration(config.begin(), config.end(), uint64_t(2),
+                                      uint64_t(4)));
+        EXPECT_EQ(config, expected_configs[i]);
+    }
+}
+
 template <size_t nDim>
 uint64_t ComputeParallelCount(const Lattice<nDim, Node> &lattice) {
     uint64_t parallelCount = 0;
@@ -166,6 +205,16 @@ uint64_t ComputeParallelCount(const Lattice<nDim, Node> &lattice) {
         }
     }
     return parallelCount;
+}
+
+template <size_t nDim>
+std::vector<uint64_t> ComputeEntropyHistogram(const Index<nDim> &shape) {
+    Lattice<nDim, Node> lattice(shape, 0);
+    std::vector<uint64_t> histogram(nDim * lattice.size(), 0);
+    do {
+        const uint64_t n_parallel = ComputeParallelCount(lattice);
+        ++histogram.at(n_parallel);
+    } while (NextConfiguration(lattice.begin(), lattice.end(), 0, 1));
 }
 
 template <size_t nDim>
