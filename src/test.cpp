@@ -149,62 +149,6 @@ TEST(Poission, Pmf) {
     }
 }
 
-TEST(Poission, SmallestOutcomeNotLessLikelyThan) {
-    std::mt19937 rng;
-    for (uint64_t i = 0; i < 32; ++i) {
-        const double lambda = std::exponential_distribution<double>(0.1)(rng);
-        const uint64_t k_max = 32 * std::ceil(lambda);
-        for (uint64_t k = 0; k < k_max; ++k) {
-            const uint64_t n =
-                poisson::SmallestOutcomeNotLessLikelyThan(k, lambda);
-            const double log_pk = poisson::LogPmf(k, lambda);
-            const double log_pn = poisson::LogPmf(n, lambda);
-            EXPECT_GE(log_pn, log_pk)
-                << "n: " << n << " k: " << k << " lambda: " << lambda;
-            if (n > 0) {
-                const double log_pn1 = poisson::LogPmf(n - 1, lambda);
-                EXPECT_LT(log_pn1, log_pk)
-                    << "n: " << n << " k: " << k << " lambda: " << lambda;
-            }
-        }
-    }
-}
-
-TEST(Poission, LargestOutcomeNotLessLikelyThan) {
-    std::mt19937 rng;
-    for (uint64_t i = 0; i < 32; ++i) {
-        const double lambda = std::exponential_distribution<double>(0.1)(rng);
-        const uint64_t k_max = 32 * std::ceil(lambda);
-        for (uint64_t k = 0; k < k_max; ++k) {
-            const uint64_t n =
-                poisson::LargestOutcomeNotLessLikelyThan(k, lambda);
-            const double log_pk = poisson::LogPmf(k, lambda);
-            const double log_pn = poisson::LogPmf(n, lambda);
-            const double log_pn1 = poisson::LogPmf(n + 1, lambda);
-            EXPECT_GE(log_pn - log_pk, -1.0e-15)
-                << "n: " << n << " k: " << k << " lambda: " << lambda;
-            EXPECT_LT(log_pn1, log_pk)
-                << "n: " << n << " k: " << k << " lambda: " << lambda;
-        }
-    }
-}
-
-TEST(Poission, CDF) {
-    std::mt19937 rng;
-    for (uint64_t i = 0; i < 4; ++i) {
-        const double lambda = std::exponential_distribution<double>(0.1)(rng);
-        const uint64_t k_max = 4 * std::ceil(lambda);
-        double sum = 0.0;
-        for (uint64_t k = 0; k < k_max; ++k) {
-            sum += std::exp(poisson::LogPmf(k, lambda));
-            const double cdf = poisson::Cdf(k, lambda);
-            EXPECT_LT(std::abs(sum - cdf), 1.0e-13)
-                << "k: " << k << " lambda: " << lambda << " sum: " << sum
-                << " cdf: " << cdf;
-        }
-    }
-}
-
 template <size_t nDim>
 uint64_t ComputeParallelCount(const Index<nDim> &shape, const Node *nodes) {
     const size_t size = GetSize(shape);
@@ -287,8 +231,7 @@ void TestWolfAlgorithmCorrectDistribution(Index<nDim> shape, double prob,
             const double expectedProbability =
                 stats.probabilities[i] / totalProbabilities[i];
             const double lambda = expectedProbability * nMeasure;
-            const double pValue =
-                poisson::PoissonPValue(stats.nVisited, lambda);
+            const double pValue = poisson::ExactTest(stats.nVisited, lambda);
             chi_squared[i] -= 2.0 * std::log(std::max(pValue, 1.0e-15));
         }
     }
