@@ -189,11 +189,9 @@ void TestWolfAlgorithmCorrectDistribution(Index<nDim> shape, double prob,
     uint64_t maxNParallel = 0;
     std::unordered_map<std::string, ConfigurationStats> configurations;
     for (size_t iStep0 = 0; iStep0 < nMeasure; ++iStep0) {
-        size_t cumulativeClusterSize = 0;
         for (size_t iStep1 = 0; iStep1 < measureEvery; ++iStep1) {
             const Index<nDim> i0 = GetRandomIndex(shape, &rng);
-            FlipCluster(iProb, i0, &lattice, &cumulativeClusterSize, &rng,
-                        &queue);
+            FlipCluster(iProb, i0, &lattice, &rng, &queue);
             ClearVisitedFlag(i0, &lattice, &queue);
         }
         auto pair =

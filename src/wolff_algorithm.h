@@ -12,9 +12,10 @@ void ClearVisitedFlag(Node *node) { (*node) &= (~128); }
 void Flip(Node *node) { (*node) ^= 1; }
 
 template <size_t nDim>
-void FlipCluster(std::mt19937::result_type iProb, const Index<nDim> &i0,
-                 Lattice<nDim, Node> *pLattice, size_t *clusterSize,
-                 std::mt19937 *rng, std::queue<Index<nDim>> *queue) {
+size_t FlipCluster(std::mt19937::result_type iProb, const Index<nDim> &i0,
+                   Lattice<nDim, Node> *pLattice, std::mt19937 *rng,
+                   std::queue<Index<nDim>> *queue) {
+    size_t clusterSize = 0;
     Lattice<nDim, Node> &lattice = *pLattice;
     queue->emplace(i0);
     MarkVisited(&lattice[i0]);
@@ -40,8 +41,9 @@ void FlipCluster(std::mt19937::result_type iProb, const Index<nDim> &i0,
 
         Flip(node0);
         queue->pop();
-        ++(*clusterSize);
+        ++clusterSize;
     }
+    return clusterSize;
 }
 
 template <size_t nDim>

@@ -211,8 +211,8 @@ template <size_t nDim> void run(const Arguments &args) {
         for (uint64_t iStep1 = 0; iStep1 < args.measureEvery && !quit.load();
              ++iStep1) {
             const auto i0 = GetRandomIndex(shape, &rng);
-            FlipCluster(args.iProb, i0, &lattice, &cumulativeClusterSize, &rng,
-                        &queue);
+            cumulativeClusterSize +=
+                FlipCluster(args.iProb, i0, &lattice, &rng, &queue);
             const auto time3 = std::chrono::high_resolution_clock::now();
             flipClusterDuration += time3 - time2;
 
