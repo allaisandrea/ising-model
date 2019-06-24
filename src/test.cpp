@@ -150,16 +150,15 @@ TEST(Poission, Pmf) {
 }
 
 template <size_t nDim>
-uint64_t ComputeParallelCount(const Index<nDim> &shape, const Node *nodes) {
-    const size_t size = GetSize(shape);
+uint64_t ComputeParallelCount(const Lattice<nDim, Node> &lattice) {
     uint64_t parallelCount = 0;
-    for (size_t si = 0; si < size; ++si) {
-        Node node = nodes[si];
-        Index<nDim> i = GetVectorIndex(si, shape);
+    for (size_t si = 0; si < lattice.size(); ++si) {
+        Node node = lattice[si];
+        Index<nDim> i = GetVectorIndex(si, lattice.shape());
         for (size_t d = 0; d < nDim; ++d) {
             const typename Index<nDim>::value_type i_d = i[d];
-            i[d] = (i_d + 1) % shape[d];
-            Node node1 = nodes[GetScalarIndex(i, shape)];
+            i[d] = (i_d + 1) % lattice.shape(d);
+            Node node1 = lattice[i];
             if (Parallel(node, node1)) {
                 ++parallelCount;
             }
@@ -176,7 +175,7 @@ void TestWolfAlgorithmCorrectDistribution(Index<nDim> shape, double prob,
     const std::mt19937::result_type iProb =
         std::floor(std::pow(2.0, 32) * prob);
     std::mt19937 rng;
-    std::vector<Node> nodes(GetSize(shape), 0);
+    Lattice<nDim, Node> lattice(shape, 0);
     std::queue<Index<nDim>> queue;
     constexpr uint64_t nTestingProbabilities = 3;
     std::array<double, nTestingProbabilities> testingProbabilities = {
@@ -193,16 +192,16 @@ void TestWolfAlgorithmCorrectDistribution(Index<nDim> shape, double prob,
         size_t cumulativeClusterSize = 0;
         for (size_t iStep1 = 0; iStep1 < measureEvery; ++iStep1) {
             const Index<nDim> i0 = GetRandomIndex(shape, &rng);
-            FlipCluster(iProb, i0, shape, nodes.data(), &cumulativeClusterSize,
-                        &rng, &queue);
-            ClearVisitedFlag(i0, shape, nodes.data(), &queue);
+            FlipCluster(iProb, i0, &lattice, &cumulativeClusterSize, &rng,
+                        &queue);
+            ClearVisitedFlag(i0, &lattice, &queue);
         }
         auto pair =
-            configurations.insert({std::string(nodes.begin(), nodes.end()),
+            configurations.insert({std::string(lattice.begin(), lattice.end()),
                                    ConfigurationStats{0, 0, {}}});
         ConfigurationStats &stats = pair.first->second;
         if (pair.second) {
-            stats.nParallel = ComputeParallelCount(shape, nodes.data());
+            stats.nParallel = ComputeParallelCount(lattice);
             maxNParallel = std::max(maxNParallel, stats.nParallel);
         }
         stats.nVisited++;

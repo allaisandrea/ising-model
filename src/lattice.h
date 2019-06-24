@@ -71,3 +71,32 @@ std::ostream &operator<<(std::ostream &os, const Index<nDim> &i) {
     }
     return os;
 }
+
+template <size_t nDim, typename Node> class Lattice {
+    Index<nDim> _shape;
+    size_t _size;
+    std::vector<Node> _nodes;
+
+  public:
+    Lattice(const Index<nDim> &shape, const Node &node)
+        : _shape(shape), _size(GetSize(_shape)), _nodes(_size, node) {}
+    const Index<nDim> &shape() const { return _shape; }
+    size_t shape(size_t d) const { return _shape[d]; }
+    size_t size() const { return _size; };
+    Node &operator[](size_t i) { return _nodes[i]; }
+    const Node &operator[](size_t i) const { return _nodes[i]; }
+    Node &operator[](const Index<nDim> &i) {
+        return _nodes[GetScalarIndex(i, _shape)];
+    }
+    const Node &operator[](const Index<nDim> &i) const {
+        return _nodes[GetScalarIndex(i, _shape)];
+    }
+    typename std::vector<Node>::iterator begin() { return _nodes.begin(); }
+    typename std::vector<Node>::const_iterator begin() const {
+        return _nodes.cbegin();
+    }
+    typename std::vector<Node>::iterator end() { return _nodes.end(); }
+    typename std::vector<Node>::const_iterator end() const {
+        return _nodes.cend();
+    }
+};

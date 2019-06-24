@@ -175,11 +175,9 @@ template <size_t nDim> void run(const Arguments &args) {
     for (size_t i = 0; i < nDim; ++i) {
         shape[i] = args.shape.at(i);
     }
-    std::vector<Node> nodes(GetSize(shape), 0);
+    Lattice<nDim, Node> lattice(shape, 0);
     std::queue<Index<nDim>> queue;
     Observables observables;
-
-    std::memset(nodes.data(), 0, nodes.size());
 
     std::array<Eigen::MatrixXf, 2> ftTables;
     for (size_t i = 0; i < 2; ++i) {
@@ -213,12 +211,12 @@ template <size_t nDim> void run(const Arguments &args) {
         for (uint64_t iStep1 = 0; iStep1 < args.measureEvery && !quit.load();
              ++iStep1) {
             const auto i0 = GetRandomIndex(shape, &rng);
-            FlipCluster(args.iProb, i0, shape, nodes.data(),
-                        &cumulativeClusterSize, &rng, &queue);
+            FlipCluster(args.iProb, i0, &lattice, &cumulativeClusterSize, &rng,
+                        &queue);
             const auto time3 = std::chrono::high_resolution_clock::now();
             flipClusterDuration += time3 - time2;
 
-            ClearVisitedFlag(i0, shape, nodes.data(), &queue);
+            ClearVisitedFlag(i0, &lattice, &queue);
             time2 = std::chrono::high_resolution_clock::now();
             clearFlagDuration += time2 - time3;
         }
@@ -226,7 +224,7 @@ template <size_t nDim> void run(const Arguments &args) {
             break;
 
         const auto time4 = std::chrono::high_resolution_clock::now();
-        Measure(shape, nodes.data(), ftTables, &observables);
+        Measure(lattice.shape(), &lattice[0], ftTables, &observables);
 
         const auto time5 = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double> step0Duration = (time5 - time0);

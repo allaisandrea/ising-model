@@ -13,21 +13,21 @@ void Flip(Node *node) { (*node) ^= 1; }
 
 template <size_t nDim>
 void FlipCluster(std::mt19937::result_type iProb, const Index<nDim> &i0,
-                 const Index<nDim> &shape, Node *nodes, size_t *clusterSize,
+                 Lattice<nDim, Node> *pLattice, size_t *clusterSize,
                  std::mt19937 *rng, std::queue<Index<nDim>> *queue) {
-
+    Lattice<nDim, Node> &lattice = *pLattice;
     queue->emplace(i0);
-    MarkVisited(nodes + GetScalarIndex(i0, shape));
+    MarkVisited(&lattice[i0]);
 
     while (!queue->empty()) {
         Index<nDim> &i = queue->front();
-        Node *node0 = nodes + GetScalarIndex(i, shape);
+        Node *node0 = &lattice[i];
         for (size_t d = 0; d < nDim; ++d) {
             const typename Index<nDim>::value_type i_d = i[d];
-            const typename Index<nDim>::value_type s_d = shape[d];
+            const typename Index<nDim>::value_type s_d = lattice.shape(d);
             for (size_t dir = 0; dir < 4; dir += 2) {
                 i[d] = (i_d + s_d + dir - 1) % s_d;
-                Node *node1 = nodes + GetScalarIndex(i, shape);
+                Node *node1 = &lattice[i];
                 const bool add = !Visited(*node1) && Parallel(*node0, *node1) &&
                                  (*rng)() > iProb;
                 if (add) {
@@ -45,20 +45,21 @@ void FlipCluster(std::mt19937::result_type iProb, const Index<nDim> &i0,
 }
 
 template <size_t nDim>
-void ClearVisitedFlag(const Index<nDim> &i0, const Index<nDim> &shape,
-                      Node *nodes, std::queue<Index<nDim>> *queue) {
+void ClearVisitedFlag(const Index<nDim> &i0, Lattice<nDim, Node> *pLattice,
+                      std::queue<Index<nDim>> *queue) {
 
+    Lattice<nDim, Node> &lattice = *pLattice;
     queue->emplace(i0);
-    ClearVisitedFlag(nodes + GetScalarIndex(i0, shape));
+    ClearVisitedFlag(&lattice[i0]);
 
     while (!queue->empty()) {
         Index<nDim> &i = queue->front();
         for (size_t d = 0; d < nDim; ++d) {
             const typename Index<nDim>::value_type i_d = i[d];
-            const typename Index<nDim>::value_type s_d = shape[d];
+            const typename Index<nDim>::value_type s_d = lattice.shape(d);
             for (size_t dir = 0; dir < 4; dir += 2) {
                 i[d] = (i_d + s_d + dir - 1) % s_d;
-                Node *node1 = nodes + GetScalarIndex(i, shape);
+                Node *node1 = &lattice[i];
                 if (Visited(*node1)) {
                     queue->emplace(i);
                     ClearVisitedFlag(node1);
