@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <stdexcept>
 
+#include <boost/math/special_functions/gamma.hpp>
+
 namespace poisson {
 
 double LogPmf(uint64_t k, double lambda) {
@@ -50,6 +52,10 @@ uint64_t LargestOutcomeNotLessLikelyThan(uint64_t k, double lambda) {
         }
     }
     return n0;
+}
+
+double Cdf(uint64_t k, double lambda) {
+    return boost::math::gamma_q(k + 1, lambda);
 }
 
 double PoissonCDF(uint64_t n, double lambda) {
