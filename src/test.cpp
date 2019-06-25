@@ -9,6 +9,7 @@
 
 #include <gtest/gtest.h>
 
+#include "chi_squared_distribution.h"
 #include "lattice.h"
 #include "observables.h"
 #include "poisson_distribution.h"
@@ -208,91 +209,122 @@ uint64_t ComputeParallelCount(const Lattice<nDim, Node> &lattice) {
 }
 
 template <size_t nDim>
+uint64_t GetMaxParallelCount(const Lattice<nDim, Node> &lattice) {
+    return nDim * lattice.size();
+}
+
+template <size_t nDim>
 std::vector<uint64_t> ComputeEntropyHistogram(const Index<nDim> &shape) {
     Lattice<nDim, Node> lattice(shape, 0);
-    std::vector<uint64_t> histogram(nDim * lattice.size(), 0);
+    std::vector<uint64_t> histogram(GetMaxParallelCount(lattice) + 1, 0);
     do {
         const uint64_t n_parallel = ComputeParallelCount(lattice);
         ++histogram.at(n_parallel);
     } while (NextConfiguration(lattice.begin(), lattice.end(), 0, 1));
+    return histogram;
 }
 
 template <size_t nDim>
-void TestWolfAlgorithmCorrectDistribution(Index<nDim> shape, double prob,
-                                          uint64_t nMeasure,
-                                          uint64_t measureEvery) {
+std::vector<uint64_t> ComputeVisitHistogram(Index<nDim> shape, double prob,
+                                            uint64_t nMeasure,
+                                            uint64_t measureEvery) {
     const std::mt19937::result_type iProb =
         std::floor(std::pow(2.0, 32) * prob);
     std::mt19937 rng;
     Lattice<nDim, Node> lattice(shape, 0);
     std::queue<Index<nDim>> queue;
-    constexpr uint64_t nTestingProbabilities = 3;
-    std::array<double, nTestingProbabilities> testingProbabilities = {
-        prob, prob + 0.05, prob - 0.05};
-    struct ConfigurationStats {
-        uint64_t nVisited;
-        uint64_t nParallel;
-        std::array<double, nTestingProbabilities> probabilities;
-    };
+    const uint64_t max_n_parallel = GetMaxParallelCount(lattice);
+    std::vector<uint64_t> histogram(max_n_parallel + 1, 0);
 
-    uint64_t maxNParallel = 0;
-    std::unordered_map<std::string, ConfigurationStats> configurations;
     for (size_t iStep0 = 0; iStep0 < nMeasure; ++iStep0) {
         for (size_t iStep1 = 0; iStep1 < measureEvery; ++iStep1) {
             const Index<nDim> i0 = GetRandomIndex(shape, &rng);
             FlipCluster(iProb, i0, &lattice, &rng, &queue);
             ClearVisitedFlag(i0, &lattice, &queue);
         }
-        auto pair =
-            configurations.insert({std::string(lattice.begin(), lattice.end()),
-                                   ConfigurationStats{0, 0, {}}});
-        ConfigurationStats &stats = pair.first->second;
-        if (pair.second) {
-            stats.nParallel = ComputeParallelCount(lattice);
-            maxNParallel = std::max(maxNParallel, stats.nParallel);
-        }
-        stats.nVisited++;
+        const uint64_t n_parallel = ComputeParallelCount(lattice);
+        ++histogram.at(n_parallel);
+    }
+    return histogram;
+}
+
+std::vector<double> ComputeExpectedVisitingProbability(
+    double prob, const std::vector<uint64_t> &entropy_histogram) {
+    const uint64_t max_n_parallel = entropy_histogram.size() - 1;
+    std::vector<double> expected_probability(entropy_histogram.size());
+    for (size_t n_parallel = 0; n_parallel <= max_n_parallel; ++n_parallel) {
+        expected_probability[n_parallel] =
+            entropy_histogram[n_parallel] *
+            std::pow(prob, double(max_n_parallel - n_parallel));
     }
 
-    std::array<double, nTestingProbabilities> totalProbabilities{};
-    std::vector<ConfigurationStats> sorted_stats;
-    for (auto &kvp : configurations) {
-        ConfigurationStats &stats = kvp.second;
-        for (uint64_t i = 0; i < nTestingProbabilities; ++i) {
-            stats.probabilities[i] =
-                std::pow(testingProbabilities[i],
-                         double(maxNParallel - stats.nParallel));
-            totalProbabilities[i] += stats.probabilities[i];
-        }
-        sorted_stats.emplace_back(stats);
+    double total_probability = std::accumulate(expected_probability.begin(),
+                                               expected_probability.end(), 0.0);
+    for (double &p : expected_probability) {
+        p /= total_probability;
     }
-    std::sort(sorted_stats.begin(), sorted_stats.end(),
-              [](const ConfigurationStats &c1, const ConfigurationStats &c2) {
-                  return c1.nVisited > c2.nVisited;
-              });
+    return expected_probability;
+}
 
-    std::array<double, nTestingProbabilities> chi_squared{};
-    for (const auto &stats : sorted_stats) {
-        for (uint64_t i = 0; i < nTestingProbabilities; ++i) {
-            const double expectedProbability =
-                stats.probabilities[i] / totalProbabilities[i];
-            const double lambda = expectedProbability * nMeasure;
-            const double pValue = poisson::ExactTest(stats.nVisited, lambda);
-            chi_squared[i] -= 2.0 * std::log(std::max(pValue, 1.0e-15));
-        }
+double ComputeDistributionPValue(double prob,
+                                 const std::vector<uint64_t> &entropy_histogram,
+                                 const std::vector<uint64_t> &visit_histogram) {
+    if (visit_histogram.size() != entropy_histogram.size()) {
+        throw std::invalid_argument("incorrect entropy_histogram.size()");
     }
-    const double dof = 2.0 * sorted_stats.size();
-    for (uint64_t i = 0; i < nTestingProbabilities; ++i) {
-        const double normal_z = (chi_squared[i] - dof) / std::sqrt(2.0 * dof);
-        if (i == 0) {
-            EXPECT_LT(std::abs(normal_z), 2.0);
-        } else {
-            EXPECT_GT(std::abs(normal_z), 3.0);
-        }
+    if (visit_histogram.empty()) {
+        throw std::invalid_argument("empty histogram");
+    }
+    const uint64_t max_n_parallel = entropy_histogram.size() - 1;
+    const uint64_t n_measure =
+        std::accumulate(visit_histogram.begin(), visit_histogram.end(), 0);
+    double chi_squared = 0;
+    const std::vector<double> expected_probability =
+        ComputeExpectedVisitingProbability(prob, entropy_histogram);
+
+    // auto cout_flags = std::cout.flags();
+    // std::cout << std::fixed << std::setprecision(3);
+    // std::cout << std::setw(5) << "entr" << std::setw(8) << "prob"
+    //           << std::setw(12) << "lambda" << std::setw(5) << "visit"
+    //           << std::setw(10) << "pValue" << std::endl;
+    for (size_t n_parallel = 0; n_parallel <= max_n_parallel; ++n_parallel) {
+        const double lambda = expected_probability[n_parallel] * n_measure;
+        const double pValue =
+            poisson::ExactTest(visit_histogram[n_parallel], lambda);
+        chi_squared -= 2.0 * std::log(std::max(pValue, 1.0e-15));
+        //    std::cout << std::setw(5) << entropy_histogram[n_parallel]
+        //              << std::setw(8) << expected_probability[n_parallel]
+        //              << std::setw(12) << lambda << std::setw(5)
+        //              << visit_histogram[n_parallel] << std::setw(10) <<
+        //              pValue
+        //              << std::endl;
+    }
+    // std::cout.flags(cout_flags);
+    return 1.0 - chi_squared::Cdf(chi_squared, 2.0 * (max_n_parallel + 1));
+}
+
+template <size_t nDim>
+void TestWolffAlgorithmCorrectDistribution(
+    const Index<nDim> &shape, double true_prob,
+    const std::vector<double> &counterfactual_probs, uint64_t n_measure,
+    uint64_t measure_every) {
+    const std::vector<uint64_t> entropy_hist = ComputeEntropyHistogram(shape);
+    const std::vector<uint64_t> visit_hist =
+        ComputeVisitHistogram(shape, true_prob, n_measure, measure_every);
+    EXPECT_GT(ComputeDistributionPValue(true_prob, entropy_hist, visit_hist),
+              0.05);
+    for (const double prob : counterfactual_probs) {
+        EXPECT_LT(ComputeDistributionPValue(prob, entropy_hist, visit_hist),
+                  0.01);
     }
 }
 
-TEST(WolffAlgorithm, CorrectDistribution) {
-    TestWolfAlgorithmCorrectDistribution(Index<3>{2, 2, 2}, 0.641978, 10000,
-                                         10);
+TEST(WolffAlgorithm, CorrectDistribution3D) {
+    TestWolffAlgorithmCorrectDistribution<3>({2, 2, 2}, 0.642, {0.63, 0.65},
+                                             1 << 14, 8);
+}
+
+TEST(WolffAlgorithm, CorrectDistribution2D) {
+    TestWolffAlgorithmCorrectDistribution<2>({2, 3}, 0.413, {0.40, 0.42},
+                                             1 << 14, 8);
 }
