@@ -7,15 +7,35 @@
 #include <thread>
 #include <unordered_map>
 
+#include <boost/math/special_functions/gamma.hpp>
 #include <gtest/gtest.h>
 
-#include "chi_squared_distribution.h"
 #include "lattice.h"
 #include "observables.h"
-#include "poisson_distribution.h"
 #include "wolff_algorithm.h"
 
 std::mt19937 rng;
+
+double ChiSquaredCdf(double x, double dof) {
+    return boost::math::gamma_p(0.5 * dof, x);
+}
+
+double PoissonLogPmf(uint64_t k, double lambda) {
+    return k * std::log(lambda) - std::lgamma(k + 1) - lambda;
+}
+
+double PoissonExactTest(uint64_t n, double lambda) {
+    const double log_pn = PoissonLogPmf(n, lambda);
+    double result = 0.0;
+    double log_pk = 0.0;
+    for (uint64_t k = 0; k <= lambda + 3 || log_pk > log_pn; ++k) {
+        log_pk = PoissonLogPmf(k, lambda);
+        if (log_pk > log_pn) {
+            result += std::exp(log_pk);
+        }
+    }
+    return 1.0 - result;
+}
 
 template <size_t nDim>
 Index<nDim> GetRandomShape(typename Index<nDim>::value_type min,
@@ -144,7 +164,7 @@ TEST(Poission, Pmf) {
     for (double lambda : {0.5, 1.0, 1.5, 2.0, 2.5}) {
         double sum = 0.0;
         for (uint64_t k = 0; k < 30 * lambda; ++k) {
-            sum += std::exp(poisson::LogPmf(k, lambda));
+            sum += std::exp(PoissonLogPmf(k, lambda));
         }
         EXPECT_LT(1.0 - sum, 1.0e-7) << "lambda: " << lambda;
     }
@@ -290,7 +310,7 @@ double ComputeDistributionPValue(double prob,
     for (size_t n_parallel = 0; n_parallel <= max_n_parallel; ++n_parallel) {
         const double lambda = expected_probability[n_parallel] * n_measure;
         const double pValue =
-            poisson::ExactTest(visit_histogram[n_parallel], lambda);
+            PoissonExactTest(visit_histogram[n_parallel], lambda);
         chi_squared -= 2.0 * std::log(std::max(pValue, 1.0e-15));
         //    std::cout << std::setw(5) << entropy_histogram[n_parallel]
         //              << std::setw(8) << expected_probability[n_parallel]
@@ -300,7 +320,7 @@ double ComputeDistributionPValue(double prob,
         //              << std::endl;
     }
     // std::cout.flags(cout_flags);
-    return 1.0 - chi_squared::Cdf(chi_squared, 2.0 * (max_n_parallel + 1));
+    return 1.0 - ChiSquaredCdf(chi_squared, 2.0 * (max_n_parallel + 1));
 }
 
 template <size_t nDim>

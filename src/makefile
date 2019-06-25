@@ -9,5 +9,5 @@ all: main test
 main:  makefile main.cpp $(HEADERS)
 	$(CXX) $(COPTS) main.cpp -o $(BUILD_DIR)/main -lboost_program_options
 
-test: makefile test.cpp $(HEADERS) poisson_distribution.h
+test: makefile test.cpp $(HEADERS)
 	$(CXX) $(COPTS)  test.cpp -o $(BUILD_DIR)/test -lgtest -lgtest_main 
