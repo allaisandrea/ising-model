@@ -49,12 +49,12 @@ Index<nDim> GetRandomShape(typename Index<nDim>::value_type min,
 
 template <size_t nDim> void TestIndexConversion() {
     std::mt19937 rng;
-    std::uniform_int_distribution<size_t> rand_int;
     for (size_t it = 0; it < 10; ++it) {
         const auto shape = GetRandomShape<nDim>(2, 6, &rng);
         const size_t size = GetSize(shape);
+        std::uniform_int_distribution<size_t> rand_int(0, size - 1);
         for (size_t it2 = 0; it2 < 10; ++it2) {
-            const size_t i = rand_int(rng) % size;
+            const size_t i = rand_int(rng);
             const Index<nDim> j = GetVectorIndex(i, shape);
             const size_t k = GetScalarIndex(j, shape);
             EXPECT_EQ(i, k);
