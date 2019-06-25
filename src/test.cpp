@@ -14,8 +14,6 @@
 #include "observables.h"
 #include "wolff_algorithm.h"
 
-std::mt19937 rng;
-
 double ChiSquaredCdf(double x, double dof) {
     return boost::math::gamma_p(0.5 * dof, x);
 }
@@ -39,19 +37,21 @@ double PoissonExactTest(uint64_t n, double lambda) {
 
 template <size_t nDim>
 Index<nDim> GetRandomShape(typename Index<nDim>::value_type min,
-                           typename Index<nDim>::value_type max) {
+                           typename Index<nDim>::value_type max,
+                           std::mt19937 *rng) {
     std::uniform_int_distribution<size_t> rand_int(min, max);
     Index<nDim> shape;
     for (size_t d = 0; d < nDim; ++d) {
-        shape[d] = rand_int(rng);
+        shape[d] = rand_int(*rng);
     }
     return shape;
 }
 
 template <size_t nDim> void TestIndexConversion() {
+    std::mt19937 rng;
     std::uniform_int_distribution<size_t> rand_int;
     for (size_t it = 0; it < 10; ++it) {
-        const auto shape = GetRandomShape<nDim>(2, 6);
+        const auto shape = GetRandomShape<nDim>(2, 6, &rng);
         const size_t size = GetSize(shape);
         for (size_t it2 = 0; it2 < 10; ++it2) {
             const size_t i = rand_int(rng) % size;
@@ -69,8 +69,9 @@ TEST(Lattice, TestIndexConversion) {
 }
 
 template <size_t nDim> void TestGetFirstNeighbors() {
+    std::mt19937 rng;
     for (size_t it1 = 0; it1 < 10; ++it1) {
-        const auto shape = GetRandomShape<nDim>(2, 6);
+        const auto shape = GetRandomShape<nDim>(2, 6, &rng);
         const size_t size = GetSize(shape);
         for (size_t si = 0; si < size; ++si) {
             const Index<nDim> i = GetVectorIndex(si, shape);
@@ -123,9 +124,10 @@ TEST(Observables, MakeFourierTable) {
 }
 
 TEST(Observables, Measure) {
+    std::mt19937 rng;
     Observables obs;
     for (size_t i = 0; i < 5; ++i) {
-        const auto shape = GetRandomShape<3>(3, 8);
+        const auto shape = GetRandomShape<3>(3, 8, &rng);
         const size_t size = GetSize(shape);
         std::vector<Node> nodes(size, 0);
 
