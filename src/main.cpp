@@ -10,7 +10,7 @@
 
 #include <boost/program_options.hpp>
 
-#include "Node.h"
+#include "UpDownSpin.h"
 #include "lattice.h"
 #include "observables.h"
 #include "wolff_algorithm.h"
@@ -175,7 +175,7 @@ template <size_t nDim> void run(const Arguments &args) {
     for (size_t i = 0; i < nDim; ++i) {
         shape[i] = args.shape.at(i);
     }
-    Lattice<nDim, Node> lattice(shape, 0);
+    Lattice<nDim, UpDownSpin> lattice(shape, UpDownSpin{0});
     std::queue<Index<nDim>> queue;
     Observables observables;
 
@@ -224,7 +224,7 @@ template <size_t nDim> void run(const Arguments &args) {
             break;
 
         const auto time4 = std::chrono::high_resolution_clock::now();
-        Measure(lattice.shape(), &lattice[0], ftTables, &observables);
+        Measure(lattice, ftTables, &observables);
 
         const auto time5 = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double> step0Duration = (time5 - time0);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Node.h"
+#include "UpDownSpin.h"
 #include <Eigen/Core>
 #include <vector>
 
@@ -16,36 +16,35 @@ struct Observables {
 };
 
 template <size_t nDim>
-void Measure(const Index<nDim> &shape, const Node *nodes,
+void Measure(const Lattice<nDim, UpDownSpin> lattice,
              const std::array<Eigen::MatrixXf, 2> fourierTables,
              Observables *obs) {
 
-    const size_t size = GetSize(shape);
-    const size_t sliceSize = shape[0] * shape[1];
-    const size_t nSlices = size / sliceSize;
+    const size_t sliceSize = lattice.shape(0) * lattice.shape(1);
+    const size_t nSlices = lattice.size() / sliceSize;
 
     thread_local Eigen::Matrix<uint_fast32_t, Eigen::Dynamic, Eigen::Dynamic>
         slice2dSum;
     thread_local Eigen::MatrixXf slice2dMagnetization;
     thread_local Eigen::MatrixXf partialFT;
 
-    slice2dSum.resize(shape[0], shape[1]);
+    slice2dSum.resize(lattice.shape(0), lattice.shape(1));
     slice2dSum.setZero();
     uint_fast32_t *slice2dSumData = slice2dSum.data();
     obs->upCount = 0;
     obs->parallelCount = 0;
-    for (size_t si = 0; si < size; ++si) {
-        Node node = nodes[si];
-        obs->upCount += node;
+    for (size_t si = 0; si < lattice.size(); ++si) {
+        UpDownSpin spin = lattice[si];
+        obs->upCount += spin.value;
         const size_t j = si % sliceSize;
-        slice2dSumData[j] += node;
+        slice2dSumData[j] += spin.value;
 
-        Index<nDim> i = GetVectorIndex(si, shape);
+        Index<nDim> i = GetVectorIndex(si, lattice.shape());
         for (size_t d = 0; d < nDim; ++d) {
             const typename Index<nDim>::value_type i_d = i[d];
-            i[d] = (i_d + 1) % shape[d];
-            Node node1 = nodes[GetScalarIndex(i, shape)];
-            if (Parallel(node, node1)) {
+            i[d] = (i_d + 1) % lattice.shape(d);
+            UpDownSpin spin1 = lattice[i];
+            if (Parallel(spin, spin1)) {
                 ++obs->parallelCount;
             }
             i[d] = i_d;

@@ -126,22 +126,22 @@ TEST(Observables, MakeFourierTable) {
 TEST(Observables, Measure) {
     std::mt19937 rng;
     Observables obs;
+    constexpr size_t nDim = 3;
     for (size_t i = 0; i < 5; ++i) {
-        const auto shape = GetRandomShape<3>(3, 8, &rng);
-        const size_t size = GetSize(shape);
-        std::vector<Node> nodes(size, 0);
+        Lattice<nDim, UpDownSpin> lattice(GetRandomShape<nDim>(3, 8, &rng),
+                                          UpDownSpin{0});
 
-        std::map<Index<2>, Node, IndexLess<2>> indexMap;
+        std::map<Index<2>, UpDownSpin, IndexLess<2>> indexMap;
 
         size_t nFlipped = 0;
-        for (size_t it = 0; it < size / 2; ++it) {
-            const Index<3> i = GetRandomIndex<3>(shape, &rng);
-            const size_t si = GetScalarIndex(i, shape);
-            if (nodes[si] == 0) {
-                nodes[si] = 1;
+        for (size_t it = 0; it < lattice.size() / 2; ++it) {
+            const Index<nDim> i = GetRandomIndex<nDim>(lattice.shape(), &rng);
+            const size_t si = GetScalarIndex(i, lattice.shape());
+            if (lattice[si].value == 0) {
+                lattice[si].value = 1;
                 Index<2> i2 = {i[0], i[1]};
                 auto pair = indexMap.emplace(i2, 0);
-                ++pair.first->second;
+                ++pair.first->second.value;
                 ++nFlipped;
             }
         }
@@ -150,13 +150,13 @@ TEST(Observables, Measure) {
         std::iota(waveNumbers.begin(), waveNumbers.end(), 1);
         std::array<Eigen::MatrixXf, 2> ftTables;
         for (size_t i = 0; i < 2; ++i) {
-            MakeFourierTable(shape[i], waveNumbers, &ftTables[i]);
+            MakeFourierTable(lattice.shape(i), waveNumbers, &ftTables[i]);
         }
 
-        Measure(shape, nodes.data(), ftTables, &obs);
+        Measure(lattice, ftTables, &obs);
 
         EXPECT_LT(std::abs(int64_t(nFlipped) - int64_t(obs.upCount)), 1.0e-5);
-        EXPECT_LT(std::abs(2.0 * nFlipped / size - 1.0 -
+        EXPECT_LT(std::abs(2.0 * nFlipped / lattice.size() - 1.0 -
                            obs.fourierTransform2d(0, 0)),
                   1.0e-5);
     }
@@ -177,9 +177,9 @@ bool NextConfiguration(Iterator begin, Iterator end, ValueType min_value,
                        ValueType max_value) {
     Iterator it = begin;
     while (it != end) {
-        ++(*it);
-        if (*it > max_value) {
-            *it = min_value;
+        ++(it->value);
+        if (it->value > max_value) {
+            it->value = min_value;
             ++it;
         } else {
             return true;
@@ -189,7 +189,7 @@ bool NextConfiguration(Iterator begin, Iterator end, ValueType min_value,
 }
 
 TEST(NextConfiguration, NextConfiguration) {
-    using Config = std::array<uint64_t, 3>;
+    using Config = std::array<UpDownSpin, 3>;
     // clang-format off
     std::array<Config, 27> expected_configs = {{
         {2, 2, 2}, {3, 2, 2}, {4, 2, 2},
@@ -212,16 +212,16 @@ TEST(NextConfiguration, NextConfiguration) {
 }
 
 template <size_t nDim>
-uint64_t ComputeParallelCount(const Lattice<nDim, Node> &lattice) {
+uint64_t ComputeParallelCount(const Lattice<nDim, UpDownSpin> &lattice) {
     uint64_t parallelCount = 0;
     for (size_t si = 0; si < lattice.size(); ++si) {
-        Node node = lattice[si];
+        UpDownSpin spin = lattice[si];
         Index<nDim> i = GetVectorIndex(si, lattice.shape());
         for (size_t d = 0; d < nDim; ++d) {
             const typename Index<nDim>::value_type i_d = i[d];
             i[d] = (i_d + 1) % lattice.shape(d);
-            Node node1 = lattice[i];
-            if (Parallel(node, node1)) {
+            UpDownSpin spin1 = lattice[i];
+            if (Parallel(spin, spin1)) {
                 ++parallelCount;
             }
             i[d] = i_d;
@@ -231,13 +231,13 @@ uint64_t ComputeParallelCount(const Lattice<nDim, Node> &lattice) {
 }
 
 template <size_t nDim>
-uint64_t GetMaxParallelCount(const Lattice<nDim, Node> &lattice) {
+uint64_t GetMaxParallelCount(const Lattice<nDim, UpDownSpin> &lattice) {
     return nDim * lattice.size();
 }
 
 template <size_t nDim>
 std::vector<uint64_t> ComputeEntropyHistogram(const Index<nDim> &shape) {
-    Lattice<nDim, Node> lattice(shape, 0);
+    Lattice<nDim, UpDownSpin> lattice(shape, 0);
     std::vector<uint64_t> histogram(GetMaxParallelCount(lattice) + 1, 0);
     do {
         const uint64_t n_parallel = ComputeParallelCount(lattice);
@@ -253,7 +253,7 @@ std::vector<uint64_t> ComputeVisitHistogram(Index<nDim> shape, double prob,
     const std::mt19937::result_type iProb =
         std::floor(std::pow(2.0, 32) * prob);
     std::mt19937 rng;
-    Lattice<nDim, Node> lattice(shape, 0);
+    Lattice<nDim, UpDownSpin> lattice(shape, 0);
     std::queue<Index<nDim>> queue;
     const uint64_t max_n_parallel = GetMaxParallelCount(lattice);
     std::vector<uint64_t> histogram(max_n_parallel + 1, 0);
