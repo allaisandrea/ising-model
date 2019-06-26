@@ -136,7 +136,7 @@ TEST(Observables, Measure) {
         size_t nFlipped = 0;
         for (size_t it = 0; it < lattice.size() / 2; ++it) {
             const Index<nDim> i = GetRandomIndex<nDim>(lattice.shape(), &rng);
-            const size_t si = GetScalarIndex(i, lattice.shape());
+            const size_t si = lattice.getScalarIndex(i);
             if (lattice[si].value == 0) {
                 lattice[si].value = 1;
                 Index<2> i2 = {i[0], i[1]};
@@ -216,7 +216,7 @@ uint64_t ComputeParallelCount(const Lattice<nDim, UpDownSpin> &lattice) {
     uint64_t parallelCount = 0;
     for (size_t si = 0; si < lattice.size(); ++si) {
         UpDownSpin spin = lattice[si];
-        Index<nDim> i = GetVectorIndex(si, lattice.shape());
+        Index<nDim> i = lattice.getVectorIndex(si);
         for (size_t d = 0; d < nDim; ++d) {
             const typename Index<nDim>::value_type i_d = i[d];
             i[d] = (i_d + 1) % lattice.shape(d);

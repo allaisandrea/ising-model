@@ -91,6 +91,12 @@ template <size_t nDim, typename Node> class Lattice {
     const Node &operator[](const Index<nDim> &i) const {
         return _nodes[GetScalarIndex(i, _shape)];
     }
+    Index<nDim> getVectorIndex(size_t i) const {
+        return GetVectorIndex(i, _shape);
+    }
+    size_t getScalarIndex(const Index<nDim> &i) const {
+        return GetScalarIndex(i, _shape);
+    }
     typename std::vector<Node>::iterator begin() { return _nodes.begin(); }
     typename std::vector<Node>::const_iterator begin() const {
         return _nodes.cbegin();

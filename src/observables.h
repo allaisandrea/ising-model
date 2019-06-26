@@ -39,7 +39,7 @@ void Measure(const Lattice<nDim, UpDownSpin> lattice,
         const size_t j = si % sliceSize;
         slice2dSumData[j] += spin.value;
 
-        Index<nDim> i = GetVectorIndex(si, lattice.shape());
+        Index<nDim> i = lattice.getVectorIndex(si);
         for (size_t d = 0; d < nDim; ++d) {
             const typename Index<nDim>::value_type i_d = i[d];
             i[d] = (i_d + 1) % lattice.shape(d);
