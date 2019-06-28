@@ -10,6 +10,7 @@
 #include <boost/math/special_functions/gamma.hpp>
 #include <gtest/gtest.h>
 
+#include "Int8Spin.h"
 #include "lattice.h"
 #include "observables.h"
 #include "wolff_algorithm.h"
@@ -349,4 +350,20 @@ TEST(WolffAlgorithm, CorrectDistribution3D) {
 TEST(WolffAlgorithm, CorrectDistribution2D) {
     TestWolffAlgorithmCorrectDistribution<2>({2, 3}, 0.413, {0.40, 0.42},
                                              1 << 14, 8);
+}
+
+TEST(Int8Spin, VisitedFlag) {
+    for (Int8Spin s0(-64); s0.value <= 63; ++s0.value) {
+        Int8Spin s1 = s0;
+        EXPECT_FALSE(Visited(s1)) << "s1: " << std::bitset<8>(s1.value)
+                                  << " s0: " << std::bitset<8>(s0.value);
+        MarkVisited(&s1);
+        EXPECT_TRUE(Visited(s1)) << "s1: " << std::bitset<8>(s1.value)
+                                 << " s0: " << std::bitset<8>(s0.value);
+        ClearVisitedFlag(&s1);
+        EXPECT_FALSE(Visited(s1)) << "s1: " << std::bitset<8>(s1.value)
+                                  << " s0: " << std::bitset<8>(s0.value);
+        EXPECT_EQ(s0, s1) << "s1: " << std::bitset<8>(s1.value)
+                          << " s0: " << std::bitset<8>(s0.value);
+    }
 }
