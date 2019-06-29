@@ -368,24 +368,31 @@ TEST(UpDownHoleSpin, VisitedFlag) {
     }
 }
 
+void TestMaskedEqual(UpDownHoleSpin sd, UpDownHoleSpin sh, UpDownHoleSpin su) {
+    EXPECT_TRUE(MaskedEqual(sd, sd));
+    EXPECT_TRUE(MaskedEqual(sh, sh));
+    EXPECT_TRUE(MaskedEqual(su, su));
+    EXPECT_FALSE(MaskedEqual(sd, sh));
+    EXPECT_FALSE(MaskedEqual(sd, su));
+    EXPECT_FALSE(MaskedEqual(sh, sd));
+    EXPECT_FALSE(MaskedEqual(sh, su));
+    EXPECT_FALSE(MaskedEqual(su, sd));
+    EXPECT_FALSE(MaskedEqual(su, sh));
+}
+
 TEST(UpDownHoleSpin, MaskedEqual) {
     UpDownHoleSpin sd = UpDownHoleSpin::Down();
     UpDownHoleSpin sh = UpDownHoleSpin::Hole();
     UpDownHoleSpin su = UpDownHoleSpin::Up();
-    for (uint64_t i = 0; i < 2; ++i) {
-        EXPECT_EQ(sd, sd);
-        EXPECT_EQ(sh, sh);
-        EXPECT_EQ(su, su);
-        EXPECT_NE(sd, sh);
-        EXPECT_NE(sd, su);
-        EXPECT_NE(sh, sd);
-        EXPECT_NE(sh, su);
-        EXPECT_NE(su, sd);
-        EXPECT_NE(su, sh);
-        MarkVisited(&sd);
-        MarkVisited(&sh);
-        MarkVisited(&su);
-    }
+    TestMaskedEqual(sd, sh, su);
+    MarkVisited(&sd);
+    TestMaskedEqual(sd, sh, su);
+    MarkVisited(&sd);
+    MarkVisited(&sh);
+    TestMaskedEqual(sd, sh, su);
+    MarkVisited(&sh);
+    MarkVisited(&su);
+    TestMaskedEqual(sd, sh, su);
 }
 
 TEST(UpDownHoleSpin, Flip) {
