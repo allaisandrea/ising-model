@@ -10,7 +10,7 @@
 #include <boost/math/special_functions/gamma.hpp>
 #include <gtest/gtest.h>
 
-#include "Int8Spin.h"
+#include "UpDownHoleSpin.h"
 #include "lattice.h"
 #include "observables.h"
 #include "wolff_algorithm.h"
@@ -352,9 +352,9 @@ TEST(WolffAlgorithm, CorrectDistribution2D) {
                                              1 << 14, 8);
 }
 
-TEST(Int8Spin, VisitedFlag) {
-    for (Int8Spin s0(-64); s0.value <= 63; ++s0.value) {
-        Int8Spin s1 = s0;
+TEST(UpDownHoleSpin, VisitedFlag) {
+    for (UpDownHoleSpin s0(0); s0.value < 3; ++s0.value) {
+        UpDownHoleSpin s1 = s0;
         EXPECT_FALSE(Visited(s1)) << "s1: " << std::bitset<8>(s1.value)
                                   << " s0: " << std::bitset<8>(s0.value);
         MarkVisited(&s1);
@@ -366,4 +366,44 @@ TEST(Int8Spin, VisitedFlag) {
         EXPECT_EQ(s0, s1) << "s1: " << std::bitset<8>(s1.value)
                           << " s0: " << std::bitset<8>(s0.value);
     }
+}
+
+TEST(UpDownHoleSpin, Parallel) {
+    UpDownHoleSpin sd = UpDownHoleSpin::Down();
+    UpDownHoleSpin sh = UpDownHoleSpin::Hole();
+    UpDownHoleSpin su = UpDownHoleSpin::Up();
+    for (uint64_t i = 0; i < 2; ++i) {
+        EXPECT_EQ(sd, sd);
+        EXPECT_EQ(sh, sh);
+        EXPECT_EQ(su, su);
+        EXPECT_NE(sd, sh);
+        EXPECT_NE(sd, su);
+        EXPECT_NE(sh, sd);
+        EXPECT_NE(sh, su);
+        EXPECT_NE(su, sd);
+        EXPECT_NE(su, sh);
+        MarkVisited(&sd);
+        MarkVisited(&sh);
+        MarkVisited(&su);
+    }
+}
+
+TEST(UpDownHoleSpin, Flip) {
+    UpDownHoleSpin s = UpDownHoleSpin::Down();
+    Flip(&s);
+    EXPECT_EQ(s, UpDownHoleSpin::Up());
+    Flip(&s);
+    EXPECT_EQ(s, UpDownHoleSpin::Down());
+}
+
+TEST(UpDownHoleSpin, Increment) {
+    UpDownHoleSpin s = UpDownHoleSpin::Down();
+    ++s.value;
+    EXPECT_EQ(s, UpDownHoleSpin::Hole());
+    ++s.value;
+    EXPECT_EQ(s, UpDownHoleSpin::Up());
+    --s.value;
+    EXPECT_EQ(s, UpDownHoleSpin::Hole());
+    --s.value;
+    EXPECT_EQ(s, UpDownHoleSpin::Down());
 }
