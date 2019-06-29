@@ -10,7 +10,7 @@ struct UpDownSpin {
 bool operator==(UpDownSpin s1, UpDownSpin s2) { return s1.value == s2.value; };
 
 bool MaskedEqual(UpDownSpin s1, UpDownSpin s2) {
-    return ((s1.value ^ s2.value) & 1) == 0;
+    return (s1.value & 1) == (s2.value & 1);
 }
 
 bool Visited(UpDownSpin s) { return s.value & 128; }
