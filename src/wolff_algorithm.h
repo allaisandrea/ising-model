@@ -20,7 +20,8 @@ size_t FlipCluster(std::mt19937::result_type iProb, const Index<nDim> &i0,
             for (size_t dir = 0; dir < 4; dir += 2) {
                 i[d] = (i_d + s_d + dir - 1) % s_d;
                 Spin *spin1 = &lattice[i];
-                const bool add = !Visited(*spin1) && Parallel(*spin0, *spin1) &&
+                const bool add = !Visited(*spin1) &&
+                                 MaskedEqual(*spin0, *spin1) &&
                                  (*rng)() > iProb;
                 if (add) {
                     queue->emplace(i);

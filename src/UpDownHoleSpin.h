@@ -17,7 +17,7 @@ bool operator!=(UpDownHoleSpin s1, UpDownHoleSpin s2) {
     return s1.value != s2.value;
 };
 
-bool Parallel(UpDownHoleSpin s1, UpDownHoleSpin s2) {
+bool MaskedEqual(UpDownHoleSpin s1, UpDownHoleSpin s2) {
     return (s1.value & 3) == (s2.value & 3);
 }
 

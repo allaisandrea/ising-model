@@ -44,7 +44,7 @@ void Measure(const Lattice<nDim, UpDownSpin> lattice,
             const typename Index<nDim>::value_type i_d = i[d];
             i[d] = (i_d + 1) % lattice.shape(d);
             UpDownSpin spin1 = lattice[i];
-            if (Parallel(spin, spin1)) {
+            if (MaskedEqual(spin, spin1)) {
                 ++obs->parallelCount;
             }
             i[d] = i_d;
