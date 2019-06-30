@@ -3,9 +3,11 @@
 #include <cstdint>
 
 struct UdSpin {
-    UdSpin(uint8_t value) : value(value) {}
     uint8_t value;
 };
+
+UdSpin UdSpinDown() { return {0}; };
+UdSpin UdSpinUp() { return {1}; };
 
 bool operator==(UdSpin s1, UdSpin s2) { return s1.value == s2.value; };
 

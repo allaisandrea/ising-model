@@ -130,7 +130,7 @@ TEST(Observables, Measure) {
     constexpr size_t nDim = 3;
     for (size_t i = 0; i < 5; ++i) {
         Lattice<nDim, UdSpin> lattice(GetRandomShape<nDim>(3, 8, &rng),
-                                      UdSpin{0});
+                                      UdSpinDown());
 
         std::map<Index<2>, UdSpin, IndexLess<2>> indexMap;
 
@@ -141,8 +141,8 @@ TEST(Observables, Measure) {
             if (lattice[si].value == 0) {
                 lattice[si].value = 1;
                 Index<2> i2 = {i[0], i[1]};
-                auto pair = indexMap.emplace(i2, 0);
-                ++pair.first->second.value;
+                auto pair = indexMap.emplace(i2, UdSpinDown());
+                Flip(&pair.first->second);
                 ++nFlipped;
             }
         }
@@ -189,8 +189,17 @@ bool NextConfiguration(Iterator begin, Iterator end, ValueType min_value,
     return false;
 }
 
+struct ConfigurationItem {
+    uint64_t value;
+    ConfigurationItem(uint64_t value) : value(value) {}
+};
+
+bool operator==(const ConfigurationItem &i1, const ConfigurationItem &i2) {
+    return i1.value == i2.value;
+}
+
 TEST(NextConfiguration, NextConfiguration) {
-    using Config = std::array<UdSpin, 3>;
+    using Config = std::array<ConfigurationItem, 3>;
     // clang-format off
     std::array<Config, 27> expected_configs = {{
         {2, 2, 2}, {3, 2, 2}, {4, 2, 2},
@@ -238,7 +247,7 @@ uint64_t GetMaxParallelCount(const Lattice<nDim, UdSpin> &lattice) {
 
 template <size_t nDim>
 std::vector<uint64_t> ComputeEntropyHistogram(const Index<nDim> &shape) {
-    Lattice<nDim, UdSpin> lattice(shape, 0);
+    Lattice<nDim, UdSpin> lattice(shape, UdSpinDown());
     std::vector<uint64_t> histogram(GetMaxParallelCount(lattice) + 1, 0);
     do {
         const uint64_t n_parallel = ComputeParallelCount(lattice);
@@ -254,7 +263,7 @@ std::vector<uint64_t> ComputeVisitHistogram(Index<nDim> shape, double prob,
     const std::mt19937::result_type iProb =
         std::floor(std::pow(2.0, 32) * prob);
     std::mt19937 rng;
-    Lattice<nDim, UdSpin> lattice(shape, 0);
+    Lattice<nDim, UdSpin> lattice(shape, UdSpinDown());
     std::queue<Index<nDim>> queue;
     const uint64_t max_n_parallel = GetMaxParallelCount(lattice);
     std::vector<uint64_t> histogram(max_n_parallel + 1, 0);
@@ -353,7 +362,7 @@ TEST(WolffAlgorithm, CorrectDistribution2D) {
 }
 
 TEST(UdhSpin, VisitedFlag) {
-    for (UdhSpin s0(0); s0.value < 3; ++s0.value) {
+    for (UdhSpin s0{0}; s0.value < 3; ++s0.value) {
         UdhSpin s1 = s0;
         EXPECT_FALSE(Visited(s1)) << "s1: " << std::bitset<8>(s1.value)
                                   << " s0: " << std::bitset<8>(s0.value);

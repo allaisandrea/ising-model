@@ -175,7 +175,7 @@ template <size_t nDim> void run(const Arguments &args) {
     for (size_t i = 0; i < nDim; ++i) {
         shape[i] = args.shape.at(i);
     }
-    Lattice<nDim, UdSpin> lattice(shape, UdSpin{0});
+    Lattice<nDim, UdSpin> lattice(shape, UdSpinDown());
     std::queue<Index<nDim>> queue;
     Observables observables;
 
