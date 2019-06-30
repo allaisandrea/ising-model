@@ -2,7 +2,7 @@ CXX=g++
 COPTS=-std=c++11 -Wall -Wextra -Werror
 BUILD_DIR=../build
 VPATH=$(BUILD_DIR)
-HEADERS=UdSpin.h UdhSpin.h lattice.h observables.h wolff_algorithm.h
+HEADERS=UdSpin.h UdhSpin.h udh_metropolis_algorithm.h lattice.h observables.h wolff_algorithm.h
 
 all: main test
 

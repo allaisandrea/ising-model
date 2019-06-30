@@ -13,6 +13,7 @@
 #include "UdhSpin.h"
 #include "lattice.h"
 #include "observables.h"
+#include "udh_metropolis_algorithm.h"
 #include "wolff_algorithm.h"
 
 double ChiSquaredCdf(double x, double dof) {
@@ -422,4 +423,21 @@ TEST(UdhSpin, Increment) {
     EXPECT_EQ(s, UdhSpinHole());
     --s.value;
     EXPECT_EQ(s, UdhSpinDown());
+}
+
+TEST(UdhMetropolis, TransitionProbabilities) {
+    std::mt19937 rng;
+    std::uniform_real_distribution<double> random_uniform(0.0, 1.0);
+    for (uint64_t i = 0; i < 8; ++i) {
+        const double p_d = random_uniform(rng);
+        const double p_h = random_uniform(rng);
+        const double p_u = random_uniform(rng);
+        const UdhTransitionProbs tp = ComputeUdhTransitionProbs(p_d, p_h, p_u);
+        for (uint32_t p_ij :
+             *reinterpret_cast<const std::array<uint32_t, 4> *>(&tp)) {
+            EXPECT_GT(p_ij, uint32_t(0));
+        }
+        EXPECT_NEAR(p_d * tp.p_dh, p_h * tp.p_hd, 1.0);
+        EXPECT_NEAR(p_u * tp.p_uh, p_h * tp.p_hu, 1.0);
+    }
 }
