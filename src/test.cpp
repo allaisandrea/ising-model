@@ -10,7 +10,7 @@
 #include <boost/math/special_functions/gamma.hpp>
 #include <gtest/gtest.h>
 
-#include "UpDownHoleSpin.h"
+#include "UdhSpin.h"
 #include "lattice.h"
 #include "observables.h"
 #include "wolff_algorithm.h"
@@ -129,10 +129,10 @@ TEST(Observables, Measure) {
     Observables obs;
     constexpr size_t nDim = 3;
     for (size_t i = 0; i < 5; ++i) {
-        Lattice<nDim, UpDownSpin> lattice(GetRandomShape<nDim>(3, 8, &rng),
-                                          UpDownSpin{0});
+        Lattice<nDim, UdSpin> lattice(GetRandomShape<nDim>(3, 8, &rng),
+                                      UdSpin{0});
 
-        std::map<Index<2>, UpDownSpin, IndexLess<2>> indexMap;
+        std::map<Index<2>, UdSpin, IndexLess<2>> indexMap;
 
         size_t nFlipped = 0;
         for (size_t it = 0; it < lattice.size() / 2; ++it) {
@@ -190,7 +190,7 @@ bool NextConfiguration(Iterator begin, Iterator end, ValueType min_value,
 }
 
 TEST(NextConfiguration, NextConfiguration) {
-    using Config = std::array<UpDownSpin, 3>;
+    using Config = std::array<UdSpin, 3>;
     // clang-format off
     std::array<Config, 27> expected_configs = {{
         {2, 2, 2}, {3, 2, 2}, {4, 2, 2},
@@ -213,15 +213,15 @@ TEST(NextConfiguration, NextConfiguration) {
 }
 
 template <size_t nDim>
-uint64_t ComputeParallelCount(const Lattice<nDim, UpDownSpin> &lattice) {
+uint64_t ComputeParallelCount(const Lattice<nDim, UdSpin> &lattice) {
     uint64_t parallelCount = 0;
     for (size_t si = 0; si < lattice.size(); ++si) {
-        UpDownSpin spin = lattice[si];
+        UdSpin spin = lattice[si];
         Index<nDim> i = lattice.getVectorIndex(si);
         for (size_t d = 0; d < nDim; ++d) {
             const typename Index<nDim>::value_type i_d = i[d];
             i[d] = (i_d + 1) % lattice.shape(d);
-            UpDownSpin spin1 = lattice[i];
+            UdSpin spin1 = lattice[i];
             if (MaskedEqual(spin, spin1)) {
                 ++parallelCount;
             }
@@ -232,13 +232,13 @@ uint64_t ComputeParallelCount(const Lattice<nDim, UpDownSpin> &lattice) {
 }
 
 template <size_t nDim>
-uint64_t GetMaxParallelCount(const Lattice<nDim, UpDownSpin> &lattice) {
+uint64_t GetMaxParallelCount(const Lattice<nDim, UdSpin> &lattice) {
     return nDim * lattice.size();
 }
 
 template <size_t nDim>
 std::vector<uint64_t> ComputeEntropyHistogram(const Index<nDim> &shape) {
-    Lattice<nDim, UpDownSpin> lattice(shape, 0);
+    Lattice<nDim, UdSpin> lattice(shape, 0);
     std::vector<uint64_t> histogram(GetMaxParallelCount(lattice) + 1, 0);
     do {
         const uint64_t n_parallel = ComputeParallelCount(lattice);
@@ -254,7 +254,7 @@ std::vector<uint64_t> ComputeVisitHistogram(Index<nDim> shape, double prob,
     const std::mt19937::result_type iProb =
         std::floor(std::pow(2.0, 32) * prob);
     std::mt19937 rng;
-    Lattice<nDim, UpDownSpin> lattice(shape, 0);
+    Lattice<nDim, UdSpin> lattice(shape, 0);
     std::queue<Index<nDim>> queue;
     const uint64_t max_n_parallel = GetMaxParallelCount(lattice);
     std::vector<uint64_t> histogram(max_n_parallel + 1, 0);
@@ -352,9 +352,9 @@ TEST(WolffAlgorithm, CorrectDistribution2D) {
                                              1 << 14, 8);
 }
 
-TEST(UpDownHoleSpin, VisitedFlag) {
-    for (UpDownHoleSpin s0(0); s0.value < 3; ++s0.value) {
-        UpDownHoleSpin s1 = s0;
+TEST(UdhSpin, VisitedFlag) {
+    for (UdhSpin s0(0); s0.value < 3; ++s0.value) {
+        UdhSpin s1 = s0;
         EXPECT_FALSE(Visited(s1)) << "s1: " << std::bitset<8>(s1.value)
                                   << " s0: " << std::bitset<8>(s0.value);
         MarkVisited(&s1);
@@ -368,7 +368,7 @@ TEST(UpDownHoleSpin, VisitedFlag) {
     }
 }
 
-void TestMaskedEqual(UpDownHoleSpin sd, UpDownHoleSpin sh, UpDownHoleSpin su) {
+void TestMaskedEqual(UdhSpin sd, UdhSpin sh, UdhSpin su) {
     EXPECT_TRUE(MaskedEqual(sd, sd));
     EXPECT_TRUE(MaskedEqual(sh, sh));
     EXPECT_TRUE(MaskedEqual(su, su));
@@ -380,10 +380,10 @@ void TestMaskedEqual(UpDownHoleSpin sd, UpDownHoleSpin sh, UpDownHoleSpin su) {
     EXPECT_FALSE(MaskedEqual(su, sh));
 }
 
-TEST(UpDownHoleSpin, MaskedEqual) {
-    UpDownHoleSpin sd = UpDownHoleSpin::Down();
-    UpDownHoleSpin sh = UpDownHoleSpin::Hole();
-    UpDownHoleSpin su = UpDownHoleSpin::Up();
+TEST(UdhSpin, MaskedEqual) {
+    UdhSpin sd = UdhSpin::Down();
+    UdhSpin sh = UdhSpin::Hole();
+    UdhSpin su = UdhSpin::Up();
     TestMaskedEqual(sd, sh, su);
     MarkVisited(&sd);
     TestMaskedEqual(sd, sh, su);
@@ -395,22 +395,22 @@ TEST(UpDownHoleSpin, MaskedEqual) {
     TestMaskedEqual(sd, sh, su);
 }
 
-TEST(UpDownHoleSpin, Flip) {
-    UpDownHoleSpin s = UpDownHoleSpin::Down();
+TEST(UdhSpin, Flip) {
+    UdhSpin s = UdhSpin::Down();
     Flip(&s);
-    EXPECT_EQ(s, UpDownHoleSpin::Up());
+    EXPECT_EQ(s, UdhSpin::Up());
     Flip(&s);
-    EXPECT_EQ(s, UpDownHoleSpin::Down());
+    EXPECT_EQ(s, UdhSpin::Down());
 }
 
-TEST(UpDownHoleSpin, Increment) {
-    UpDownHoleSpin s = UpDownHoleSpin::Down();
+TEST(UdhSpin, Increment) {
+    UdhSpin s = UdhSpin::Down();
     ++s.value;
-    EXPECT_EQ(s, UpDownHoleSpin::Hole());
+    EXPECT_EQ(s, UdhSpin::Hole());
     ++s.value;
-    EXPECT_EQ(s, UpDownHoleSpin::Up());
+    EXPECT_EQ(s, UdhSpin::Up());
     --s.value;
-    EXPECT_EQ(s, UpDownHoleSpin::Hole());
+    EXPECT_EQ(s, UdhSpin::Hole());
     --s.value;
-    EXPECT_EQ(s, UpDownHoleSpin::Down());
+    EXPECT_EQ(s, UdhSpin::Down());
 }

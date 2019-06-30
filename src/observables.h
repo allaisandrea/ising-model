@@ -1,6 +1,6 @@
 #pragma once
 
-#include "UpDownSpin.h"
+#include "UdSpin.h"
 #include <Eigen/Core>
 #include <vector>
 
@@ -16,7 +16,7 @@ struct Observables {
 };
 
 template <size_t nDim>
-void Measure(const Lattice<nDim, UpDownSpin> lattice,
+void Measure(const Lattice<nDim, UdSpin> lattice,
              const std::array<Eigen::MatrixXf, 2> fourierTables,
              Observables *obs) {
 
@@ -34,7 +34,7 @@ void Measure(const Lattice<nDim, UpDownSpin> lattice,
     obs->upCount = 0;
     obs->parallelCount = 0;
     for (size_t si = 0; si < lattice.size(); ++si) {
-        UpDownSpin spin = lattice[si];
+        UdSpin spin = lattice[si];
         obs->upCount += spin.value;
         const size_t j = si % sliceSize;
         slice2dSumData[j] += spin.value;
@@ -43,7 +43,7 @@ void Measure(const Lattice<nDim, UpDownSpin> lattice,
         for (size_t d = 0; d < nDim; ++d) {
             const typename Index<nDim>::value_type i_d = i[d];
             i[d] = (i_d + 1) % lattice.shape(d);
-            UpDownSpin spin1 = lattice[i];
+            UdSpin spin1 = lattice[i];
             if (MaskedEqual(spin, spin1)) {
                 ++obs->parallelCount;
             }
