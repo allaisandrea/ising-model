@@ -381,9 +381,9 @@ void TestMaskedEqual(UdhSpin sd, UdhSpin sh, UdhSpin su) {
 }
 
 TEST(UdhSpin, MaskedEqual) {
-    UdhSpin sd = UdhSpin::Down();
-    UdhSpin sh = UdhSpin::Hole();
-    UdhSpin su = UdhSpin::Up();
+    UdhSpin sd = UdhSpinDown();
+    UdhSpin sh = UdhSpinHole();
+    UdhSpin su = UdhSpinUp();
     TestMaskedEqual(sd, sh, su);
     MarkVisited(&sd);
     TestMaskedEqual(sd, sh, su);
@@ -396,21 +396,21 @@ TEST(UdhSpin, MaskedEqual) {
 }
 
 TEST(UdhSpin, Flip) {
-    UdhSpin s = UdhSpin::Down();
+    UdhSpin s = UdhSpinDown();
     Flip(&s);
-    EXPECT_EQ(s, UdhSpin::Up());
+    EXPECT_EQ(s, UdhSpinUp());
     Flip(&s);
-    EXPECT_EQ(s, UdhSpin::Down());
+    EXPECT_EQ(s, UdhSpinDown());
 }
 
 TEST(UdhSpin, Increment) {
-    UdhSpin s = UdhSpin::Down();
+    UdhSpin s = UdhSpinDown();
     ++s.value;
-    EXPECT_EQ(s, UdhSpin::Hole());
+    EXPECT_EQ(s, UdhSpinHole());
     ++s.value;
-    EXPECT_EQ(s, UdhSpin::Up());
+    EXPECT_EQ(s, UdhSpinUp());
     --s.value;
-    EXPECT_EQ(s, UdhSpin::Hole());
+    EXPECT_EQ(s, UdhSpinHole());
     --s.value;
-    EXPECT_EQ(s, UdhSpin::Down());
+    EXPECT_EQ(s, UdhSpinDown());
 }

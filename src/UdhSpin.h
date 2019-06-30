@@ -3,12 +3,13 @@
 #include <cstdint>
 
 struct UdhSpin {
-    static UdhSpin Down() { return 0; };
-    static UdhSpin Hole() { return 1; };
-    static UdhSpin Up() { return 2; };
     UdhSpin(uint8_t value) : value(value) {}
     uint8_t value;
 };
+
+UdhSpin UdhSpinDown() { return 0; };
+UdhSpin UdhSpinHole() { return 1; };
+UdhSpin UdhSpinUp() { return 2; };
 
 bool operator==(UdhSpin s1, UdhSpin s2) { return s1.value == s2.value; };
 bool operator!=(UdhSpin s1, UdhSpin s2) { return s1.value != s2.value; };
