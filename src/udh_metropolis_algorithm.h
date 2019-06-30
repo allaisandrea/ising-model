@@ -17,3 +17,17 @@ UdhTransitionProbs ComputeUdhTransitionProbs(const double p_d, const double p_h,
     };
     return {MakeProb(p_h), MakeProb(p_d), MakeProb(p_u), MakeProb(p_h)};
 }
+
+template <size_t nDim>
+std::array<UdhTransitionProbs, 4 * nDim + 1>
+ComputeUdhTransitionProbs(const double J, const double r) {
+    std::array<UdhTransitionProbs, 4 * nDim + 1> result;
+    const int64_t max_n_val = 2 * nDim;
+    for (int64_t n = -max_n_val; n <= max_n_val; ++n) {
+        const double p_d = std::exp(-J * n - r);
+        const double p_h = 1.0;
+        const double p_u = std::exp(+J * n - r);
+        result.at(max_n_val + n) = ComputeUdhTransitionProbs(p_d, p_h, p_u);
+    }
+    return result;
+}

@@ -439,5 +439,46 @@ TEST(UdhMetropolis, TransitionProbabilities) {
         }
         EXPECT_NEAR(p_d * tp.p_dh, p_h * tp.p_hd, 1.0);
         EXPECT_NEAR(p_u * tp.p_uh, p_h * tp.p_hu, 1.0);
+        EXPECT_EQ(tp.p_dh, tp.p_uh);
     }
+}
+
+template <size_t nDim> void TestTransitionProbabilitiesArray() {
+    std::mt19937 rng;
+    std::uniform_real_distribution<double> random_J(0.0, 2.0);
+    std::uniform_real_distribution<double> random_r(-1.0, 1.0);
+    for (uint64_t i = 0; i < 4; ++i) {
+        const double J0 = random_J(rng);
+        const double r0 = random_r(rng);
+        const auto tp0 = ComputeUdhTransitionProbs<nDim>(J0, r0);
+        // Check for symmetry n -> -n
+        for (uint64_t n = 0; n < tp0.size(); ++n) {
+            const uint64_t m = tp0.size() - n - 1;
+            EXPECT_EQ(tp0.at(n).p_dh, tp0.at(m).p_uh);
+            EXPECT_EQ(tp0.at(n).p_hd, tp0.at(m).p_hu);
+        }
+
+        // As n increases, it is more likely to go from a hole to up, and less
+        // likely to go from a hole to down
+        for (uint64_t n = 1; n < tp0.size(); ++n) {
+            EXPECT_GE(tp0.at(n).p_hu, tp0.at(n - 1).p_hu);
+            EXPECT_LE(tp0.at(n).p_hd, tp0.at(n - 1).p_hd);
+        }
+
+        // As r increases, it is less likely to go fro a hole to either up or
+        // down, and it is more loikely to go from up or down to a hole
+        const auto tp1 = ComputeUdhTransitionProbs<nDim>(J0, r0 + 0.1);
+        for (uint64_t n = 0; n < tp0.size(); ++n) {
+            EXPECT_LE(tp1.at(n).p_hd, tp0.at(n).p_hd);
+            EXPECT_LE(tp1.at(n).p_hu, tp0.at(n).p_hu);
+            EXPECT_GE(tp1.at(n).p_dh, tp0.at(n).p_dh);
+            EXPECT_GE(tp1.at(n).p_uh, tp0.at(n).p_uh);
+        }
+    }
+}
+
+TEST(UdhMetropolis, TransitionProbabilitiesArray) {
+    TestTransitionProbabilitiesArray<2>();
+    TestTransitionProbabilitiesArray<3>();
+    TestTransitionProbabilitiesArray<4>();
 }
