@@ -70,6 +70,46 @@ TEST(Lattice, TestIndexConversion) {
     TestIndexConversion<4>();
 }
 
+TEST(Lattice, NextIndex2D) {
+    const Index<2> shape{5, 4};
+    // clang-format off
+    std::array<Index<2>, 20> expected_indices = {{
+        {0, 0}, {1, 0}, {2, 0}, {3, 0}, {4, 0},
+        {0, 1}, {1, 1}, {2, 1}, {3, 1}, {4, 1},
+        {0, 2}, {1, 2}, {2, 2}, {3, 2}, {4, 2},
+        {0, 3}, {1, 3}, {2, 3}, {3, 3}, {4, 3},
+    }};
+    // clang-format on
+    Index<2> index{0, 0};
+    size_t i = 0;
+    do {
+        EXPECT_EQ(index, expected_indices.at(i));
+        ++i;
+    } while (NextIndex(&index, shape));
+    EXPECT_EQ(i, expected_indices.size());
+}
+
+TEST(Lattice, NextIndex3D) {
+    const Index<3> shape{4, 3, 2};
+    // clang-format off
+    std::array<Index<3>, 24> expected_indices = {{
+        {0, 0, 0}, {1, 0, 0}, {2, 0, 0}, {3, 0, 0},
+        {0, 1, 0}, {1, 1, 0}, {2, 1, 0}, {3, 1, 0},
+        {0, 2, 0}, {1, 2, 0}, {2, 2, 0}, {3, 2, 0},
+        {0, 0, 1}, {1, 0, 1}, {2, 0, 1}, {3, 0, 1},
+        {0, 1, 1}, {1, 1, 1}, {2, 1, 1}, {3, 1, 1},
+        {0, 2, 1}, {1, 2, 1}, {2, 2, 1}, {3, 2, 1},
+    }};
+    // clang-format on
+    Index<3> index{0, 0, 0};
+    size_t i = 0;
+    do {
+        EXPECT_EQ(index, expected_indices.at(i));
+        ++i;
+    } while (NextIndex(&index, shape));
+    EXPECT_EQ(i, expected_indices.size());
+}
+
 template <size_t nDim> void TestGetFirstNeighbors() {
     std::mt19937 rng;
     for (size_t it1 = 0; it1 < 10; ++it1) {

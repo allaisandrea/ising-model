@@ -34,6 +34,22 @@ size_t GetScalarIndex(const Index<nDim> &j, const Index<nDim> &shape) {
     return i;
 }
 
+// Advance vector index in lexicographic order. Returns false if the highest
+// possible index has been passed and index is now all zeros again, otherwise
+// returns true.
+template <size_t nDim>
+bool NextIndex(Index<nDim> *i, const Index<nDim> &shape) {
+    for (size_t d = 0; d < nDim; ++d) {
+        ++(*i)[d];
+        if ((*i)[d] < shape[d]) {
+            return true;
+        } else {
+            (*i)[d] = 0;
+        }
+    }
+    return false;
+}
+
 template <size_t nDim>
 std::array<Index<nDim>, 2 * nDim> GetFirstNeighbors(const Index<nDim> &i,
                                                     const Index<nDim> &shape) {
