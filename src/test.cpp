@@ -70,6 +70,22 @@ TEST(Lattice, TestIndexConversion) {
     TestIndexConversion<4>();
 }
 
+TEST(Lattice, IndexIsValid) {
+    EXPECT_TRUE(IndexIsValid(Index<2>{0, 0}, Index<2>{2, 3}));
+    EXPECT_TRUE(IndexIsValid(Index<2>{1, 0}, Index<2>{2, 3}));
+    EXPECT_TRUE(IndexIsValid(Index<2>{0, 2}, Index<2>{2, 3}));
+    EXPECT_FALSE(IndexIsValid(Index<2>{2, 0}, Index<2>{2, 3}));
+    EXPECT_FALSE(IndexIsValid(Index<2>{0, 3}, Index<2>{2, 3}));
+
+    EXPECT_TRUE(IndexIsValid(Index<3>{0, 0, 0}, Index<3>{2, 3, 4}));
+    EXPECT_TRUE(IndexIsValid(Index<3>{1, 0, 0}, Index<3>{2, 3, 4}));
+    EXPECT_TRUE(IndexIsValid(Index<3>{0, 2, 0}, Index<3>{2, 3, 4}));
+    EXPECT_TRUE(IndexIsValid(Index<3>{0, 0, 3}, Index<3>{2, 3, 4}));
+    EXPECT_FALSE(IndexIsValid(Index<3>{2, 0, 0}, Index<3>{2, 3, 4}));
+    EXPECT_FALSE(IndexIsValid(Index<3>{0, 3, 0}, Index<3>{2, 3, 4}));
+    EXPECT_FALSE(IndexIsValid(Index<3>{0, 0, 4}, Index<3>{2, 3, 4}));
+}
+
 TEST(Lattice, NextIndex2D) {
     const Index<2> shape{5, 4};
     // clang-format off
@@ -265,9 +281,9 @@ TEST(NextConfiguration, NextConfiguration) {
 template <size_t nDim>
 uint64_t ComputeParallelCount(const Lattice<nDim, UdSpin> &lattice) {
     uint64_t parallelCount = 0;
-    for (size_t si = 0; si < lattice.size(); ++si) {
-        UdSpin spin = lattice[si];
-        Index<nDim> i = lattice.getVectorIndex(si);
+    Index<nDim> i{};
+    do {
+        UdSpin spin = lattice[i];
         for (size_t d = 0; d < nDim; ++d) {
             const typename Index<nDim>::value_type i_d = i[d];
             i[d] = (i_d + 1) % lattice.shape(d);
@@ -277,7 +293,7 @@ uint64_t ComputeParallelCount(const Lattice<nDim, UdSpin> &lattice) {
             }
             i[d] = i_d;
         }
-    }
+    } while (NextIndex(&i, lattice.shape()));
     return parallelCount;
 }
 
@@ -339,41 +355,23 @@ std::vector<double> ComputeExpectedVisitingProbability(
     return expected_probability;
 }
 
-double ComputeDistributionPValue(double prob,
-                                 const std::vector<uint64_t> &entropy_histogram,
-                                 const std::vector<uint64_t> &visit_histogram) {
-    if (visit_histogram.size() != entropy_histogram.size()) {
+template <typename DoubleHistogram, typename IntHistogram>
+double ComputeDistributionPValue(const DoubleHistogram &expected_probability,
+                                 const IntHistogram &visit_histogram) {
+    if (visit_histogram.size() != expected_probability.size()) {
         throw std::invalid_argument("incorrect entropy_histogram.size()");
     }
-    if (visit_histogram.empty()) {
-        throw std::invalid_argument("empty histogram");
-    }
-    const uint64_t max_n_parallel = entropy_histogram.size() - 1;
+    const uint64_t n = visit_histogram.size();
     const uint64_t n_measure =
         std::accumulate(visit_histogram.begin(), visit_histogram.end(), 0);
     double chi_squared = 0;
-    const std::vector<double> expected_probability =
-        ComputeExpectedVisitingProbability(prob, entropy_histogram);
 
-    // auto cout_flags = std::cout.flags();
-    // std::cout << std::fixed << std::setprecision(3);
-    // std::cout << std::setw(5) << "entr" << std::setw(8) << "prob"
-    //           << std::setw(12) << "lambda" << std::setw(5) << "visit"
-    //           << std::setw(10) << "pValue" << std::endl;
-    for (size_t n_parallel = 0; n_parallel <= max_n_parallel; ++n_parallel) {
-        const double lambda = expected_probability[n_parallel] * n_measure;
-        const double pValue =
-            PoissonExactTest(visit_histogram[n_parallel], lambda);
+    for (size_t i = 0; i <= n; ++i) {
+        const double lambda = expected_probability[i] * n_measure;
+        const double pValue = PoissonExactTest(visit_histogram[i], lambda);
         chi_squared -= 2.0 * std::log(std::max(pValue, 1.0e-15));
-        //    std::cout << std::setw(5) << entropy_histogram[n_parallel]
-        //              << std::setw(8) << expected_probability[n_parallel]
-        //              << std::setw(12) << lambda << std::setw(5)
-        //              << visit_histogram[n_parallel] << std::setw(10) <<
-        //              pValue
-        //              << std::endl;
     }
-    // std::cout.flags(cout_flags);
-    return 1.0 - ChiSquaredCdf(chi_squared, 2.0 * (max_n_parallel + 1));
+    return 1.0 - ChiSquaredCdf(chi_squared, 2.0 * n);
 }
 
 template <size_t nDim>
@@ -381,13 +379,18 @@ void TestWolffAlgorithmCorrectDistribution(
     const Index<nDim> &shape, double true_prob,
     const std::vector<double> &counterfactual_probs, uint64_t n_measure,
     uint64_t measure_every) {
+
     const std::vector<uint64_t> entropy_hist = ComputeEntropyHistogram(shape);
     const std::vector<uint64_t> visit_hist =
         ComputeVisitHistogram(shape, true_prob, n_measure, measure_every);
-    EXPECT_GT(ComputeDistributionPValue(true_prob, entropy_hist, visit_hist),
+    const std::vector<double> expected_probability =
+        ComputeExpectedVisitingProbability(true_prob, entropy_hist);
+    EXPECT_GT(ComputeDistributionPValue(expected_probability, visit_hist),
               0.05);
     for (const double prob : counterfactual_probs) {
-        EXPECT_LT(ComputeDistributionPValue(prob, entropy_hist, visit_hist),
+        const std::vector<double> expected_probability =
+            ComputeExpectedVisitingProbability(prob, entropy_hist);
+        EXPECT_LT(ComputeDistributionPValue(expected_probability, visit_hist),
                   0.01);
     }
 }
@@ -473,12 +476,14 @@ TEST(UdhMetropolis, TransitionProbabilities) {
         const double p_h = random_uniform(rng);
         const double p_u = random_uniform(rng);
         const UdhTransitionProbs tp = ComputeUdhTransitionProbs(p_d, p_h, p_u);
-        for (uint32_t p_ij :
-             *reinterpret_cast<const std::array<uint32_t, 4> *>(&tp)) {
-            EXPECT_GT(p_ij, uint32_t(0));
-        }
+        EXPECT_GT(tp.p_dh, uint32_t(0));
+        EXPECT_GT(tp.p_hd, uint32_t(0));
+        EXPECT_GT(tp.p_hu, uint32_t(0));
+        EXPECT_GT(tp.p_uh, uint32_t(0));
         EXPECT_NEAR(p_d * tp.p_dh, p_h * tp.p_hd, 1.0);
         EXPECT_NEAR(p_u * tp.p_uh, p_h * tp.p_hu, 1.0);
+        EXPECT_NEAR(p_u * tp.p_uh + p_d * tp.p_dh, p_h * (tp.p_hu + tp.p_hd),
+                    1.0);
         EXPECT_EQ(tp.p_dh, tp.p_uh);
     }
 }
@@ -486,11 +491,11 @@ TEST(UdhMetropolis, TransitionProbabilities) {
 template <size_t nDim> void TestTransitionProbabilitiesArray() {
     std::mt19937 rng;
     std::uniform_real_distribution<double> random_J(0.0, 2.0);
-    std::uniform_real_distribution<double> random_r(-1.0, 1.0);
+    std::uniform_real_distribution<double> random_mu(-1.0, 1.0);
     for (uint64_t i = 0; i < 4; ++i) {
         const double J0 = random_J(rng);
-        const double r0 = random_r(rng);
-        const auto tp0 = ComputeUdhTransitionProbs<nDim>(J0, r0);
+        const double mu0 = random_mu(rng);
+        const auto tp0 = ComputeUdhTransitionProbs<nDim>(J0, mu0);
         // Check for symmetry n -> -n
         for (uint64_t n = 0; n < tp0.size(); ++n) {
             const uint64_t m = tp0.size() - n - 1;
@@ -505,9 +510,9 @@ template <size_t nDim> void TestTransitionProbabilitiesArray() {
             EXPECT_LE(tp0.at(n).p_hd, tp0.at(n - 1).p_hd);
         }
 
-        // As r increases, it is less likely to go fro a hole to either up or
+        // As mu increases, it is less likely to go fro a hole to either up or
         // down, and it is more loikely to go from up or down to a hole
-        const auto tp1 = ComputeUdhTransitionProbs<nDim>(J0, r0 + 0.1);
+        const auto tp1 = ComputeUdhTransitionProbs<nDim>(J0, mu0 + 0.1);
         for (uint64_t n = 0; n < tp0.size(); ++n) {
             EXPECT_LE(tp1.at(n).p_hd, tp0.at(n).p_hd);
             EXPECT_LE(tp1.at(n).p_hu, tp0.at(n).p_hu);
@@ -521,4 +526,175 @@ TEST(UdhMetropolis, TransitionProbabilitiesArray) {
     TestTransitionProbabilitiesArray<2>();
     TestTransitionProbabilitiesArray<3>();
     TestTransitionProbabilitiesArray<4>();
+}
+
+template <size_t nDim>
+Index<2> ComputeEnergies(const Lattice<nDim, UdhSpin> &lattice) {
+    Index<2> energies{};
+    Index<nDim> i{};
+    energies[0] = nDim * lattice.size();
+    do {
+        UdhSpin spin = lattice[i];
+        if (spin == UdhSpinHole()) {
+            continue;
+        }
+        ++energies[1];
+        for (size_t d = 0; d < nDim; ++d) {
+            const typename Index<nDim>::value_type i_d = i[d];
+            i[d] = (i_d + 1) % lattice.shape(d);
+            UdhSpin spin1 = lattice[i];
+            energies[0] +=
+                (int64_t(spin.value) - 1) * (int64_t(spin1.value) - 1);
+            i[d] = i_d;
+        }
+    } while (NextIndex(&i, lattice.shape()));
+    return energies;
+}
+
+template <size_t nDim>
+Index<2> GetHistogramShape(const Index<nDim> &lattice_shape) {
+    return {
+        typename Index<nDim>::value_type(2 * nDim * GetSize(lattice_shape) + 1),
+        typename Index<nDim>::value_type(GetSize(lattice_shape) + 1)};
+}
+
+template <size_t nDim>
+Lattice<2, uint64_t> ComputeEntropyHistogramUdh(const Index<nDim> &shape) {
+    Lattice<nDim, UdhSpin> lattice(shape, UdhSpinDown());
+    Lattice<2, uint64_t> histogram(GetHistogramShape(shape), 0);
+    do {
+        const Index<2> energies = ComputeEnergies(lattice);
+        EXPECT_TRUE(IndexIsValid(energies, histogram.shape()));
+        ++histogram[energies];
+    } while (NextConfiguration(lattice.begin(), lattice.end(), 0, 2));
+    return histogram;
+}
+
+template <size_t nDim>
+Lattice<2, uint64_t>
+ComputeVisitHistogramUdh(const Index<nDim> &shape, double J, double mu,
+                         uint64_t nMeasure, uint64_t measureEvery) {
+
+    std::mt19937 rng;
+    Lattice<nDim, UdhSpin> lattice(shape, UdhSpinDown());
+    std::uniform_int_distribution<uint64_t> random_spin(0, 2);
+    for (UdhSpin &s : lattice) {
+        s.value = random_spin(rng);
+    }
+    Lattice<2, uint64_t> histogram(GetHistogramShape(shape), 0);
+    // const UdhTransitionProbsArray<nDim> transition_probs_array =
+    //     ComputeUdhTransitionProbs<nDim>(J, mu);
+    // for (const UdhTransitionProbs& tp : transition_probs_array) {
+    //     std::cout
+    //         << std::setw(13) << double(tp.p_dh) /
+    //         std::numeric_limits<uint32_t>::max()
+    //         << std::setw(13) << double(tp.p_hd) /
+    //         std::numeric_limits<uint32_t>::max()
+    //         << std::setw(13) << double(tp.p_hu) /
+    //         std::numeric_limits<uint32_t>::max()
+    //         << std::setw(13) << double(tp.p_uh) /
+    //         std::numeric_limits<uint32_t>::max()
+    //         << std::endl;
+    // }
+    // const uint32_t p_no_add =
+    //     std::round(std::numeric_limits<uint32_t>::max() * std::exp(-2.0 *
+    //     J));
+
+    std::queue<Index<nDim>> queue;
+    for (size_t iStep0 = 0; iStep0 < nMeasure; ++iStep0) {
+        for (size_t iStep1 = 0; iStep1 < measureEvery; ++iStep1) {
+            // UdhMetropolisSweep(transition_probs_array, &lattice, &rng);
+            UdhMetropolisSweep(J, mu, &lattice, &rng);
+            // const Index<nDim> i0 = GetRandomIndex(shape, &rng);
+            // if (lattice[i0] != UdhSpinHole()) {
+            //     FlipCluster(p_no_add, i0, &lattice, &rng, &queue);
+            //     ClearVisitedFlag(i0, &lattice, &queue);
+            // }
+        }
+        const Index<2> energies = ComputeEnergies(lattice);
+        EXPECT_TRUE(IndexIsValid(energies, histogram.shape()));
+        ++histogram[energies];
+    }
+    return histogram;
+}
+
+Lattice<2, double> ComputeExpectedVisitingProbability(
+    double J, double mu, const Lattice<2, uint64_t> &entropy_histogram) {
+
+    Lattice<2, double> expected_probability(entropy_histogram.shape(), 0.0);
+    Index<2> i{};
+    do {
+        expected_probability[i] =
+            entropy_histogram[i] * std::exp(J * i[0] - mu * i[1]);
+
+    } while (NextIndex(&i, expected_probability.shape()));
+
+    double total_probability = std::accumulate(expected_probability.begin(),
+                                               expected_probability.end(), 0.0);
+    for (double &p : expected_probability) {
+        p /= total_probability;
+    }
+    return expected_probability;
+}
+
+std::string MakeDebugString(const Lattice<2, uint64_t> &entropy_hist,
+                            const Lattice<2, uint64_t> &visit_hist,
+                            const Lattice<2, double> &expected_probability) {
+    std::ostringstream strm;
+    strm << std::setw(12) << "si sj" << std::setw(12) << "si si"
+         << std::setw(12) << "entropy" << std::setw(12) << "exp. prob."
+         << std::setw(12) << "visit prob." << std::endl;
+    const uint64_t n_measure =
+        std::accumulate(visit_hist.begin(), visit_hist.end(), 0);
+    Index<2> i{};
+    do {
+        if (visit_hist[i] == 0 && entropy_hist[i] == 0) {
+            continue;
+        }
+        strm << std::setw(12) << i[0] << std::setw(12) << i[1] << std::setw(12)
+             << entropy_hist[i] << std::setw(12) << expected_probability[i]
+             << std::setw(12) << double(visit_hist[i]) / n_measure << std::endl;
+    } while (NextIndex(&i, visit_hist.shape()));
+
+    return strm.str();
+}
+
+template <size_t nDim>
+void TestUdhMetropolisAlgorithmCorrectDistribution(
+    const Index<nDim> &shape, std::array<double, 2> true_params,
+    const std::vector<std::array<double, 2>> &counterfactual_params,
+    uint64_t n_measure, uint64_t measure_every) {
+
+    const Lattice<2, uint64_t> entropy_hist = ComputeEntropyHistogramUdh(shape);
+    const Lattice<2, uint64_t> visit_hist = ComputeVisitHistogramUdh(
+        shape, true_params[0], true_params[1], n_measure, measure_every);
+    const Lattice<2, double> expected_probability =
+        ComputeExpectedVisitingProbability(true_params[0], true_params[1],
+                                           entropy_hist);
+
+    EXPECT_GT(ComputeDistributionPValue(expected_probability, visit_hist), 0.05)
+        << std::endl
+        << "True params: J " << true_params[0] << " mu " << true_params[1]
+        << std::endl
+        << MakeDebugString(entropy_hist, visit_hist, expected_probability);
+    for (const std::array<double, 2> &params : counterfactual_params) {
+        const Lattice<2, double> expected_probability =
+            ComputeExpectedVisitingProbability(params[0], params[1],
+                                               entropy_hist);
+        EXPECT_LT(ComputeDistributionPValue(expected_probability, visit_hist),
+                  0.01)
+            << std::endl
+            << "Counterfactual params: J " << params[0] << " mu " << params[1]
+            << std::endl
+            << MakeDebugString(entropy_hist, visit_hist, expected_probability);
+    }
+}
+
+TEST(UdhMetropolisAlgorithm, CorrectDistribution3D) {
+    const double J = 0.3;
+    const double mu = -0.5;
+    TestUdhMetropolisAlgorithmCorrectDistribution<3>(
+        {2, 2, 2}, {J, mu},
+        {{J + 0.01, mu}, {J - 0.01, mu}, {J, mu + 0.10}, {J, mu - 0.10}},
+        1 << 17, 32);
 }

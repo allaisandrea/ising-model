@@ -34,6 +34,16 @@ size_t GetScalarIndex(const Index<nDim> &j, const Index<nDim> &shape) {
     return i;
 }
 
+template <size_t nDim>
+bool IndexIsValid(const Index<nDim> &i, const Index<nDim> &shape) {
+    for (size_t d = 0; d < nDim; ++d) {
+        if (i[d] >= shape[d]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 // Advance vector index in lexicographic order. Returns false if the highest
 // possible index has been passed and index is now all zeros again, otherwise
 // returns true.
