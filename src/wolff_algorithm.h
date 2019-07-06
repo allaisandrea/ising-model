@@ -3,7 +3,7 @@
 #include "lattice.h"
 
 template <size_t nDim, typename Spin>
-size_t FlipCluster(std::mt19937::result_type iProb, const Index<nDim> &i0,
+size_t FlipCluster(uint64_t p_no_add, const Index<nDim> &i0,
                    Lattice<nDim, Spin> *pLattice, std::mt19937 *rng,
                    std::queue<Index<nDim>> *queue) {
     size_t clusterSize = 0;
@@ -22,7 +22,7 @@ size_t FlipCluster(std::mt19937::result_type iProb, const Index<nDim> &i0,
                 Spin *spin1 = &lattice[i];
                 const bool add = !Visited(*spin1) &&
                                  MaskedEqual(*spin0, *spin1) &&
-                                 (*rng)() > iProb;
+                                 (*rng)() > p_no_add;
                 if (add) {
                     queue->emplace(i);
                     MarkVisited(spin1);

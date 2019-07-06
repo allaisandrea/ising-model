@@ -486,48 +486,9 @@ TEST(UdhMetropolis, TransitionProbabilities) {
         EXPECT_LE(tp.p_hd, tp.p_hd_plus_p_hu);
         EXPECT_GT(tp.p_hd_plus_p_hu, 0ul);
         EXPECT_GT(tp.p_hd_plus_p_hu, tp.p_hd);
-        EXPECT_NEAR(p_d * tp.p_dh_or_uh, p_h * tp.p_hd, 1.0);
-        EXPECT_NEAR(p_u * tp.p_dh_or_uh, p_h * get_p_hu(tp), 1.0);
+        EXPECT_NEAR(p_d * tp.p_dh_or_uh, p_h * tp.p_hd, 2.0);
+        EXPECT_NEAR(p_u * tp.p_dh_or_uh, p_h * get_p_hu(tp), 2.0);
     }
-}
-
-template <size_t nDim> void TestTransitionProbabilitiesArray() {
-    std::mt19937 rng;
-    std::uniform_real_distribution<double> random_J(0.0, 2.0);
-    std::uniform_real_distribution<double> random_mu(-1.0, 1.0);
-    for (uint64_t i = 0; i < 4; ++i) {
-        const double J0 = random_J(rng);
-        const double mu0 = random_mu(rng);
-        const auto tp0 = ComputeUdhTransitionProbs<nDim>(J0, mu0);
-        // Check for symmetry n -> -n
-        for (uint64_t n = 0; n < tp0.size(); ++n) {
-            const uint64_t m = tp0.size() - n - 1;
-            EXPECT_EQ(tp0.at(n).p_dh_or_uh, tp0.at(m).p_dh_or_uh);
-            EXPECT_EQ(tp0.at(n).p_hd, get_p_hu(tp0.at(m)));
-        }
-
-        // As n increases, it is more likely to go from a hole to up, and less
-        // likely to go from a hole to down
-        for (uint64_t n = 1; n < tp0.size(); ++n) {
-            EXPECT_LE(tp0.at(n).p_hd, tp0.at(n - 1).p_hd);
-            EXPECT_GE(get_p_hu(tp0.at(n)), get_p_hu(tp0.at(n - 1)));
-        }
-
-        // As mu increases, it is less likely to go fro a hole to either up or
-        // down, and it is more loikely to go from up or down to a hole
-        const auto tp1 = ComputeUdhTransitionProbs<nDim>(J0, mu0 + 0.1);
-        for (uint64_t n = 0; n < tp0.size(); ++n) {
-            EXPECT_LE(tp1.at(n).p_hd, tp0.at(n).p_hd);
-            EXPECT_LE(get_p_hu(tp1.at(n)), get_p_hu(tp0.at(n)));
-            EXPECT_GE(tp1.at(n).p_dh_or_uh, tp0.at(n).p_dh_or_uh);
-        }
-    }
-}
-
-TEST(UdhMetropolis, TransitionProbabilitiesArray) {
-    TestTransitionProbabilitiesArray<2>();
-    TestTransitionProbabilitiesArray<3>();
-    TestTransitionProbabilitiesArray<4>();
 }
 
 template <size_t nDim>
@@ -586,19 +547,17 @@ ComputeVisitHistogramUdh(const Index<nDim> &shape, double J, double mu,
     Lattice<2, uint64_t> histogram(GetHistogramShape(shape), 0);
     const UdhTransitionProbsArray<nDim> transition_probs_array =
         ComputeUdhTransitionProbs<nDim>(J, mu);
-    // const uint32_t p_no_add =
-    //     std::round(std::numeric_limits<uint32_t>::max() * std::exp(-2.0 *
-    //     J));
+    const uint32_t p_no_add = std::round((1ul << 32) * std::exp(-2.0 * J));
 
     std::queue<Index<nDim>> queue;
     for (size_t iStep0 = 0; iStep0 < nMeasure; ++iStep0) {
         for (size_t iStep1 = 0; iStep1 < measureEvery; ++iStep1) {
             UdhMetropolisSweep(transition_probs_array, &lattice, &rng);
-            // const Index<nDim> i0 = GetRandomIndex(shape, &rng);
-            // if (lattice[i0] != UdhSpinHole()) {
-            //     FlipCluster(p_no_add, i0, &lattice, &rng, &queue);
-            //     ClearVisitedFlag(i0, &lattice, &queue);
-            // }
+            const Index<nDim> i0 = GetRandomIndex(shape, &rng);
+            if (lattice[i0] != UdhSpinHole()) {
+                FlipCluster(p_no_add, i0, &lattice, &rng, &queue);
+                ClearVisitedFlag(i0, &lattice, &queue);
+            }
         }
         const Index<2> energies = ComputeEnergies(lattice);
         EXPECT_TRUE(IndexIsValid(energies, histogram.shape()));
