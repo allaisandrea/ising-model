@@ -586,8 +586,6 @@ ComputeVisitHistogramUdh(const Index<nDim> &shape, double J, double mu,
     Lattice<2, uint64_t> histogram(GetHistogramShape(shape), 0);
     const UdhTransitionProbsArray<nDim> transition_probs_array =
         ComputeUdhTransitionProbs<nDim>(J, mu);
-    // const UdhTransitionProbsArrayD<nDim> transition_probs_array1 =
-    //    ComputeUdhTransitionProbs2<nDim>(J, mu);
     // const uint32_t p_no_add =
     //     std::round(std::numeric_limits<uint32_t>::max() * std::exp(-2.0 *
     //     J));
