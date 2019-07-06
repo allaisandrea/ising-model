@@ -540,10 +540,6 @@ ComputeVisitHistogramUdh(const Index<nDim> &shape, double J, double mu,
 
     std::mt19937 rng;
     Lattice<nDim, UdhSpin> lattice(shape, UdhSpinDown());
-    std::uniform_int_distribution<uint64_t> random_spin(0, 2);
-    for (UdhSpin &s : lattice) {
-        s.value = random_spin(rng);
-    }
     Lattice<2, uint64_t> histogram(GetHistogramShape(shape), 0);
     const UdhTransitionProbsArray<nDim> transition_probs_array =
         ComputeUdhTransitionProbs<nDim>(J, mu);
@@ -650,5 +646,5 @@ TEST(UdhMetropolisAlgorithm, CorrectDistribution3D) {
     TestUdhMetropolisAlgorithmCorrectDistribution<3>(
         {2, 2, 2}, {J, mu},
         {{J + 0.01, mu}, {J - 0.01, mu}, {J, mu + 0.10}, {J, mu - 0.10}},
-        1 << 17, 32);
+        1 << 17, 2);
 }
