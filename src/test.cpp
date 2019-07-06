@@ -10,8 +10,8 @@
 #include <boost/math/special_functions/gamma.hpp>
 #include <gtest/gtest.h>
 
+#include "Tensor.h"
 #include "UdhSpin.h"
-#include "lattice.h"
 #include "observables.h"
 #include "udh_metropolis_algorithm.h"
 #include "wolff_algorithm.h"
@@ -64,13 +64,13 @@ template <size_t nDim> void TestIndexConversion() {
     }
 }
 
-TEST(Lattice, TestIndexConversion) {
+TEST(Tensor, TestIndexConversion) {
     TestIndexConversion<2>();
     TestIndexConversion<3>();
     TestIndexConversion<4>();
 }
 
-TEST(Lattice, IndexIsValid) {
+TEST(Tensor, IndexIsValid) {
     EXPECT_TRUE(IndexIsValid(Index<2>{0, 0}, Index<2>{2, 3}));
     EXPECT_TRUE(IndexIsValid(Index<2>{1, 0}, Index<2>{2, 3}));
     EXPECT_TRUE(IndexIsValid(Index<2>{0, 2}, Index<2>{2, 3}));
@@ -86,7 +86,7 @@ TEST(Lattice, IndexIsValid) {
     EXPECT_FALSE(IndexIsValid(Index<3>{0, 0, 4}, Index<3>{2, 3, 4}));
 }
 
-TEST(Lattice, NextIndex2D) {
+TEST(Tensor, NextIndex2D) {
     const Index<2> shape{5, 4};
     // clang-format off
     std::array<Index<2>, 20> expected_indices = {{
@@ -105,7 +105,7 @@ TEST(Lattice, NextIndex2D) {
     EXPECT_EQ(i, expected_indices.size());
 }
 
-TEST(Lattice, NextIndex3D) {
+TEST(Tensor, NextIndex3D) {
     const Index<3> shape{4, 3, 2};
     // clang-format off
     std::array<Index<3>, 24> expected_indices = {{
@@ -142,7 +142,7 @@ template <size_t nDim> void TestGetFirstNeighbors() {
     }
 }
 
-TEST(Lattice, TestGetFirstNeighbors) {
+TEST(Tensor, TestGetFirstNeighbors) {
     TestGetFirstNeighbors<2>();
     TestGetFirstNeighbors<3>();
     TestGetFirstNeighbors<4>();
@@ -186,8 +186,8 @@ TEST(Observables, Measure) {
     Observables obs;
     constexpr size_t nDim = 3;
     for (size_t i = 0; i < 5; ++i) {
-        Lattice<nDim, UdSpin> lattice(GetRandomShape<nDim>(3, 8, &rng),
-                                      UdSpinDown());
+        Tensor<nDim, UdSpin> lattice(GetRandomShape<nDim>(3, 8, &rng),
+                                     UdSpinDown());
 
         std::map<Index<2>, UdSpin, IndexLess<2>> indexMap;
 
@@ -279,7 +279,7 @@ TEST(NextConfiguration, NextConfiguration) {
 }
 
 template <size_t nDim>
-uint64_t ComputeParallelCount(const Lattice<nDim, UdSpin> &lattice) {
+uint64_t ComputeParallelCount(const Tensor<nDim, UdSpin> &lattice) {
     uint64_t parallelCount = 0;
     Index<nDim> i{};
     do {
@@ -298,13 +298,13 @@ uint64_t ComputeParallelCount(const Lattice<nDim, UdSpin> &lattice) {
 }
 
 template <size_t nDim>
-uint64_t GetMaxParallelCount(const Lattice<nDim, UdSpin> &lattice) {
+uint64_t GetMaxParallelCount(const Tensor<nDim, UdSpin> &lattice) {
     return nDim * lattice.size();
 }
 
 template <size_t nDim>
 std::vector<uint64_t> ComputeEntropyHistogram(const Index<nDim> &shape) {
-    Lattice<nDim, UdSpin> lattice(shape, UdSpinDown());
+    Tensor<nDim, UdSpin> lattice(shape, UdSpinDown());
     std::vector<uint64_t> histogram(GetMaxParallelCount(lattice) + 1, 0);
     do {
         const uint64_t n_parallel = ComputeParallelCount(lattice);
@@ -319,7 +319,7 @@ std::vector<uint64_t> ComputeVisitHistogram(Index<nDim> shape, double prob,
                                             uint64_t measureEvery) {
     const uint64_t p_no_add = std::round((1ul << 32) * prob);
     std::mt19937 rng;
-    Lattice<nDim, UdSpin> lattice(shape, UdSpinDown());
+    Tensor<nDim, UdSpin> lattice(shape, UdSpinDown());
     std::queue<Index<nDim>> queue;
     const uint64_t max_n_parallel = GetMaxParallelCount(lattice);
     std::vector<uint64_t> histogram(max_n_parallel + 1, 0);
@@ -491,7 +491,7 @@ TEST(UdhMetropolis, TransitionProbabilities) {
 }
 
 template <size_t nDim>
-Index<2> ComputeEnergies(const Lattice<nDim, UdhSpin> &lattice) {
+Index<2> ComputeEnergies(const Tensor<nDim, UdhSpin> &lattice) {
     Index<2> energies{};
     Index<nDim> i{};
     energies[0] = nDim * lattice.size();
@@ -521,9 +521,9 @@ Index<2> GetHistogramShape(const Index<nDim> &lattice_shape) {
 }
 
 template <size_t nDim>
-Lattice<2, uint64_t> ComputeEntropyHistogramUdh(const Index<nDim> &shape) {
-    Lattice<nDim, UdhSpin> lattice(shape, UdhSpinDown());
-    Lattice<2, uint64_t> histogram(GetHistogramShape(shape), 0);
+Tensor<2, uint64_t> ComputeEntropyHistogramUdh(const Index<nDim> &shape) {
+    Tensor<nDim, UdhSpin> lattice(shape, UdhSpinDown());
+    Tensor<2, uint64_t> histogram(GetHistogramShape(shape), 0);
     do {
         const Index<2> energies = ComputeEnergies(lattice);
         EXPECT_TRUE(IndexIsValid(energies, histogram.shape()));
@@ -533,13 +533,13 @@ Lattice<2, uint64_t> ComputeEntropyHistogramUdh(const Index<nDim> &shape) {
 }
 
 template <size_t nDim>
-Lattice<2, uint64_t>
-ComputeVisitHistogramUdh(const Index<nDim> &shape, double J, double mu,
-                         uint64_t nMeasure, uint64_t measureEvery) {
+Tensor<2, uint64_t> ComputeVisitHistogramUdh(const Index<nDim> &shape, double J,
+                                             double mu, uint64_t nMeasure,
+                                             uint64_t measureEvery) {
 
     std::mt19937 rng;
-    Lattice<nDim, UdhSpin> lattice(shape, UdhSpinDown());
-    Lattice<2, uint64_t> histogram(GetHistogramShape(shape), 0);
+    Tensor<nDim, UdhSpin> lattice(shape, UdhSpinDown());
+    Tensor<2, uint64_t> histogram(GetHistogramShape(shape), 0);
     const UdhTransitionProbsArray<nDim> transition_probs_array =
         ComputeUdhTransitionProbs<nDim>(J, mu);
     const uint32_t p_no_add = std::round((1ul << 32) * std::exp(-2.0 * J));
@@ -561,10 +561,10 @@ ComputeVisitHistogramUdh(const Index<nDim> &shape, double J, double mu,
     return histogram;
 }
 
-Lattice<2, double> ComputeExpectedVisitingProbability(
-    double J, double mu, const Lattice<2, uint64_t> &entropy_histogram) {
+Tensor<2, double> ComputeExpectedVisitingProbability(
+    double J, double mu, const Tensor<2, uint64_t> &entropy_histogram) {
 
-    Lattice<2, double> expected_probability(entropy_histogram.shape(), 0.0);
+    Tensor<2, double> expected_probability(entropy_histogram.shape(), 0.0);
     Index<2> i{};
     do {
         expected_probability[i] =
@@ -580,9 +580,9 @@ Lattice<2, double> ComputeExpectedVisitingProbability(
     return expected_probability;
 }
 
-std::string MakeDebugString(const Lattice<2, uint64_t> &entropy_hist,
-                            const Lattice<2, uint64_t> &visit_hist,
-                            const Lattice<2, double> &expected_probability) {
+std::string MakeDebugString(const Tensor<2, uint64_t> &entropy_hist,
+                            const Tensor<2, uint64_t> &visit_hist,
+                            const Tensor<2, double> &expected_probability) {
     std::ostringstream strm;
     strm << std::setw(12) << "si sj" << std::setw(12) << "si si"
          << std::setw(12) << "entropy" << std::setw(12) << "exp. prob."
@@ -614,10 +614,10 @@ void TestUdhMetropolisAlgorithmCorrectDistribution(
     const std::vector<std::array<double, 2>> &counterfactual_params,
     uint64_t n_measure, uint64_t measure_every) {
 
-    const Lattice<2, uint64_t> entropy_hist = ComputeEntropyHistogramUdh(shape);
-    const Lattice<2, uint64_t> visit_hist = ComputeVisitHistogramUdh(
+    const Tensor<2, uint64_t> entropy_hist = ComputeEntropyHistogramUdh(shape);
+    const Tensor<2, uint64_t> visit_hist = ComputeVisitHistogramUdh(
         shape, true_params[0], true_params[1], n_measure, measure_every);
-    const Lattice<2, double> expected_probability =
+    const Tensor<2, double> expected_probability =
         ComputeExpectedVisitingProbability(true_params[0], true_params[1],
                                            entropy_hist);
 
@@ -627,7 +627,7 @@ void TestUdhMetropolisAlgorithmCorrectDistribution(
         << std::endl
         << MakeDebugString(entropy_hist, visit_hist, expected_probability);
     for (const std::array<double, 2> &params : counterfactual_params) {
-        const Lattice<2, double> expected_probability =
+        const Tensor<2, double> expected_probability =
             ComputeExpectedVisitingProbability(params[0], params[1],
                                                entropy_hist);
         EXPECT_LT(ComputeDistributionPValue(expected_probability, visit_hist),

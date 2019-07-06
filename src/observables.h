@@ -16,7 +16,7 @@ struct Observables {
 };
 
 template <size_t nDim>
-void Measure(const Lattice<nDim, UdSpin> lattice,
+void Measure(const Tensor<nDim, UdSpin> lattice,
              const std::array<Eigen::MatrixXf, 2> fourierTables,
              Observables *obs) {
 

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "lattice.h"
+#include "Tensor.h"
 
 template <size_t nDim, typename Spin>
 size_t FlipCluster(uint64_t p_no_add, const Index<nDim> &i0,
-                   Lattice<nDim, Spin> *pLattice, std::mt19937 *rng,
+                   Tensor<nDim, Spin> *pTensor, std::mt19937 *rng,
                    std::queue<Index<nDim>> *queue) {
     size_t clusterSize = 0;
-    Lattice<nDim, Spin> &lattice = *pLattice;
+    Tensor<nDim, Spin> &lattice = *pTensor;
     queue->emplace(i0);
     MarkVisited(&lattice[i0]);
 
@@ -39,10 +39,10 @@ size_t FlipCluster(uint64_t p_no_add, const Index<nDim> &i0,
 }
 
 template <size_t nDim, typename Spin>
-void ClearVisitedFlag(const Index<nDim> &i0, Lattice<nDim, Spin> *pLattice,
+void ClearVisitedFlag(const Index<nDim> &i0, Tensor<nDim, Spin> *pTensor,
                       std::queue<Index<nDim>> *queue) {
 
-    Lattice<nDim, Spin> &lattice = *pLattice;
+    Tensor<nDim, Spin> &lattice = *pTensor;
     queue->emplace(i0);
     ClearVisitedFlag(&lattice[i0]);
 

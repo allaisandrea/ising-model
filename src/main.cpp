@@ -10,8 +10,8 @@
 
 #include <boost/program_options.hpp>
 
+#include "Tensor.h"
 #include "UdSpin.h"
-#include "lattice.h"
 #include "observables.h"
 #include "wolff_algorithm.h"
 
@@ -175,7 +175,7 @@ template <size_t nDim> void run(const Arguments &args) {
     for (size_t i = 0; i < nDim; ++i) {
         shape[i] = args.shape.at(i);
     }
-    Lattice<nDim, UdSpin> lattice(shape, UdSpinDown());
+    Tensor<nDim, UdSpin> lattice(shape, UdSpinDown());
     std::queue<Index<nDim>> queue;
     Observables observables;
 

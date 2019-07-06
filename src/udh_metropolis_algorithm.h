@@ -36,8 +36,8 @@ UdhTransitionProbsArray<nDim> ComputeUdhTransitionProbs(const double J,
 template <size_t nDim>
 void UdhMetropolisMove(
     const UdhTransitionProbsArray<nDim> &transition_probs_array,
-    const Index<nDim> &i, Lattice<nDim, UdhSpin> *pLattice, std::mt19937 *rng) {
-    Lattice<nDim, UdhSpin> &lattice = *pLattice;
+    const Index<nDim> &i, Tensor<nDim, UdhSpin> *pTensor, std::mt19937 *rng) {
+    Tensor<nDim, UdhSpin> &lattice = *pTensor;
 
     // Total magnetization of the neighbors
     uint64_t n = 0;
@@ -75,7 +75,7 @@ void UdhMetropolisMove(
 template <size_t nDim>
 void UdhMetropolisSweep(
     const UdhTransitionProbsArray<nDim> &transition_probs_array,
-    Lattice<nDim, UdhSpin> *lattice, std::mt19937 *rng) {
+    Tensor<nDim, UdhSpin> *lattice, std::mt19937 *rng) {
     Index<nDim> i{};
     do {
         UdhMetropolisMove(transition_probs_array, i, lattice, rng);
