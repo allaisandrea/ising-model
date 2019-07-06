@@ -317,8 +317,7 @@ template <size_t nDim>
 std::vector<uint64_t> ComputeVisitHistogram(Index<nDim> shape, double prob,
                                             uint64_t nMeasure,
                                             uint64_t measureEvery) {
-    const std::mt19937::result_type iProb =
-        std::floor(std::pow(2.0, 32) * prob);
+    const uint64_t p_no_add = std::round((1ul << 32) * prob);
     std::mt19937 rng;
     Lattice<nDim, UdSpin> lattice(shape, UdSpinDown());
     std::queue<Index<nDim>> queue;
@@ -328,7 +327,7 @@ std::vector<uint64_t> ComputeVisitHistogram(Index<nDim> shape, double prob,
     for (size_t iStep0 = 0; iStep0 < nMeasure; ++iStep0) {
         for (size_t iStep1 = 0; iStep1 < measureEvery; ++iStep1) {
             const Index<nDim> i0 = GetRandomIndex(shape, &rng);
-            FlipCluster(iProb, i0, &lattice, &rng, &queue);
+            FlipCluster(p_no_add, i0, &lattice, &rng, &queue);
             ClearVisitedFlag(i0, &lattice, &queue);
         }
         const uint64_t n_parallel = ComputeParallelCount(lattice);
@@ -366,7 +365,7 @@ double ComputeDistributionPValue(const DoubleHistogram &expected_probability,
         std::accumulate(visit_histogram.begin(), visit_histogram.end(), 0);
     double chi_squared = 0;
 
-    for (size_t i = 0; i <= n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         const double lambda = expected_probability[i] * n_measure;
         const double pValue = PoissonExactTest(visit_histogram[i], lambda);
         chi_squared -= 2.0 * std::log(std::max(pValue, 1.0e-15));
@@ -645,6 +644,15 @@ TEST(UdhMetropolisAlgorithm, CorrectDistribution3D) {
     const double mu = -0.5;
     TestUdhMetropolisAlgorithmCorrectDistribution<3>(
         {2, 2, 2}, {J, mu},
+        {{J + 0.01, mu}, {J - 0.01, mu}, {J, mu + 0.10}, {J, mu - 0.10}},
+        1 << 17, 2);
+}
+
+TEST(UdhMetropolisAlgorithm, CorrectDistribution2D) {
+    const double J = 0.3;
+    const double mu = -0.5;
+    TestUdhMetropolisAlgorithmCorrectDistribution<2>(
+        {2, 3}, {J, mu},
         {{J + 0.01, mu}, {J - 0.01, mu}, {J, mu + 0.10}, {J, mu - 0.10}},
         1 << 17, 2);
 }

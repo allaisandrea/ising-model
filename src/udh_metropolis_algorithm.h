@@ -9,9 +9,11 @@ struct UdhTransitionProbs {
 
 UdhTransitionProbs ComputeUdhTransitionProbs(const double p_d, const double p_h,
                                              const double p_u) {
-    return {uint64_t((1ul << 32) * std::min(1.0, p_h / (p_u + p_d))),
-            uint64_t((1ul << 32) * std::min(p_d / p_h, p_d / (p_u + p_d))),
-            uint64_t((1ul << 32) * std::min((p_d + p_u) / p_h, 1.0))};
+    return {
+        uint64_t(std::round((1ul << 32) * std::min(1.0, p_h / (p_u + p_d)))),
+        uint64_t(
+            std::round((1ul << 32) * std::min(p_d / p_h, p_d / (p_u + p_d)))),
+        uint64_t(std::round((1ul << 32) * std::min((p_d + p_u) / p_h, 1.0)))};
 }
 
 template <size_t nDim>
