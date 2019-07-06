@@ -148,6 +148,81 @@ TEST(Tensor, TestGetFirstNeighbors) {
     TestGetFirstNeighbors<4>();
 }
 
+template <size_t nDim>
+void TestTileTensor(const Index<nDim> &tile_shape, const Index<nDim> &n_tiles,
+                    const std::vector<uint64_t> &expected_values) {
+    Tensor<nDim, uint64_t> tile(tile_shape, 0);
+    for (uint64_t i = 0; i < tile.size(); ++i) {
+        tile[i] = i;
+    }
+    const Tensor<nDim, uint64_t> tiled = TileTensor(tile, n_tiles);
+    for (size_t i = 0; i < expected_values.size(); ++i) {
+        EXPECT_EQ(tiled[i], expected_values[i]);
+    }
+    EXPECT_EQ(expected_values.size(), tiled.size());
+}
+
+TEST(Tensor, TileTensor1) {
+    // clang-format off
+    TestTileTensor<2>({2, 3}, {3, 2}, {
+             0, 1, 0, 1, 0, 1,
+             2, 3, 2, 3, 2, 3,
+             4, 5, 4, 5, 4, 5,
+             0, 1, 0, 1, 0, 1,
+             2, 3, 2, 3, 2, 3,
+             4, 5, 4, 5, 4, 5});
+    // clang-format on
+}
+
+TEST(Tensor, TileTensor2) {
+    // clang-format off
+    TestTileTensor<2>({2, 3}, {2, 3}, {
+             0, 1, 0, 1 ,
+             2, 3, 2, 3 ,
+             4, 5, 4, 5 ,
+             0, 1, 0, 1 ,
+             2, 3, 2, 3 ,
+             4, 5, 4, 5 ,
+             0, 1, 0, 1 ,
+             2, 3, 2, 3 ,
+             4, 5, 4, 5 });
+    // clang-format on
+}
+
+TEST(Tensor, TileTensor3) {
+    // clang-format off
+    TestTileTensor<3>({2, 3, 2}, {3, 2, 2}, {
+             0, 1, 0, 1, 0, 1,
+             2, 3, 2, 3, 2, 3,
+             4, 5, 4, 5, 4, 5,
+             0, 1, 0, 1, 0, 1,
+             2, 3, 2, 3, 2, 3,
+             4, 5, 4, 5, 4, 5,
+
+             6, 7, 6, 7, 6, 7,
+             8, 9, 8, 9, 8, 9,
+            10,11,10,11,10,11,
+             6, 7, 6, 7, 6, 7,
+             8, 9, 8, 9, 8, 9,
+            10,11,10,11,10,11,
+
+             0, 1, 0, 1, 0, 1,
+             2, 3, 2, 3, 2, 3,
+             4, 5, 4, 5, 4, 5,
+             0, 1, 0, 1, 0, 1,
+             2, 3, 2, 3, 2, 3,
+             4, 5, 4, 5, 4, 5,
+
+             6, 7, 6, 7, 6, 7,
+             8, 9, 8, 9, 8, 9,
+            10,11,10,11,10,11,
+             6, 7, 6, 7, 6, 7,
+             8, 9, 8, 9, 8, 9,
+            10,11,10,11,10,11,
+             });
+    // clang-format on
+}
+
 void MakeLaplacianMatrix(const size_t period, Eigen::MatrixXf *K) {
     K->resize(period, period);
     K->setZero();
