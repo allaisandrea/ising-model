@@ -1,5 +1,27 @@
 syntax = "proto3";
+package udh;
 
-message Test {
-    string foo = 1;
+message Parameters {
+    double j = 1;
+    double mu = 2;
+    repeated uint32 shape = 3;
+    uint32 n_wolff = 4;
+    uint32 n_metropolis = 5;
+    uint32 mesure_every = 6;
+    uint32 n_measure = 7;
+    uint32 seed = 8;
+    string tag = 9;
+}
+
+message Observables {
+    uint64 stamp = 1;
+    uint64 flip_cluster_duration = 2;
+    uint64 clear_flag_duration = 3;
+    uint64 metropolis_sweep_duration = 4;
+    uint64 measure_duration = 5;
+    uint64 serialize_duration = 6;
+    uint64 n_down = 7;
+    uint64 n_holes = 8;
+    uint64 n_up = 9;
+    uint64 sum_si_sj = 10;
 }
