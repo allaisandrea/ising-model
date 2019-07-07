@@ -10,8 +10,8 @@
 #include <boost/math/special_functions/gamma.hpp>
 #include <gtest/gtest.h>
 
-#include "Tensor.h"
-#include "UdhSpin.h"
+#include "tensor.h"
+#include "udh_spin.h"
 #include "observables.h"
 #include "udh_io.h"
 #include "udh_metropolis_algorithm.h"

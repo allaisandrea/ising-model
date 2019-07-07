@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Tensor.h"
+#include "tensor.h"
 
 template <size_t nDim, typename Spin>
 size_t FlipCluster(uint64_t p_no_add, const Index<nDim> &i0,

@@ -10,8 +10,8 @@
 
 #include <boost/program_options.hpp>
 
-#include "Tensor.h"
-#include "UdSpin.h"
+#include "tensor.h"
+#include "ud_spin.h"
 #include "observables.h"
 #include "wolff_algorithm.h"
 
