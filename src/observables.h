@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tensor.h"
 #include "ud_spin.h"
 #include <Eigen/Core>
 #include <vector>

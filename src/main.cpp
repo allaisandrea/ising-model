@@ -10,9 +10,9 @@
 
 #include <boost/program_options.hpp>
 
+#include "observables.h"
 #include "tensor.h"
 #include "ud_spin.h"
-#include "observables.h"
 #include "wolff_algorithm.h"
 
 struct Arguments {

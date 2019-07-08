@@ -23,5 +23,5 @@ message Observables {
     uint64 n_down = 7;
     uint64 n_holes = 8;
     uint64 n_up = 9;
-    uint64 sum_si_sj = 10;
+    int64 sum_si_sj = 10;
 }

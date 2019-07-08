@@ -1,6 +1,8 @@
 #pragma once
 #include <cstdint>
 
+#include "udh_spin.h"
+
 struct UdhTransitionProbs {
     uint64_t p_dh_or_uh;
     uint64_t p_hd;
