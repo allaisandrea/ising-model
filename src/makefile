@@ -3,7 +3,7 @@ COPTS=-std=c++11 -Wall -Wextra -Werror
 BUILD_DIR=../build
 VPATH=$(BUILD_DIR)
 HEADERS=ud_spin.h udh_spin.h udh_metropolis_algorithm.h tensor.h observables.h wolff_algorithm.h \
-        udh_measure.h
+        udh_measure.h timer.h
 
 all: test
 

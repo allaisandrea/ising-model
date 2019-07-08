@@ -1,3 +1,4 @@
+#pragma once
 #include "udh_simulation.pb.h"
 #include "udh_spin.h"
 
