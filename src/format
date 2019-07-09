@@ -1,2 +1,3 @@
 #! /bin/bash
 clang-format -i *.cpp *.h
+rm udh_simulation.pb.*

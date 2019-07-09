@@ -11,6 +11,7 @@
 #include <gtest/gtest.h>
 
 #include "observables.h"
+#include "progress.h"
 #include "tensor.h"
 #include "timer.h"
 #include "udh_io.h"
@@ -875,4 +876,26 @@ TEST(Timer, Timer) {
     timer.stop();
     MockClock::time = 19;
     EXPECT_EQ(timer.elapsed(), 8l);
+}
+
+TEST(Progress, ProgressString) {
+    std::ostringstream strm;
+    strm << ProgressString(0, 60, 0, 100);
+    EXPECT_EQ(strm.str(), "  0.00%");
+
+    strm.str("");
+    strm << ProgressString(0, 60, 100, 100);
+    EXPECT_EQ(strm.str(), "100.00% ETA Wed Dec 31 16:01:00 1969");
+
+    strm.str("");
+    strm << ProgressString(0, 60, 50, 100);
+    EXPECT_EQ(strm.str(), " 50.00% ETA Wed Dec 31 16:02:00 1969");
+
+    strm.str("");
+    strm << ProgressString(30, 90, 50, 100);
+    EXPECT_EQ(strm.str(), " 50.00% ETA Wed Dec 31 16:02:30 1969");
+
+    strm.str("");
+    strm << ProgressString(0, 3600, 1, 1ul << 32);
+    EXPECT_EQ(strm.str(), "  0.00% ETA Sun Jul 18 09:00:00     ");
 }
