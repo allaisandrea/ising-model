@@ -13,6 +13,7 @@
 #include "observables.h"
 #include "progress.h"
 #include "tensor.h"
+#include "throttle.h"
 #include "timer.h"
 #include "udh_io.h"
 #include "udh_measure.h"
@@ -850,12 +851,12 @@ TEST(UdhMeasure, ChosenConfigurations) {
 }
 
 struct MockClock {
-    using time_point = uint64_t;
+    using time_point = int64_t;
     using duration = int64_t;
-    static uint64_t time;
-    static uint64_t now() { return time; }
+    static int64_t time;
+    static int64_t now() { return time; }
 };
-uint64_t MockClock::time{};
+int64_t MockClock::time{};
 
 TEST(Timer, Timer) {
     Timer<MockClock> timer;
@@ -900,4 +901,20 @@ TEST(Progress, ProgressString) {
         EXPECT_EQ(progress.string(3600, 1),
                   "  0.00% ETA Sun Jul 18 09:00:00     ");
     }
+}
+
+TEST(Throttle, Throttle) {
+    Throttle<MockClock> throttle(5);
+    uint64_t counter = 0;
+    MockClock::time = 31;
+    throttle([&counter]() { ++counter; });
+    EXPECT_EQ(counter, 1ul);
+    throttle([&counter]() { ++counter; });
+    EXPECT_EQ(counter, 1ul);
+    MockClock::time = 35;
+    throttle([&counter]() { ++counter; });
+    EXPECT_EQ(counter, 1ul);
+    MockClock::time = 36;
+    throttle([&counter]() { ++counter; });
+    EXPECT_EQ(counter, 2ul);
 }
