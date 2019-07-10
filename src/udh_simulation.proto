@@ -7,10 +7,11 @@ message Parameters {
     repeated uint32 shape = 3;
     uint32 n_wolff = 4;
     uint32 n_metropolis = 5;
-    uint32 mesure_every = 6;
+    uint32 measure_every = 6;
     uint32 n_measure = 7;
     uint32 seed = 8;
-    string tag = 9;
+    string id = 9;
+    string tag = 10;
 }
 
 message Observables {
