@@ -32,3 +32,5 @@ template <typename Clock> class Timer {
         }
     }
 };
+
+using HiResTimer = Timer<std::chrono::high_resolution_clock>;

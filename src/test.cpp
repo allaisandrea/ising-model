@@ -132,6 +132,11 @@ TEST(Tensor, NextIndex3D) {
     EXPECT_EQ(i, expected_indices.size());
 }
 
+TEST(Tensor, HypercubeShape) {
+    EXPECT_EQ(HypercubeShape<2>(5), (Index<2>{5, 5}));
+    EXPECT_EQ(HypercubeShape<3>(7), (Index<3>{7, 7, 7}));
+}
+
 template <size_t nDim> void TestGetFirstNeighbors() {
     std::mt19937 rng;
     for (size_t it1 = 0; it1 < 10; ++it1) {
@@ -623,7 +628,7 @@ Tensor<2, uint64_t> ComputeVisitHistogramUdh(const Index<nDim> &shape, double J,
     Tensor<2, uint64_t> histogram(GetHistogramShape(shape), 0);
     const UdhTransitionProbsArray<nDim> transition_probs_array =
         ComputeUdhTransitionProbs<nDim>(J, mu);
-    const uint32_t p_no_add = std::round((1ul << 32) * std::exp(-2.0 * J));
+    const uint32_t p_no_add = GetNoAddProbabilityFromJ(J);
 
     std::queue<Index<nDim>> queue;
     for (size_t iStep0 = 0; iStep0 < nMeasure; ++iStep0) {
@@ -929,9 +934,9 @@ TEST(UdhArguments, UdhArguments) {
     const char *args2[] = { "run-simulation",
         "--J", "0.5",
         "--mu", "0.25",
-        "--shape", "3", "4",
+        "--shape", "8", "16",
         "--n-wolff", "5",
-        "--n-metropolis", "6",
+        "--n-metropolis", "1",
         "--measure-every", "100",
         "--n-measure", "200"};
     // clang-format on
@@ -941,10 +946,10 @@ TEST(UdhArguments, UdhArguments) {
     EXPECT_EQ(parameters.j(), 0.5);
     EXPECT_EQ(parameters.mu(), 0.25);
     EXPECT_EQ(parameters.shape().size(), 2);
-    EXPECT_EQ(parameters.shape(0), 3ul);
-    EXPECT_EQ(parameters.shape(1), 4ul);
+    EXPECT_EQ(parameters.shape(0), 8ul);
+    EXPECT_EQ(parameters.shape(1), 16ul);
     EXPECT_EQ(parameters.n_wolff(), 5ul);
-    EXPECT_EQ(parameters.n_metropolis(), 6ul);
+    EXPECT_EQ(parameters.n_metropolis(), 1ul);
     EXPECT_EQ(parameters.measure_every(), 100ul);
     EXPECT_EQ(parameters.n_measure(), 200ul);
     EXPECT_GT(parameters.seed(), 0ul);
@@ -955,8 +960,8 @@ TEST(UdhArguments, UdhArguments) {
     const char *args3[] = { "run-simulation",
         "--J", "0.5",
         "--mu", "0.25",
-        "--shape", "3", "4",
-        "--n-wolff", "5",
+        "--shape", "8", "16",
+        "--n-wolff", "1",
         "--n-metropolis", "6",
         "--measure-every", "100",
         "--n-measure", "200",
@@ -970,9 +975,9 @@ TEST(UdhArguments, UdhArguments) {
     EXPECT_EQ(parameters.j(), 0.5);
     EXPECT_EQ(parameters.mu(), 0.25);
     EXPECT_EQ(parameters.shape().size(), 2);
-    EXPECT_EQ(parameters.shape(0), 3ul);
-    EXPECT_EQ(parameters.shape(1), 4ul);
-    EXPECT_EQ(parameters.n_wolff(), 5ul);
+    EXPECT_EQ(parameters.shape(0), 8l);
+    EXPECT_EQ(parameters.shape(1), 16ul);
+    EXPECT_EQ(parameters.n_wolff(), 1ul);
     EXPECT_EQ(parameters.n_metropolis(), 6ul);
     EXPECT_EQ(parameters.measure_every(), 100ul);
     EXPECT_EQ(parameters.n_measure(), 200ul);

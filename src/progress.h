@@ -3,6 +3,11 @@
 #include <sstream>
 #include <string>
 
+inline std::string TimeString(std::time_t time) {
+    const char *time_string = std::asctime(std::localtime(&time));
+    return std::string(time_string, time_string + 24);
+}
+
 class ProgressIndicator {
     std::time_t _start_time;
     uint64_t _max_progress;
@@ -19,8 +24,7 @@ class ProgressIndicator {
             const double elapsed = std::difftime(now, _start_time);
             const std::time_t eta =
                 _start_time + _max_progress * elapsed / progress;
-            const char *time_string = std::asctime(std::localtime(&eta));
-            strm << " ETA " << std::string(time_string, time_string + 24);
+            strm << " ETA " << TimeString(eta);
         }
         return strm.str();
     }

@@ -1,6 +1,8 @@
 #pragma once
-#include "udh_simulation.pb.h"
+#include <iostream>
 #include <stdexcept>
+
+#include "udh_simulation.pb.h"
 
 template <typename ProtoMessage>
 void Write(const ProtoMessage &message, std::ostream *stream) {

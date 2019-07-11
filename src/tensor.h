@@ -45,6 +45,15 @@ bool IndexIsValid(const Index<nDim> &i, const Index<nDim> &shape) {
 }
 
 template <size_t nDim>
+Index<nDim> HypercubeShape(typename Index<nDim>::value_type L) {
+    Index<nDim> shape;
+    for (size_t d = 0; d < nDim; ++d) {
+        shape[d] = L;
+    }
+    return shape;
+}
+
+template <size_t nDim>
 Index<nDim> operator+(const Index<nDim> &i1, const Index<nDim> &i2) {
     Index<nDim> result = i1;
     for (size_t d = 0; d < nDim; ++d) {
