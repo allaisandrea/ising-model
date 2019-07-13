@@ -71,6 +71,8 @@ template <size_t nDim> int Run(const udh::Parameters &parameters) {
                                          parameters.n_measure());
     log_file << TimeString(std::time(nullptr)) << " Starting simulation"
              << std::endl;
+    HiResTimer simulation_timer;
+    simulation_timer.start();
     for (uint64_t i0 = 0; i0 < parameters.n_measure(); ++i0) {
         HiResTimer flip_cluster_timer, clear_flag_timer, metropolis_sweep_timer,
             measure_timer, serialize_timer;
@@ -96,6 +98,7 @@ template <size_t nDim> int Run(const udh::Parameters &parameters) {
         Measure(lattice, &observables);
         measure_timer.stop();
 
+        observables.set_stamp(simulation_timer.elapsed().count());
         observables.set_flip_cluster_duration(
             flip_cluster_timer.elapsed().count());
         observables.set_clear_flag_duration(clear_flag_timer.elapsed().count());

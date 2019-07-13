@@ -50,10 +50,11 @@ bool Read(ProtoMessage *message, std::istream *stream) {
     if (!message->ParseFromString(buffer)) {
         throw std::runtime_error("Failed to parse message");
     }
+
     return true;
 }
 
-bool Skip(uint64_t n_messages, std::istream *stream) {
+inline bool Skip(uint64_t n_messages, std::istream *stream) {
     for (uint64_t i = 0; i < n_messages; ++i) {
         uint64_t size;
         stream->read(reinterpret_cast<char *>(&size), sizeof(size));
@@ -93,15 +94,52 @@ inline void PrintAsCsv(const udh::Parameters &params, std::ostream *pStrm) {
          << params.n_metropolis() << ","
          << params.measure_every() << ","
          << params.seed() << ","
-         << params.id() << ","
+         << "\"" << params.id() << "\","
          << params.n_measure() << ","
-         << params.tag();
+         << "\"" << params.tag() << "\"";
     // clang-format on
 }
 
-inline std::string GetCsvString(const udh::Parameters &params) {
+inline void PrintAsCsv(const udh::Observables &observables,
+                       std::ostream *pStrm) {
+    std::ostream &strm = *pStrm;
+    // clang-format off
+    strm << observables.stamp() << ","
+         << observables.flip_cluster_duration() << ","
+         << observables.clear_flag_duration() << ","
+         << observables.metropolis_sweep_duration() << ","
+         << observables.measure_duration() << ","
+         << observables.serialize_duration() << ","
+         << observables.n_down() << ","
+         << observables.n_holes() << ","
+         << observables.n_up() << ","
+         << observables.sum_si_sj();
+    // clang-format on
+}
+
+template <typename ProtoMessage>
+inline void PrintCsvHeader(std::ostream *pStrm);
+
+template <> inline void PrintCsvHeader<udh::Observables>(std::ostream *pStrm) {
+    std::ostream &strm = *pStrm;
+    // clang-format off
+    strm << "stamp,"
+         << "flip_cluster_duration,"
+         << "clear_flag_duration,"
+         << "metropolis_sweep_duration,"
+         << "measure_duration,"
+         << "serialize_duration,"
+         << "n_down,"
+         << "n_holes,"
+         << "n_up,"
+         << "sum_si_sj";
+    // clang-format on
+}
+
+template <typename ProtoMessage>
+inline std::string GetCsvString(const ProtoMessage &message) {
     std::ostringstream strm;
-    PrintAsCsv(params, &strm);
+    PrintAsCsv(message, &strm);
     return strm.str();
 }
 

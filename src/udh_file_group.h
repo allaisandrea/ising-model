@@ -12,7 +12,7 @@ class UdhFileGroup {
     const uint64_t _skip_first_n;
     const std::vector<Entry> _entries;
     const udh::Parameters _parameters;
-    std::vector<Entry>::const_iterator _current_entry;
+    size_t _current_entry;
     std::ifstream _current_file;
 
     static std::vector<Entry> MakeEntries(ParametersSet::const_iterator begin,
@@ -20,11 +20,12 @@ class UdhFileGroup {
 
     bool OpenNextFile();
 
+    const Entry &current_entry() { return _entries.at(_current_entry); }
+
   public:
     UdhFileGroup(ParametersSet::const_iterator begin,
                  ParametersSet::const_iterator end, uint64_t skip_first_n = 0);
 
-    void Rewind();
     bool NextObservables(udh::Observables *observables);
     const udh::Parameters &parameters() const { return _parameters; }
 };
@@ -56,37 +57,47 @@ inline UdhFileGroup::UdhFileGroup(ParametersSet::const_iterator begin,
                                   ParametersSet::const_iterator end,
                                   uint64_t skip_first_n)
     : _skip_first_n(skip_first_n), _entries(MakeEntries(begin, end)),
-      _parameters(*begin), _current_entry(_entries.begin()),
-      _current_file(_current_entry->file_name) {}
-
-inline void UdhFileGroup::Rewind() {
-    _current_entry = _entries.begin();
-    _current_file.close();
-    _current_file.open(_current_entry->file_name);
-}
+      _parameters(*begin), _current_entry{_entries.size()} {}
 
 inline bool UdhFileGroup::OpenNextFile() {
+    std::cout << "OpenNextFile" << std::endl;
+    _current_file.close();
     ++_current_entry;
-    if (_current_entry == _entries.end()) {
-        return false;
-    } else {
-        _current_file.close();
-        _current_file.open(_current_entry->file_name);
+    if (_current_entry < _entries.size()) {
+        const std::string file_name = current_entry().file_name;
+        _current_file.open(file_name);
+        if (!_current_file.good()) {
+            throw std::runtime_error("Unable to open file \"" + file_name +
+                                     "\"");
+        }
+        if (!Skip(1, &_current_file)) {
+            throw std::runtime_error(
+                "File \"" + file_name +
+                "\" does not contain the parameters header");
+        }
         return true;
+    } else {
+        return false;
     }
 }
 
 inline bool UdhFileGroup::NextObservables(udh::Observables *observables) {
-    const uint64_t n_skip = _current_entry->read_every - 1;
+    if (_current_entry >= _entries.size()) {
+        _current_entry = -1;
+        if (!OpenNextFile()) {
+            return false;
+        }
+    }
+    const uint64_t n_skip = current_entry().read_every - 1;
     while (!Skip(n_skip, &_current_file) && OpenNextFile()) {
     }
     while (!Read(observables, &_current_file) && OpenNextFile()) {
         const uint64_t n_skip =
-            (_current_entry->read_every - 1) * _skip_first_n;
+            (current_entry().read_every - 1) * _skip_first_n;
         while (!Skip(n_skip, &_current_file) && OpenNextFile()) {
         }
     }
-    return _current_entry != _entries.end();
+    return _current_entry < _entries.size();
 }
 
 template <typename FilenameIt>
