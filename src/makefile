@@ -5,7 +5,7 @@ VPATH=$(BUILD_DIR)
 HEADERS=ud_spin.h udh_spin.h udh_metropolis_algorithm.h tensor.h observables.h wolff_algorithm.h \
         udh_measure.h timer.h progress.h throttle.h udh_arguments.h
 
-all: compute-autocorrelation print-parameters-table print-observables
+all: compute-autocorrelation print-parameters-table print-observables run-simulation
 
 run-simulation: makefile udh_run_simulation.cpp $(HEADERS) udh_simulation.pb.o
 	$(CXX) $(COPTS) udh_run_simulation.cpp udh_simulation.pb.o -o $(BUILD_DIR)/run-simulation \

@@ -54,8 +54,8 @@ bool Read(ProtoMessage *message, std::istream *stream) {
     return true;
 }
 
-inline bool Skip(uint64_t n_messages, std::istream *stream) {
-    for (uint64_t i = 0; i < n_messages; ++i) {
+inline bool Skip(uint64_t n_skip, std::istream *stream) {
+    for (uint64_t i = 0; i < n_skip; ++i) {
         uint64_t size;
         stream->read(reinterpret_cast<char *>(&size), sizeof(size));
         if (stream->eof()) {
@@ -104,7 +104,8 @@ inline void PrintAsCsv(const udh::Observables &observables,
                        std::ostream *pStrm) {
     std::ostream &strm = *pStrm;
     // clang-format off
-    strm << observables.stamp() << ","
+    strm << observables.sequence_id() << ","
+         << observables.stamp() << ","
          << observables.flip_cluster_duration() << ","
          << observables.clear_flag_duration() << ","
          << observables.metropolis_sweep_duration() << ","
@@ -123,7 +124,8 @@ inline void PrintCsvHeader(std::ostream *pStrm);
 template <> inline void PrintCsvHeader<udh::Observables>(std::ostream *pStrm) {
     std::ostream &strm = *pStrm;
     // clang-format off
-    strm << "stamp,"
+    strm << "sequence_id,"
+         << "stamp,"
          << "flip_cluster_duration,"
          << "clear_flag_duration,"
          << "metropolis_sweep_duration,"

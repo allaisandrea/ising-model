@@ -98,6 +98,7 @@ template <size_t nDim> int Run(const udh::Parameters &parameters) {
         Measure(lattice, &observables);
         measure_timer.stop();
 
+        observables.set_sequence_id(i0);
         observables.set_stamp(simulation_timer.elapsed().count());
         observables.set_flip_cluster_duration(
             flip_cluster_timer.elapsed().count());

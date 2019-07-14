@@ -15,14 +15,15 @@ message Parameters {
 }
 
 message Observables {
-    uint64 stamp = 1;
-    uint64 flip_cluster_duration = 2;
-    uint64 clear_flag_duration = 3;
-    uint64 metropolis_sweep_duration = 4;
-    uint64 measure_duration = 5;
-    uint64 serialize_duration = 6;
-    uint64 n_down = 7;
-    uint64 n_holes = 8;
-    uint64 n_up = 9;
-    int64 sum_si_sj = 10;
+    uint64 sequence_id = 1;
+    uint64 stamp = 2;
+    uint64 flip_cluster_duration = 3;
+    uint64 clear_flag_duration = 4;
+    uint64 metropolis_sweep_duration = 5;
+    uint64 measure_duration = 6;
+    uint64 serialize_duration = 7;
+    uint64 n_down = 8;
+    uint64 n_holes = 9;
+    uint64 n_up = 10;
+    int64 sum_si_sj = 11;
 }

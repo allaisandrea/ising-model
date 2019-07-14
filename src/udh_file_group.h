@@ -27,6 +27,7 @@ class UdhFileGroup {
                  ParametersSet::const_iterator end, uint64_t skip_first_n = 0);
 
     bool NextObservables(udh::Observables *observables);
+    uint64_t CountObservables();
     const udh::Parameters &parameters() const { return _parameters; }
 };
 
@@ -60,10 +61,12 @@ inline UdhFileGroup::UdhFileGroup(ParametersSet::const_iterator begin,
       _parameters(*begin), _current_entry{_entries.size()} {}
 
 inline bool UdhFileGroup::OpenNextFile() {
-    std::cout << "OpenNextFile" << std::endl;
     _current_file.close();
-    ++_current_entry;
-    if (_current_entry < _entries.size()) {
+    while (true) {
+        ++_current_entry;
+        if (_current_entry >= _entries.size()) {
+            return false;
+        }
         const std::string file_name = current_entry().file_name;
         _current_file.open(file_name);
         if (!_current_file.good()) {
@@ -75,10 +78,12 @@ inline bool UdhFileGroup::OpenNextFile() {
                 "File \"" + file_name +
                 "\" does not contain the parameters header");
         }
-        return true;
-    } else {
-        return false;
+        const uint64_t n_skip = _skip_first_n * current_entry().read_every;
+        if (Skip(n_skip, &_current_file)) {
+            return true;
+        }
     }
+    return false;
 }
 
 inline bool UdhFileGroup::NextObservables(udh::Observables *observables) {
@@ -88,20 +93,48 @@ inline bool UdhFileGroup::NextObservables(udh::Observables *observables) {
             return false;
         }
     }
-    const uint64_t n_skip = current_entry().read_every - 1;
-    while (!Skip(n_skip, &_current_file) && OpenNextFile()) {
-    }
-    while (!Read(observables, &_current_file) && OpenNextFile()) {
-        const uint64_t n_skip =
-            (current_entry().read_every - 1) * _skip_first_n;
-        while (!Skip(n_skip, &_current_file) && OpenNextFile()) {
+    while (true) {
+        const uint64_t n_skip = current_entry().read_every - 1;
+        if (!Skip(n_skip, &_current_file)) {
+            if (!OpenNextFile()) {
+                return false;
+            }
+            continue;
+        }
+        if (!Read(observables, &_current_file)) {
+            if (!OpenNextFile()) {
+                return false;
+            }
+            continue;
+        } else {
+            break;
         }
     }
     return _current_entry < _entries.size();
 }
 
+inline uint64_t UdhFileGroup::CountObservables() {
+    _current_entry = -1;
+    if (!OpenNextFile()) {
+        return 0;
+    }
+    uint64_t result = 0;
+    while (true) {
+        const uint64_t n_skip = current_entry().read_every;
+        if (!Skip(n_skip, &_current_file)) {
+            if (!OpenNextFile()) {
+                return result;
+            }
+            continue;
+        }
+        ++result;
+    }
+    return result;
+}
+
 template <typename FilenameIt>
-inline std::vector<UdhFileGroup> GroupFiles(FilenameIt begin, FilenameIt end) {
+inline std::vector<UdhFileGroup> GroupFiles(FilenameIt begin, FilenameIt end,
+                                            uint64_t skip_first_n = 0) {
     const ParametersSet parameters_set = ParametersSetFromFileNames(begin, end);
     auto group_begin = parameters_set.begin();
     std::vector<UdhFileGroup> result;
@@ -111,7 +144,7 @@ inline std::vector<UdhFileGroup> GroupFiles(FilenameIt begin, FilenameIt end) {
                OutputCanBeJoined(*group_begin, *group_end)) {
             ++group_end;
         }
-        result.emplace_back(UdhFileGroup(group_begin, group_end));
+        result.emplace_back(UdhFileGroup(group_begin, group_end, skip_first_n));
         group_begin = group_end;
     }
     return result;
