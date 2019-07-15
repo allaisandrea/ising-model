@@ -1,0 +1,75 @@
+proto_library(
+    name = "udh_simulation_proto",
+    srcs = ["udh_simulation.proto"]
+)
+
+cc_proto_library(
+    name = "udh_simulation_cc_proto",
+    deps = [":udh_simulation_proto"]
+)
+
+cc_binary(
+    name = "run-simulation",
+    srcs = [
+        "udh_run_simulation.cpp",
+        "progress.h",
+        "udh_measure.h",
+        "udh_spin.h",
+        "udh_metropolis_algorithm.h",
+        "wolff_algorithm.h",
+        "udh_io.h",
+        "tensor.h",
+        "timer.h",
+        "udh_arguments.h"],
+    deps = [":udh_simulation_cc_proto"],
+    linkopts = [
+        "-lboost_program_options"
+    ],
+)
+
+cc_binary(
+    name = "compute-autocorrelation",
+    srcs = [
+        "compute_autocorrelation.cpp",
+        "udh_file_group.h",
+        "udh_parameters_set.h",
+        "udh_io.h",
+        "udh_arguments.h"],
+    deps = [":udh_simulation_cc_proto"],
+)
+
+cc_binary(
+    name = "print-parameters-table",
+    srcs = [
+        "print_parameters_table.cpp",
+        "udh_parameters_set.h",
+        "udh_io.h",
+        "udh_arguments.h"],
+    deps = [":udh_simulation_cc_proto"],
+)
+
+cc_test (
+    name = "test",
+    srcs = [
+        "test.cpp",
+        "progress.h",
+        "udh_measure.h",
+        "observables.h",
+        "udh_spin.h",
+        "ud_spin.h",
+        "throttle.h",
+        "udh_metropolis_algorithm.h",
+        "wolff_algorithm.h",
+        "udh_io.h",
+        "tensor.h",
+        "timer.h",
+        "udh_arguments.h"],
+    deps = [
+        ":udh_simulation_cc_proto",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main" # Only if hello_test.cc has no main()
+    ],
+    linkopts = [
+        "-lboost_program_options"
+    ],
+)
