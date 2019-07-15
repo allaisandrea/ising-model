@@ -3,7 +3,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "udh_simulation.pb.h"
+#include "udh.pb.h"
 
 template <typename ProtoMessage>
 void Write(const ProtoMessage &message, std::ostream *stream) {

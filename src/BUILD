@@ -1,11 +1,11 @@
 proto_library(
-    name = "udh_simulation_proto",
-    srcs = ["udh_simulation.proto"]
+    name = "udh_proto",
+    srcs = ["udh.proto"]
 )
 
 cc_proto_library(
-    name = "udh_simulation_cc_proto",
-    deps = [":udh_simulation_proto"]
+    name = "udh_cc_proto",
+    deps = [":udh_proto"]
 )
 
 cc_binary(
@@ -21,7 +21,7 @@ cc_binary(
         "tensor.h",
         "timer.h",
         "udh_arguments.h"],
-    deps = [":udh_simulation_cc_proto"],
+    deps = [":udh_cc_proto"],
     linkopts = [
         "-lboost_program_options"
     ],
@@ -35,7 +35,7 @@ cc_binary(
         "udh_parameters_set.h",
         "udh_io.h",
         "udh_arguments.h"],
-    deps = [":udh_simulation_cc_proto"],
+    deps = [":udh_cc_proto"],
 )
 
 cc_binary(
@@ -45,7 +45,7 @@ cc_binary(
         "udh_parameters_set.h",
         "udh_io.h",
         "udh_arguments.h"],
-    deps = [":udh_simulation_cc_proto"],
+    deps = [":udh_cc_proto"],
 )
 
 cc_test (
@@ -65,7 +65,7 @@ cc_test (
         "timer.h",
         "udh_arguments.h"],
     deps = [
-        ":udh_simulation_cc_proto",
+        ":udh_cc_proto",
         "@gtest//:gtest",
         "@gtest//:gtest_main" # Only if hello_test.cc has no main()
     ],

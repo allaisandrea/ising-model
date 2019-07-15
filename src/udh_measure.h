@@ -1,5 +1,5 @@
 #pragma once
-#include "udh_simulation.pb.h"
+#include "udh.pb.h"
 #include "udh_spin.h"
 
 template <size_t nDim>
