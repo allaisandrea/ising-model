@@ -63,6 +63,7 @@ cc_test (
         "progress.h",
         "udh_measure.h",
         "observables.h",
+        "distributions.h",
         "next_configuration.h",
         "udh_spin.h",
         "ud_spin.h",
