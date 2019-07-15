@@ -110,6 +110,18 @@ Index<nDim> GetRandomIndex(const Index<nDim> &shape, std::mt19937 *rng) {
     return i;
 }
 
+template <size_t nDim>
+Index<nDim> GetRandomShape(typename Index<nDim>::value_type min,
+                           typename Index<nDim>::value_type max,
+                           std::mt19937 *rng) {
+    std::uniform_int_distribution<size_t> rand_int(min, max);
+    Index<nDim> shape;
+    for (size_t d = 0; d < nDim; ++d) {
+        shape[d] = rand_int(*rng);
+    }
+    return shape;
+}
+
 template <size_t Dim> struct IndexLess {
     bool operator()(const Index<Dim> &i1, const Index<Dim> &i2) const {
         return std::lexicographical_compare(i1.begin(), i1.end(), i2.begin(),
