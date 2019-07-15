@@ -63,6 +63,7 @@ cc_test (
         "progress.h",
         "udh_measure.h",
         "observables.h",
+        "next_configuration.h",
         "udh_spin.h",
         "ud_spin.h",
         "throttle.h",
@@ -99,6 +100,17 @@ cc_test (
         "observables_test.cpp"],
     deps = [
         ":observables",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main" # Only if hello_test.cc has no main()
+    ],
+)
+
+cc_test (
+    name = "next_configuration_test",
+    srcs = [
+        "next_configuration_test.cpp",
+        "next_configuration.h"],
+    deps = [
         "@gtest//:gtest",
         "@gtest//:gtest_main" # Only if hello_test.cc has no main()
     ],
