@@ -8,6 +8,14 @@ cc_proto_library(
     deps = [":udh_proto"]
 )
 
+cc_library(
+    name = "observables",
+    hdrs = [
+        "observables.h",
+        "tensor.h",
+        "ud_spin.h"],
+)
+
 cc_binary(
     name = "run-simulation",
     srcs = [
@@ -80,6 +88,17 @@ cc_test (
         "tensor_test.cpp",
         "tensor.h"],
     deps = [
+        "@gtest//:gtest",
+        "@gtest//:gtest_main" # Only if hello_test.cc has no main()
+    ],
+)
+
+cc_test (
+    name = "observables_test",
+    srcs = [
+        "observables_test.cpp"],
+    deps = [
+        ":observables",
         "@gtest//:gtest",
         "@gtest//:gtest_main" # Only if hello_test.cc has no main()
     ],
