@@ -5,8 +5,8 @@
 #include <set>
 
 struct ParametersComp {
-    bool operator()(const udh::Parameters &p1,
-                    const udh::Parameters &p2) const {
+    bool operator()(const UdhParameters &p1,
+                    const UdhParameters &p2) const {
         if (p1.shape().size() < p2.shape().size()) {
             return true;
         } else if (p1.shape().size() > p2.shape().size()) {
@@ -53,10 +53,10 @@ struct ParametersComp {
     }
 };
 
-using ParametersSet = std::set<udh::Parameters, ParametersComp>;
+using ParametersSet = std::set<UdhParameters, ParametersComp>;
 
-inline bool OutputCanBeJoined(const udh::Parameters &p1,
-                              const udh::Parameters &p2) {
+inline bool OutputCanBeJoined(const UdhParameters &p1,
+                              const UdhParameters &p2) {
     bool result = true;
     // clang-format off
     result = p1.shape().size() == p2.shape().size() && 
@@ -78,7 +78,7 @@ inline bool OutputCanBeJoined(const udh::Parameters &p1,
 template <typename FileNamesIt>
 ParametersSet ParametersSetFromFileNames(FileNamesIt begin, FileNamesIt end) {
     ParametersSet result;
-    udh::Parameters parameters;
+    UdhParameters parameters;
     for (FileNamesIt file_name = begin; file_name != end; ++file_name) {
         std::ifstream file(*file_name);
         if (!Read(&parameters, &file)) {

@@ -4,7 +4,7 @@
 
 template <size_t nDim>
 void Measure(const Tensor<nDim, UdhSpin> &lattice,
-             udh::Observables *observables) {
+             UdhObservables *observables) {
     Index<nDim> i{};
     std::array<uint64_t, 3> udh_count{};
     int64_t sum_si_sj{};

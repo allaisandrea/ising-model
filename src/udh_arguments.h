@@ -3,7 +3,7 @@
 #include <boost/program_options.hpp>
 #include <random>
 
-bool ParseArgs(int argc, const char *argv[], udh::Parameters *parameters) {
+bool ParseArgs(int argc, const char *argv[], UdhParameters *parameters) {
     using namespace boost::program_options;
 
     std::vector<uint32_t> shape;

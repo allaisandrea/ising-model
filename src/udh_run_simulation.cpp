@@ -11,7 +11,7 @@
 #include "wolff_algorithm.h"
 
 template <size_t nDim>
-Index<nDim> GetNumberOfTiles(const udh::Parameters &parameters,
+Index<nDim> GetNumberOfTiles(const UdhParameters &parameters,
                              uint64_t tile_size) {
     Index<nDim> n_tiles;
     for (size_t d = 0; d < nDim; ++d) {
@@ -24,7 +24,7 @@ Index<nDim> GetNumberOfTiles(const udh::Parameters &parameters,
     return n_tiles;
 }
 
-template <size_t nDim> int Run(const udh::Parameters &parameters) {
+template <size_t nDim> int Run(const UdhParameters &parameters) {
     const std::string out_file_name = parameters.id() + ".udh";
     std::ofstream out_file(out_file_name, std::ios_base::binary);
     if (!out_file.good()) {
@@ -66,7 +66,7 @@ template <size_t nDim> int Run(const udh::Parameters &parameters) {
     const uint32_t p_no_add = GetNoAddProbabilityFromJ(parameters.j());
 
     std::queue<Index<nDim>> queue;
-    udh::Observables observables;
+    UdhObservables observables;
     ProgressIndicator progress_indicator(std::time(nullptr),
                                          parameters.n_measure());
     log_file << TimeString(std::time(nullptr)) << " Starting simulation"
@@ -119,7 +119,7 @@ template <size_t nDim> int Run(const udh::Parameters &parameters) {
 }
 
 int main(int argc, const char **argv) {
-    udh::Parameters parameters;
+    UdhParameters parameters;
     try {
         if (!ParseArgs(argc, argv, &parameters)) {
             return -1;
@@ -129,7 +129,7 @@ int main(int argc, const char **argv) {
         return -1;
     }
 
-    const std::map<uint32_t, int (*)(const udh::Parameters &)> dispatch_table =
+    const std::map<uint32_t, int (*)(const UdhParameters &)> dispatch_table =
         {{2u, &Run<2>}, {3u, &Run<3>}, {4u, &Run<4>}, {5u, &Run<5>}};
 
     const auto pair = dispatch_table.find(parameters.shape().size());

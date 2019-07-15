@@ -1,7 +1,6 @@
 syntax = "proto3";
-package udh;
 
-message Parameters {
+message UdhParameters {
     double j = 1;
     double mu = 2;
     repeated uint32 shape = 3;
@@ -14,7 +13,7 @@ message Parameters {
     string tag = 10;
 }
 
-message Observables {
+message UdhObservables {
     uint64 sequence_id = 1;
     uint64 stamp = 2;
     uint64 flip_cluster_duration = 3;

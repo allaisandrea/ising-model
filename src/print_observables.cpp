@@ -12,15 +12,15 @@ int main(int argc, char **argv) {
                                  std::string(file_name) + "\"");
     }
 
-    udh::Parameters parameters;
+    UdhParameters parameters;
     if (!Read(&parameters, &in_file)) {
         throw std::runtime_error("Unable to read parameters from file \"" +
                                  std::string(file_name) + "\"");
     }
 
-    PrintCsvHeader<udh::Observables>(&std::cout);
+    PrintCsvHeader<UdhObservables>(&std::cout);
     std::cout << std::endl;
-    udh::Observables observables;
+    UdhObservables observables;
     while (Read(&observables, &in_file)) {
         PrintAsCsv(observables, &std::cout);
         std::cout << std::endl;

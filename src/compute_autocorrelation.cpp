@@ -7,9 +7,9 @@ int main(int argc, char **argv) {
         std::cout << "Group ";
         PrintAsCsv(group.parameters(), &std::cout);
         std::cout << std::endl;
-        PrintCsvHeader<udh::Observables>(&std::cout);
+        PrintCsvHeader<UdhObservables>(&std::cout);
         std::cout << std::endl;
-        udh::Observables observables;
+        UdhObservables observables;
         int i = 0;
         while (group.NextObservables(&observables)) {
             std::cout << i << ",";

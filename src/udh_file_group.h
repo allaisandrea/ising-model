@@ -11,7 +11,7 @@ class UdhFileGroup {
     };
     const uint64_t _skip_first_n;
     const std::vector<Entry> _entries;
-    const udh::Parameters _parameters;
+    const UdhParameters _parameters;
     size_t _current_entry;
     std::ifstream _current_file;
 
@@ -26,9 +26,9 @@ class UdhFileGroup {
     UdhFileGroup(ParametersSet::const_iterator begin,
                  ParametersSet::const_iterator end, uint64_t skip_first_n = 0);
 
-    bool NextObservables(udh::Observables *observables);
+    bool NextObservables(UdhObservables *observables);
     uint64_t CountObservables();
-    const udh::Parameters &parameters() const { return _parameters; }
+    const UdhParameters &parameters() const { return _parameters; }
 };
 
 inline std::vector<UdhFileGroup::Entry>
@@ -86,7 +86,7 @@ inline bool UdhFileGroup::OpenNextFile() {
     return false;
 }
 
-inline bool UdhFileGroup::NextObservables(udh::Observables *observables) {
+inline bool UdhFileGroup::NextObservables(UdhObservables *observables) {
     if (_current_entry >= _entries.size()) {
         _current_entry = -1;
         if (!OpenNextFile()) {

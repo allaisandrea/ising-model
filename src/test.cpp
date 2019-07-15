@@ -747,27 +747,27 @@ TEST(UdhIo, ReadWrite) {
     std::mt19937 rng;
     std::normal_distribution<double> normal_variate(0, 1);
 
-    udh::Parameters parameters_out;
+    UdhParameters parameters_out;
     parameters_out.set_j(normal_variate(rng));
     parameters_out.set_mu(normal_variate(rng));
     parameters_out.mutable_shape()->Add(rng());
     parameters_out.mutable_shape()->Add(rng());
     parameters_out.set_tag("foo bar");
 
-    std::vector<udh::Observables> observables_out(4);
-    for (udh::Observables &obs : observables_out) {
+    std::vector<UdhObservables> observables_out(4);
+    for (UdhObservables &obs : observables_out) {
         obs.set_stamp(rng());
         obs.set_sum_si_sj(rng());
     }
 
     std::stringstream strm;
     Write(parameters_out, &strm);
-    for (const udh::Observables &obs : observables_out) {
+    for (const UdhObservables &obs : observables_out) {
         Write(obs, &strm);
     }
 
     strm.seekg(0);
-    udh::Parameters parameters_in;
+    UdhParameters parameters_in;
     EXPECT_TRUE(Read(&parameters_in, &strm));
 
     EXPECT_EQ(parameters_out.j(), parameters_in.j());
@@ -776,7 +776,7 @@ TEST(UdhIo, ReadWrite) {
     EXPECT_EQ(parameters_out.shape(1), parameters_in.shape(1));
     EXPECT_EQ(parameters_out.tag(), parameters_in.tag());
 
-    std::vector<udh::Observables> observables_in;
+    std::vector<UdhObservables> observables_in;
     do {
         observables_in.emplace_back();
     } while (Read(&observables_in.back(), &strm));
@@ -799,7 +799,7 @@ void TestUdhMeasureRandomConfiguration(const Index<nDim> &shape) {
         for (UdhSpin &node : lattice) {
             node.value = random_spin(rng);
         }
-        udh::Observables observables;
+        UdhObservables observables;
         Measure(lattice, &observables);
         const Index<2> energies = ComputeEnergies(lattice);
         EXPECT_EQ(nDim * lattice.size() + observables.sum_si_sj(), energies[0]);
@@ -824,7 +824,7 @@ void TestUdhMeasure(const Index<nDim> &shape,
         ASSERT_LT(values[i], 3ul);
         lattice[i].value = values[i];
     }
-    udh::Observables observables;
+    UdhObservables observables;
     Measure(lattice, &observables);
     EXPECT_EQ(observables.n_down(), n_down);
     EXPECT_EQ(observables.n_holes(), n_holes);
@@ -926,7 +926,7 @@ TEST(Throttle, Throttle) {
 }
 
 TEST(UdhArguments, UdhArguments) {
-    udh::Parameters parameters;
+    UdhParameters parameters;
     const char *args1[] = {"run-simulation", "--help"};
     EXPECT_FALSE(ParseArgs(2, args1, &parameters));
 

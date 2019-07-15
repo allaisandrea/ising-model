@@ -75,7 +75,7 @@ inline bool Skip(uint64_t n_skip, std::istream *stream) {
     return true;
 }
 
-inline void PrintAsCsv(const udh::Parameters &params, std::ostream *pStrm) {
+inline void PrintAsCsv(const UdhParameters &params, std::ostream *pStrm) {
     std::ostream &strm = *pStrm;
     // clang-format off
     strm << params.shape().size() << ","
@@ -100,7 +100,7 @@ inline void PrintAsCsv(const udh::Parameters &params, std::ostream *pStrm) {
     // clang-format on
 }
 
-inline void PrintAsCsv(const udh::Observables &observables,
+inline void PrintAsCsv(const UdhObservables &observables,
                        std::ostream *pStrm) {
     std::ostream &strm = *pStrm;
     // clang-format off
@@ -121,7 +121,7 @@ inline void PrintAsCsv(const udh::Observables &observables,
 template <typename ProtoMessage>
 inline void PrintCsvHeader(std::ostream *pStrm);
 
-template <> inline void PrintCsvHeader<udh::Observables>(std::ostream *pStrm) {
+template <> inline void PrintCsvHeader<UdhObservables>(std::ostream *pStrm) {
     std::ostream &strm = *pStrm;
     // clang-format off
     strm << "sequence_id,"
