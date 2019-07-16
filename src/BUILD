@@ -1,3 +1,5 @@
+# Libraries ##################################
+
 proto_library(
     name = "udh_proto",
     srcs = ["udh.proto"]
@@ -52,6 +54,8 @@ cc_library(
     hdrs = ["mock_clock.h"],
 )
 
+# Binaries  ##################################
+
 cc_binary(
     name = "ud-run-simulation",
     srcs = [
@@ -62,6 +66,12 @@ cc_binary(
     linkopts = [
         "-lboost_program_options"
     ],
+)
+
+cc_binary(
+    name = "compute-integral",
+    srcs = [
+        "compute_integral.cpp"],
 )
 
 cc_binary(
@@ -103,6 +113,8 @@ cc_binary(
         "udh_arguments.h"],
     deps = [":udh_cc_proto"],
 )
+
+# Tests ##################################
 
 cc_test (
     name = "tensor_test",
