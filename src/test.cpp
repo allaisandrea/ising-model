@@ -23,39 +23,12 @@
 #include "udh_spin.h"
 #include "wolff_algorithm.h"
 #include "distributions.h"
+#include "mock_clock.h"
 
 
 
 
 
-struct MockClock {
-    using time_point = int64_t;
-    using duration = int64_t;
-    static int64_t time;
-    static int64_t now() { return time; }
-};
-int64_t MockClock::time{};
-
-TEST(Timer, Timer) {
-    Timer<MockClock> timer;
-    MockClock::time = 5;
-    EXPECT_EQ(timer.elapsed(), 0l);
-    timer.start();
-    MockClock::time = 7;
-    EXPECT_EQ(timer.elapsed(), 2l);
-    MockClock::time = 10;
-    EXPECT_EQ(timer.elapsed(), 5l);
-    timer.stop();
-    EXPECT_EQ(timer.elapsed(), 5l);
-    MockClock::time = 12;
-    EXPECT_EQ(timer.elapsed(), 5l);
-    timer.start();
-    MockClock::time = 15;
-    EXPECT_EQ(timer.elapsed(), 8l);
-    timer.stop();
-    MockClock::time = 19;
-    EXPECT_EQ(timer.elapsed(), 8l);
-}
 
 TEST(Progress, ProgressString) {
     {

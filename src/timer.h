@@ -1,5 +1,6 @@
 #pragma once
 #include <chrono>
+#include <stdexcept>
 
 template <typename Clock> class Timer {
     typename Clock::time_point _start_time;

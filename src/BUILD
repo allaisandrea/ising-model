@@ -46,6 +46,12 @@ cc_library(
         "distributions.h"],
 )
 
+cc_library(
+    name = "mock_clock",
+    srcs= ["mock_clock.cpp"],
+    hdrs = ["mock_clock.h"],
+)
+
 cc_binary(
     name = "run-simulation",
     srcs = [
@@ -106,6 +112,7 @@ cc_test (
         "udh_arguments.h"],
     deps = [
         ":udh_cc_proto",
+        ":mock_clock",
         ":compute_distribution_p_value",
         "@gtest//:gtest",
         "@gtest//:gtest_main" 
@@ -207,6 +214,18 @@ cc_test (
         ":udh_cc_proto",
         ":udh_measure",
         ":udh_metropolis_algorithm",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main" 
+    ],
+)
+
+cc_test (
+    name = "timer_test",
+    srcs = [
+        "timer_test.cpp",
+        "timer.h"],
+    deps = [
+        ":mock_clock",
         "@gtest//:gtest",
         "@gtest//:gtest_main" 
     ],
