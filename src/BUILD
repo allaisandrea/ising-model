@@ -258,4 +258,7 @@ cc_test (
         "@gtest//:gtest",
         "@gtest//:gtest_main" 
     ],
+    linkopts = [
+        "-lboost_program_options"
+    ],
 )
