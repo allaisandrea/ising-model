@@ -178,3 +178,15 @@ cc_test (
         "@gtest//:gtest_main"
     ],
 )
+
+cc_test (
+    name = "udh_io_test",
+    srcs = [
+        "udh_io_test.cpp",
+        "udh_io.h"],
+    deps = [
+        ":udh_cc_proto",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main" 
+    ],
+)
