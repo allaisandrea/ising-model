@@ -32,6 +32,14 @@ cc_library(
 )
 
 cc_library(
+    name = "udh_measure",
+    hdrs = [
+        "udh_measure.h",
+        "tensor.h",
+        "udh_spin.h"],
+)
+
+cc_library(
     name = "compute_distribution_p_value",
     hdrs = [
         "compute_distribution_p_value.h",
@@ -186,6 +194,19 @@ cc_test (
         "udh_io.h"],
     deps = [
         ":udh_cc_proto",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main" 
+    ],
+)
+
+cc_test (
+    name = "udh_measure_test",
+    srcs = [
+        "udh_measure_test.cpp"],
+    deps = [
+        ":udh_cc_proto",
+        ":udh_measure",
+        ":udh_metropolis_algorithm",
         "@gtest//:gtest",
         "@gtest//:gtest_main" 
     ],
