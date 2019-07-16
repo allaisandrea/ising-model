@@ -230,3 +230,14 @@ cc_test (
         "@gtest//:gtest_main" 
     ],
 )
+
+cc_test (
+    name = "progress_test",
+    srcs = [
+        "progress_test.cpp",
+        "progress.h"],
+    deps = [
+        "@gtest//:gtest",
+        "@gtest//:gtest_main" 
+    ],
+)
