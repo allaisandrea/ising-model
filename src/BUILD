@@ -241,3 +241,15 @@ cc_test (
         "@gtest//:gtest_main" 
     ],
 )
+
+cc_test (
+    name = "throttle_test",
+    srcs = [
+        "throttle_test.cpp",
+        "throttle.h"],
+    deps = [
+        ":mock_clock",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main" 
+    ],
+)
