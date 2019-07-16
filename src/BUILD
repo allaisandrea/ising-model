@@ -24,6 +24,14 @@ cc_library(
 )
 
 cc_library(
+    name = "udh_metropolis_algorithm",
+    hdrs = [
+        "udh_metropolis_algorithm.h",
+        "tensor.h",
+        "udh_spin.h"],
+)
+
+cc_library(
     name = "compute_distribution_p_value",
     hdrs = [
         "compute_distribution_p_value.h",
@@ -137,7 +145,6 @@ cc_test (
     srcs = [
         "wolff_algorithm_test.cpp",
         "ud_spin.h",
-        "distributions.h",
         "next_configuration.h"],
     deps = [
         ":compute_distribution_p_value",
@@ -155,5 +162,19 @@ cc_test (
     deps = [
         "@gtest//:gtest",
         "@gtest//:gtest_main" 
+    ],
+)
+
+cc_test (
+    name = "udh_metropolis_algorithm_test",
+    srcs = [
+        "udh_metropolis_algorithm_test.cpp",
+        "next_configuration.h"],
+    deps = [
+        ":compute_distribution_p_value",
+        ":udh_metropolis_algorithm",
+        ":wolff_algorithm",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main"
     ],
 )

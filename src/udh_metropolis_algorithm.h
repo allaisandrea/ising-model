@@ -1,7 +1,10 @@
 #pragma once
 #include <cstdint>
+#include <cmath>
+#include <algorithm>
 
 #include "udh_spin.h"
+#include "tensor.h"
 
 struct UdhTransitionProbs {
     uint64_t p_dh_or_uh;
@@ -82,4 +85,27 @@ void UdhMetropolisSweep(
     do {
         UdhMetropolisMove(transition_probs_array, i, lattice, rng);
     } while (NextIndex(&i, lattice->shape()));
+}
+
+template <size_t nDim>
+Index<2> ComputeEnergies(const Tensor<nDim, UdhSpin> &lattice) {
+    Index<2> energies{};
+    Index<nDim> i{};
+    energies[0] = nDim * lattice.size();
+    do {
+        UdhSpin spin = lattice[i];
+        if (spin == UdhSpinHole()) {
+            continue;
+        }
+        ++energies[1];
+        for (size_t d = 0; d < nDim; ++d) {
+            const typename Index<nDim>::value_type i_d = i[d];
+            i[d] = (i_d + 1) % lattice.shape(d);
+            UdhSpin spin1 = lattice[i];
+            energies[0] +=
+                (int64_t(spin.value) - 1) * (int64_t(spin1.value) - 1);
+            i[d] = i_d;
+        }
+    } while (NextIndex(&i, lattice.shape()));
+    return energies;
 }
