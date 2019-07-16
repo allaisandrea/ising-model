@@ -53,7 +53,19 @@ cc_library(
 )
 
 cc_binary(
-    name = "run-simulation",
+    name = "ud-run-simulation",
+    srcs = [
+        "ud_run_simulation.cpp",
+        "wolff_algorithm.h"],
+    deps = [
+            ":observables"],
+    linkopts = [
+        "-lboost_program_options"
+    ],
+)
+
+cc_binary(
+    name = "udh-run-simulation",
     srcs = [
         "udh_run_simulation.cpp",
         "progress.h",
