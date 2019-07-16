@@ -146,3 +146,14 @@ cc_test (
         "@gtest//:gtest_main" 
     ],
 )
+
+cc_test (
+    name = "udh_spin_test",
+    srcs = [
+        "udh_spin_test.cpp",
+        "udh_spin.h"],
+    deps = [
+        "@gtest//:gtest",
+        "@gtest//:gtest_main" 
+    ],
+)
