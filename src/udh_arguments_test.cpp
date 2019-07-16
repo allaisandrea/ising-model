@@ -1,36 +1,7 @@
-#include <algorithm>
-#include <chrono>
-#include <iostream>
-#include <map>
-#include <queue>
-#include <random>
-#include <thread>
-#include <unordered_map>
+
+#include "udh_arguments.h"
 
 #include <gtest/gtest.h>
-
-#include "observables.h"
-#include "progress.h"
-#include "tensor.h"
-#include "next_configuration.h"
-#include "throttle.h"
-#include "timer.h"
-#include "udh_arguments.h"
-#include "udh_io.h"
-#include "udh_measure.h"
-#include "udh_metropolis_algorithm.h"
-#include "compute_distribution_p_value.h"
-#include "udh_spin.h"
-#include "wolff_algorithm.h"
-#include "distributions.h"
-#include "mock_clock.h"
-
-
-
-
-
-
-
 
 TEST(UdhArguments, UdhArguments) {
     UdhParameters parameters;

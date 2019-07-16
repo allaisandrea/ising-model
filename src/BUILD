@@ -93,36 +93,6 @@ cc_binary(
 )
 
 cc_test (
-    name = "test",
-    srcs = [
-        "test.cpp",
-        "progress.h",
-        "udh_measure.h",
-        "observables.h",
-        "distributions.h",
-        "next_configuration.h",
-        "udh_spin.h",
-        "ud_spin.h",
-        "throttle.h",
-        "udh_metropolis_algorithm.h",
-        "wolff_algorithm.h",
-        "udh_io.h",
-        "tensor.h",
-        "timer.h",
-        "udh_arguments.h"],
-    deps = [
-        ":udh_cc_proto",
-        ":mock_clock",
-        ":compute_distribution_p_value",
-        "@gtest//:gtest",
-        "@gtest//:gtest_main" 
-    ],
-    linkopts = [
-        "-lboost_program_options"
-    ],
-)
-
-cc_test (
     name = "tensor_test",
     srcs = [
         "tensor_test.cpp",
@@ -249,6 +219,18 @@ cc_test (
         "throttle.h"],
     deps = [
         ":mock_clock",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main" 
+    ],
+)
+
+cc_test (
+    name = "udh_arguments_test",
+    srcs = [
+        "udh_arguments_test.cpp",
+        "udh_arguments.h"],
+    deps = [
+        ":udh_cc_proto",
         "@gtest//:gtest",
         "@gtest//:gtest_main" 
     ],
