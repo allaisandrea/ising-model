@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+namespace {
 void MakeLaplacianMatrix(const size_t period, Eigen::MatrixXf *K) {
     K->resize(period, period);
     K->setZero();
@@ -72,4 +73,5 @@ TEST(Observables, Measure) {
                            obs.fourierTransform2d(0, 0)),
                   1.0e-5);
     }
+}
 }

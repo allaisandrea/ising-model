@@ -10,6 +10,8 @@
 #include "udh_spin.h"
 #include "wolff_algorithm.h"
 
+namespace {
+
 template <size_t nDim>
 Index<nDim> GetNumberOfTiles(const UdhParameters &parameters,
                              uint64_t tile_size) {
@@ -116,6 +118,8 @@ template <size_t nDim> int Run(const UdhParameters &parameters) {
                  << std::endl;
     }
     return 0;
+}
+
 }
 
 int main(int argc, const char **argv) {

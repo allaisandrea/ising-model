@@ -5,6 +5,8 @@
 
 #include <gtest/gtest.h>
 
+namespace {
+
 uint64_t get_p_hu(const UdhTransitionProbs &tp) {
     return tp.p_hd_plus_p_hu - tp.p_hd;
 }
@@ -171,4 +173,5 @@ TEST(UdhMetropolisAlgorithm, CorrectDistribution2D) {
         {2, 3}, {J, mu},
         {{J + 0.01, mu}, {J - 0.01, mu}, {J, mu + 0.10}, {J, mu - 0.10}},
         1 << 17, 2);
+}
 }

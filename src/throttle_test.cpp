@@ -2,7 +2,7 @@
 #include "mock_clock.h"
 
 #include <gtest/gtest.h>
-
+namespace {
 TEST(Throttle, Throttle) {
     Throttle<MockClock> throttle(5);
     uint64_t counter = 0;
@@ -17,4 +17,5 @@ TEST(Throttle, Throttle) {
     MockClock::time = 36;
     throttle([&counter]() { ++counter; });
     EXPECT_EQ(counter, 2ul);
+}
 }

@@ -3,6 +3,8 @@
 
 #include <gtest/gtest.h>
 
+namespace {
+
 TEST(Timer, Timer) {
     Timer<MockClock> timer;
     MockClock::time = 5;
@@ -22,4 +24,6 @@ TEST(Timer, Timer) {
     timer.stop();
     MockClock::time = 19;
     EXPECT_EQ(timer.elapsed(), 8l);
+}
+
 }

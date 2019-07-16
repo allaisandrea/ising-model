@@ -1,7 +1,7 @@
 #include "progress.h"
 
 #include <gtest/gtest.h>
-
+namespace {
 TEST(Progress, ProgressString) {
     {
         ProgressIndicator progress(0, 100);
@@ -24,4 +24,5 @@ TEST(Progress, ProgressString) {
         EXPECT_EQ(progress.string(3600, 1),
                   "  0.00% ETA Sun Jul 18 09:00:00     ");
     }
+}
 }

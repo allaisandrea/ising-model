@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 
+namespace {
 template <size_t nDim>
 uint64_t ComputeParallelCount(const Tensor<nDim, UdSpin> &lattice) {
     uint64_t parallelCount = 0;
@@ -111,4 +112,5 @@ TEST(WolffAlgorithm, CorrectDistribution3D) {
 TEST(WolffAlgorithm, CorrectDistribution2D) {
     TestWolffAlgorithmCorrectDistribution<2>({2, 3}, 0.413, {0.40, 0.42},
                                              1 << 14, 8);
+}
 }

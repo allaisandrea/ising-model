@@ -2,7 +2,7 @@
 #include "udh_arguments.h"
 
 #include <gtest/gtest.h>
-
+namespace {
 TEST(UdhArguments, UdhArguments) {
     UdhParameters parameters;
     const char *args1[] = {"run-simulation", "--help"};
@@ -62,4 +62,5 @@ TEST(UdhArguments, UdhArguments) {
     EXPECT_EQ(parameters.seed(), 7ul);
     EXPECT_EQ(parameters.id(), "5ab4fd9aa");
     EXPECT_EQ(parameters.tag(), "foo");
+}
 }

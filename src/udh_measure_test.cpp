@@ -3,6 +3,8 @@
 
 #include <gtest/gtest.h>
 
+namespace {
+
 template <size_t nDim>
 void TestUdhMeasureRandomConfiguration(const Index<nDim> &shape) {
     std::mt19937 rng;
@@ -67,4 +69,6 @@ TEST(UdhMeasure, ChosenConfigurations) {
             1, 1, 1}, 
             /*n_down=*/1, /*n_holes=*/4, /*n_up=*/1, /*sum_si_sj=*/-1);
     // clang-format on
+}
+
 }

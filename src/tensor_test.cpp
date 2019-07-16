@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+namespace {
 template <size_t nDim> void TestIndexConversion() {
     std::mt19937 rng;
     for (size_t it = 0; it < 10; ++it) {
@@ -179,4 +180,5 @@ TEST(Tensor, TileTensor3) {
             10,11,10,11,10,11,
              });
     // clang-format on
+}
 }

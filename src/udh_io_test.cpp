@@ -3,6 +3,8 @@
 #include <gtest/gtest.h>
 #include <random>
 
+namespace {
+
 TEST(UdhIo, ReadWrite) {
     std::mt19937 rng;
     std::normal_distribution<double> normal_variate(0, 1);
@@ -48,4 +50,6 @@ TEST(UdhIo, ReadWrite) {
         EXPECT_EQ(observables_out[i].sum_si_sj(),
                   observables_in[i].sum_si_sj());
     }
-};
+}
+
+}

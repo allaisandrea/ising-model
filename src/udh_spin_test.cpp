@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+namespace {
+
 TEST(UdhSpin, VisitedFlag) {
     for (UdhSpin s0{0}; s0.value < 3; ++s0.value) {
         UdhSpin s1 = s0;
@@ -63,4 +65,5 @@ TEST(UdhSpin, Increment) {
     EXPECT_EQ(s, UdhSpinHole());
     --s.value;
     EXPECT_EQ(s, UdhSpinDown());
+}
 }

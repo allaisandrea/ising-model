@@ -2,7 +2,7 @@
 
 #include <array>
 #include <gtest/gtest.h>
-
+namespace {
 struct ConfigurationItem {
     uint64_t value;
     ConfigurationItem(uint64_t value) : value(value) {}
@@ -33,4 +33,5 @@ TEST(NextConfiguration, NextConfiguration) {
                                       uint64_t(4)));
         EXPECT_EQ(config, expected_configs[i]);
     }
+}
 }
