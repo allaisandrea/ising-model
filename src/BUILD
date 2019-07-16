@@ -16,6 +16,20 @@ cc_library(
         "ud_spin.h"],
 )
 
+cc_library(
+    name = "wolff_algorithm",
+    hdrs = [
+        "wolff_algorithm.h",
+        "tensor.h"],
+)
+
+cc_library(
+    name = "compute_distribution_p_value",
+    hdrs = [
+        "compute_distribution_p_value.h",
+        "distributions.h"],
+)
+
 cc_binary(
     name = "run-simulation",
     srcs = [
@@ -76,8 +90,9 @@ cc_test (
         "udh_arguments.h"],
     deps = [
         ":udh_cc_proto",
+        ":compute_distribution_p_value",
         "@gtest//:gtest",
-        "@gtest//:gtest_main" # Only if hello_test.cc has no main()
+        "@gtest//:gtest_main" 
     ],
     linkopts = [
         "-lboost_program_options"
@@ -91,7 +106,7 @@ cc_test (
         "tensor.h"],
     deps = [
         "@gtest//:gtest",
-        "@gtest//:gtest_main" # Only if hello_test.cc has no main()
+        "@gtest//:gtest_main" 
     ],
 )
 
@@ -102,7 +117,7 @@ cc_test (
     deps = [
         ":observables",
         "@gtest//:gtest",
-        "@gtest//:gtest_main" # Only if hello_test.cc has no main()
+        "@gtest//:gtest_main" 
     ],
 )
 
@@ -113,6 +128,21 @@ cc_test (
         "next_configuration.h"],
     deps = [
         "@gtest//:gtest",
-        "@gtest//:gtest_main" # Only if hello_test.cc has no main()
+        "@gtest//:gtest_main" 
+    ],
+)
+
+cc_test (
+    name = "wolff_algorithm_test",
+    srcs = [
+        "wolff_algorithm_test.cpp",
+        "ud_spin.h",
+        "distributions.h",
+        "next_configuration.h"],
+    deps = [
+        ":compute_distribution_p_value",
+        ":wolff_algorithm",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main" 
     ],
 )
