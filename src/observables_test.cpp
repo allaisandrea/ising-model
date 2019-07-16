@@ -74,4 +74,4 @@ TEST(Observables, Measure) {
                   1.0e-5);
     }
 }
-}
+} // namespace

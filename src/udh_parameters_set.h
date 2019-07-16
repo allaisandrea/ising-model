@@ -1,12 +1,11 @@
 #pragma once
-#include "udh_io.h"
 #include "udh.pb.h"
+#include "udh_io.h"
 #include <fstream>
 #include <set>
 
 struct ParametersComp {
-    bool operator()(const UdhParameters &p1,
-                    const UdhParameters &p2) const {
+    bool operator()(const UdhParameters &p1, const UdhParameters &p2) const {
         if (p1.shape().size() < p2.shape().size()) {
             return true;
         } else if (p1.shape().size() > p2.shape().size()) {

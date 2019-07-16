@@ -34,4 +34,4 @@ TEST(NextConfiguration, NextConfiguration) {
         EXPECT_EQ(config, expected_configs[i]);
     }
 }
-}
+} // namespace

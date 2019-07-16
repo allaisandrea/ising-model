@@ -66,4 +66,4 @@ TEST(UdhSpin, Increment) {
     --s.value;
     EXPECT_EQ(s, UdhSpinDown());
 }
-}
+} // namespace

@@ -120,7 +120,7 @@ template <size_t nDim> int Run(const UdhParameters &parameters) {
     return 0;
 }
 
-}
+} // namespace
 
 int main(int argc, const char **argv) {
     UdhParameters parameters;
@@ -133,8 +133,8 @@ int main(int argc, const char **argv) {
         return -1;
     }
 
-    const std::map<uint32_t, int (*)(const UdhParameters &)> dispatch_table =
-        {{2u, &Run<2>}, {3u, &Run<3>}, {4u, &Run<4>}, {5u, &Run<5>}};
+    const std::map<uint32_t, int (*)(const UdhParameters &)> dispatch_table = {
+        {2u, &Run<2>}, {3u, &Run<3>}, {4u, &Run<4>}, {5u, &Run<5>}};
 
     const auto pair = dispatch_table.find(parameters.shape().size());
     if (pair == dispatch_table.end()) {

@@ -25,4 +25,4 @@ TEST(Progress, ProgressString) {
                   "  0.00% ETA Sun Jul 18 09:00:00     ");
     }
 }
-}
+} // namespace

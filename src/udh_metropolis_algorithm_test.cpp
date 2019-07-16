@@ -1,7 +1,7 @@
-#include "udh_metropolis_algorithm.h"
-#include "wolff_algorithm.h"
 #include "compute_distribution_p_value.h"
 #include "next_configuration.h"
+#include "udh_metropolis_algorithm.h"
+#include "wolff_algorithm.h"
 
 #include <gtest/gtest.h>
 
@@ -29,7 +29,6 @@ TEST(UdhMetropolis, TransitionProbabilities) {
         EXPECT_NEAR(p_u * tp.p_dh_or_uh, p_h * get_p_hu(tp), 2.0);
     }
 }
-
 
 template <size_t nDim>
 Index<2> GetHistogramShape(const Index<nDim> &lattice_shape) {
@@ -174,4 +173,4 @@ TEST(UdhMetropolisAlgorithm, CorrectDistribution2D) {
         {{J + 0.01, mu}, {J - 0.01, mu}, {J, mu + 0.10}, {J, mu - 0.10}},
         1 << 17, 2);
 }
-}
+} // namespace

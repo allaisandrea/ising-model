@@ -1,8 +1,8 @@
-#include "wolff_algorithm.h"
-#include "ud_spin.h"
+#include "compute_distribution_p_value.h"
 #include "distributions.h"
 #include "next_configuration.h"
-#include "compute_distribution_p_value.h"
+#include "ud_spin.h"
+#include "wolff_algorithm.h"
 
 #include <gtest/gtest.h>
 
@@ -113,4 +113,4 @@ TEST(WolffAlgorithm, CorrectDistribution2D) {
     TestWolffAlgorithmCorrectDistribution<2>({2, 3}, 0.413, {0.40, 0.42},
                                              1 << 14, 8);
 }
-}
+} // namespace

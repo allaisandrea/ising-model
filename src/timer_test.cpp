@@ -1,5 +1,5 @@
-#include "timer.h"
 #include "mock_clock.h"
+#include "timer.h"
 
 #include <gtest/gtest.h>
 
@@ -26,4 +26,4 @@ TEST(Timer, Timer) {
     EXPECT_EQ(timer.elapsed(), 8l);
 }
 
-}
+} // namespace

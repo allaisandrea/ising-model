@@ -63,4 +63,4 @@ TEST(UdhArguments, UdhArguments) {
     EXPECT_EQ(parameters.id(), "5ab4fd9aa");
     EXPECT_EQ(parameters.tag(), "foo");
 }
-}
+} // namespace

@@ -52,4 +52,4 @@ TEST(UdhIo, ReadWrite) {
     }
 }
 
-}
+} // namespace

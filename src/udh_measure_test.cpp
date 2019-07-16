@@ -71,4 +71,4 @@ TEST(UdhMeasure, ChosenConfigurations) {
     // clang-format on
 }
 
-}
+} // namespace

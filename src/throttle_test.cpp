@@ -1,5 +1,5 @@
-#include "throttle.h"
 #include "mock_clock.h"
+#include "throttle.h"
 
 #include <gtest/gtest.h>
 namespace {
@@ -18,4 +18,4 @@ TEST(Throttle, Throttle) {
     throttle([&counter]() { ++counter; });
     EXPECT_EQ(counter, 2ul);
 }
-}
+} // namespace

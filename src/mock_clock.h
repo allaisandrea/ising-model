@@ -7,4 +7,3 @@ struct MockClock {
     static int64_t time;
     static int64_t now() { return time; }
 };
-

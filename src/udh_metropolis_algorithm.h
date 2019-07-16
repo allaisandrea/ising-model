@@ -1,10 +1,10 @@
 #pragma once
-#include <cstdint>
-#include <cmath>
 #include <algorithm>
+#include <cmath>
+#include <cstdint>
 
-#include "udh_spin.h"
 #include "tensor.h"
+#include "udh_spin.h"
 
 struct UdhTransitionProbs {
     uint64_t p_dh_or_uh;

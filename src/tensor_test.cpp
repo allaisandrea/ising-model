@@ -181,4 +181,4 @@ TEST(Tensor, TileTensor3) {
              });
     // clang-format on
 }
-}
+} // namespace

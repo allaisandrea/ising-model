@@ -1,8 +1,8 @@
 #pragma once
 #include <ctime>
+#include <iomanip>
 #include <sstream>
 #include <string>
-#include <iomanip>
 
 inline std::string TimeString(std::time_t time) {
     const char *time_string = std::asctime(std::localtime(&time));

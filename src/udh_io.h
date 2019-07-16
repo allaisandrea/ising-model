@@ -100,8 +100,7 @@ inline void PrintAsCsv(const UdhParameters &params, std::ostream *pStrm) {
     // clang-format on
 }
 
-inline void PrintAsCsv(const UdhObservables &observables,
-                       std::ostream *pStrm) {
+inline void PrintAsCsv(const UdhObservables &observables, std::ostream *pStrm) {
     std::ostream &strm = *pStrm;
     // clang-format off
     strm << observables.sequence_id() << ","
