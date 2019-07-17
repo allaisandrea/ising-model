@@ -5,81 +5,54 @@
 #include <stdexcept>
 
 class UdhFileGroup {
+  public:
     struct Entry {
         std::string file_name;
         uint64_t read_every;
     };
-    const uint64_t _skip_first_n;
-    const std::vector<Entry> _entries;
-    const UdhParameters _parameters;
-    size_t _current_entry;
-    std::ifstream _current_file;
 
-    static std::vector<Entry> MakeEntries(ParametersSet::const_iterator begin,
-                                          ParametersSet::const_iterator end);
-
-    bool OpenNextFile();
-
-    const Entry &current_entry() { return _entries.at(_current_entry); }
-
-  public:
-    UdhFileGroup(ParametersSet::const_iterator begin,
-                 ParametersSet::const_iterator end, uint64_t skip_first_n = 0);
+    UdhFileGroup(const UdhParameters &params, const std::vector<Entry> &entries,
+                 uint64_t skip_first_n = 0,
+                 OpenFunctionT open_function = &OpenFile);
 
     bool NextObservables(UdhObservables *observables);
     uint64_t CountObservables();
     const UdhParameters &parameters() const { return _parameters; }
+
+  private:
+    const UdhParameters &_parameters;
+    const uint64_t _skip_first_n;
+    const std::vector<Entry> _entries;
+    size_t _current_entry;
+    std::unique_ptr<std::istream> _current_file;
+    OpenFunctionT _open_function;
+
+    bool OpenNextFile();
+
+    const Entry &current_entry() { return _entries.at(_current_entry); }
 };
 
-inline std::vector<UdhFileGroup::Entry>
-UdhFileGroup::MakeEntries(ParametersSet::const_iterator begin,
-                          ParametersSet::const_iterator end) {
-    if (begin == end) {
-        throw std::invalid_argument("Cannot make empty file group");
-    }
-    std::vector<Entry> entries;
-    for (auto params = begin; params != end; ++params) {
-        if ((params != begin) && !OutputCanBeJoined(*begin, *params)) {
-            throw std::invalid_argument("Outputs cannot be joined:\n" +
-                                        GetCsvString(*begin) + "\n" +
-                                        GetCsvString(*params));
-        }
-        entries.emplace_back(
-            Entry{params->id() + ".udh",
-                  begin->measure_every() / params->measure_every()});
-        if (entries.back().read_every == 0) {
-            throw std::runtime_error("read every is zero");
-        }
-    }
-    return entries;
-}
-
-inline UdhFileGroup::UdhFileGroup(ParametersSet::const_iterator begin,
-                                  ParametersSet::const_iterator end,
-                                  uint64_t skip_first_n)
-    : _skip_first_n(skip_first_n), _entries(MakeEntries(begin, end)),
-      _parameters(*begin), _current_entry{_entries.size()} {}
+inline UdhFileGroup::UdhFileGroup(const UdhParameters &params,
+                                  const std::vector<Entry> &entries,
+                                  uint64_t skip_first_n,
+                                  OpenFunctionT open_function)
+    : _parameters(params), _skip_first_n(skip_first_n), _entries(entries),
+      _current_entry(entries.size()), _open_function(open_function) {}
 
 inline bool UdhFileGroup::OpenNextFile() {
-    _current_file.close();
     while (true) {
         ++_current_entry;
         if (_current_entry >= _entries.size()) {
             return false;
         }
-        const std::string file_name = current_entry().file_name;
-        _current_file.open(file_name);
-        if (!_current_file.good()) {
-            throw std::runtime_error("Unable to open file \"" + file_name +
-                                     "\"");
-        }
-        if (!Skip(1, &_current_file)) {
+        _current_file = _open_function(current_entry().file_name);
+        if (!Skip(1, _current_file.get())) {
             throw std::runtime_error(
-                "File \"" + file_name +
+                "File \"" + current_entry().file_name +
                 "\" does not contain the parameters header");
         }
         const uint64_t n_skip = _skip_first_n * current_entry().read_every;
-        if (Skip(n_skip, &_current_file)) {
+        if (Skip(n_skip, _current_file.get())) {
             return true;
         }
     }
@@ -95,13 +68,13 @@ inline bool UdhFileGroup::NextObservables(UdhObservables *observables) {
     }
     while (true) {
         const uint64_t n_skip = current_entry().read_every - 1;
-        if (!Skip(n_skip, &_current_file)) {
+        if (!Skip(n_skip, _current_file.get())) {
             if (!OpenNextFile()) {
                 return false;
             }
             continue;
         }
-        if (!Read(observables, &_current_file)) {
+        if (!Read(observables, _current_file.get())) {
             if (!OpenNextFile()) {
                 return false;
             }
@@ -121,7 +94,7 @@ inline uint64_t UdhFileGroup::CountObservables() {
     uint64_t result = 0;
     while (true) {
         const uint64_t n_skip = current_entry().read_every;
-        if (!Skip(n_skip, &_current_file)) {
+        if (!Skip(n_skip, _current_file.get())) {
             if (!OpenNextFile()) {
                 return result;
             }
@@ -133,19 +106,25 @@ inline uint64_t UdhFileGroup::CountObservables() {
 }
 
 template <typename FilenameIt>
-inline std::vector<UdhFileGroup> GroupFiles(FilenameIt begin, FilenameIt end,
-                                            uint64_t skip_first_n = 0) {
-    const ParametersSet parameters_set = ParametersSetFromFileNames(begin, end);
-    auto group_begin = parameters_set.begin();
+inline std::vector<UdhFileGroup>
+GroupFiles(FilenameIt begin, FilenameIt end, uint64_t skip_first_n = 0,
+           OpenFunctionT open_function = &OpenFile) {
+    auto pairs = ReadUdhParametersFromFiles(begin, end, open_function);
+    auto group_begin = pairs.begin();
     std::vector<UdhFileGroup> result;
-    while (group_begin != parameters_set.end()) {
-        auto group_end = std::next(group_begin);
-        while (group_end != parameters_set.end() &&
-               OutputCanBeJoined(*group_begin, *group_end)) {
-            ++group_end;
+    while (group_begin != pairs.end()) {
+        std::vector<UdhFileGroup::Entry> entries;
+        auto pair = group_begin;
+        for (; pair != pairs.end() &&
+               OutputCanBeJoined(group_begin->second, pair->second);
+             ++pair) {
+            const uint64_t read_every = group_begin->second.measure_every() /
+                                        pair->second.measure_every();
+            entries.emplace_back(UdhFileGroup::Entry{pair->first, read_every});
         }
-        result.emplace_back(UdhFileGroup(group_begin, group_end, skip_first_n));
-        group_begin = group_end;
+        result.emplace_back(UdhFileGroup(group_begin->second, entries,
+                                         skip_first_n, open_function));
+        group_begin = pair;
     }
     return result;
 }

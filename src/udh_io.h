@@ -1,4 +1,5 @@
 #pragma once
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -149,7 +150,8 @@ inline void PrintParametersAsCsv(ParametersIt begin, ParametersIt end,
                                  std::ostream *pStrm) {
     std::ostream &strm = *pStrm;
     // clang-format off
-    strm << "n_dim,"
+    strm << "file_name"
+         << "n_dim,"
          << "J,"
          << "L0,"
          << "L1,"
@@ -165,7 +167,20 @@ inline void PrintParametersAsCsv(ParametersIt begin, ParametersIt end,
          << "tag" << std::endl;
     // clang-format on
     for (ParametersIt params = begin; params != end; ++params) {
-        PrintAsCsv(*params, pStrm);
+        strm << params->first << ",";
+        PrintAsCsv(params->second, pStrm);
         strm << "\n";
     }
+}
+
+using OpenFunctionT =
+    std::function<std::unique_ptr<std::istream>(const std::string &)>;
+
+inline std::unique_ptr<std::istream> OpenFile(const std::string &file_name) {
+    std::unique_ptr<std::istream> file(
+        new std::ifstream(file_name, std::ios_base::binary));
+    if (!file->good()) {
+        throw std::runtime_error("Unable to open \"" + file_name + "\".");
+    }
+    return file;
 }

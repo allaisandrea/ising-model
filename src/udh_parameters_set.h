@@ -52,8 +52,6 @@ struct ParametersComp {
     }
 };
 
-using ParametersSet = std::set<UdhParameters, ParametersComp>;
-
 inline bool OutputCanBeJoined(const UdhParameters &p1,
                               const UdhParameters &p2) {
     bool result = true;
@@ -74,17 +72,22 @@ inline bool OutputCanBeJoined(const UdhParameters &p1,
     return result;
 }
 
-template <typename FileNamesIt>
-ParametersSet ParametersSetFromFileNames(FileNamesIt begin, FileNamesIt end) {
-    ParametersSet result;
-    UdhParameters parameters;
-    for (FileNamesIt file_name = begin; file_name != end; ++file_name) {
-        std::ifstream file(*file_name);
-        if (!Read(&parameters, &file)) {
+template <typename FilenameIt>
+std::vector<std::pair<std::string, UdhParameters>>
+ReadUdhParametersFromFiles(FilenameIt begin, FilenameIt end,
+                           OpenFunctionT open_function = &OpenFile) {
+    using Pair = std::pair<std::string, UdhParameters>;
+    std::vector<Pair> result;
+    for (FilenameIt file_name = begin; file_name != end; ++file_name) {
+        auto file = open_function(*file_name);
+        result.emplace_back(Pair{*file_name, UdhParameters{}});
+        if (!Read(&result.back().second, file.get())) {
             throw std::runtime_error("Unable to read parameters from file \"" +
                                      std::string(*file_name) + "\"");
         }
-        result.emplace(parameters);
     }
+    std::sort(result.begin(), result.end(), [](const Pair &p1, const Pair &p2) {
+        return ParametersComp()(p1.second, p2.second);
+    });
     return result;
 }

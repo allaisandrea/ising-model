@@ -1,6 +1,8 @@
 #pragma once
 #include "distributions.h"
 
+#include <numeric>
+
 template <typename DoubleHistogram, typename IntHistogram>
 double ComputeDistributionPValue(const DoubleHistogram &expected_probability,
                                  const IntHistogram &visit_histogram) {
