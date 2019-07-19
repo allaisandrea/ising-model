@@ -125,8 +125,10 @@ inline std::vector<std::vector<UdhFileGroup::Entry>> MakeUdhFileGroupEntries(
     auto group_begin = pairs.begin();
     std::vector<std::vector<UdhFileGroup::Entry>> result;
     while (group_begin != pairs.end()) {
-        std::vector<UdhFileGroup::Entry> entries;
-        auto pair = group_begin;
+        result.emplace_back();
+        std::vector<UdhFileGroup::Entry> &entries = result.back();
+        entries.emplace_back(UdhFileGroup::Entry{group_begin->first, 1});
+        auto pair = std::next(group_begin);
         for (; pair != pairs.end() &&
                OutputCanBeJoined(group_begin->second, pair->second);
              ++pair) {
@@ -134,7 +136,6 @@ inline std::vector<std::vector<UdhFileGroup::Entry>> MakeUdhFileGroupEntries(
                                         pair->second.measure_every();
             entries.emplace_back(UdhFileGroup::Entry{pair->first, read_every});
         }
-        result.emplace_back(std::move(entries));
         group_begin = pair;
     }
     return result;
