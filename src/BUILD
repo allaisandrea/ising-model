@@ -54,6 +54,14 @@ cc_library(
     hdrs = ["mock_clock.h"],
 )
 
+cc_library(
+    name = "udh_file_group",
+    hdrs = [
+        "udh_file_group.h",
+        "udh_io.h",
+        "udh_parameters_set.h"],
+)
+
 # Binaries  ##################################
 
 cc_binary(
@@ -260,5 +268,18 @@ cc_test (
     ],
     linkopts = [
         "-lboost_program_options"
+    ],
+)
+
+cc_test (
+    name = "udh_file_group_test",
+    srcs = [
+        "udh_file_group_test.cpp",
+        "mock_file_system.h" ],
+    deps = [
+        ":udh_cc_proto",
+        ":udh_file_group",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main" 
     ],
 )

@@ -106,9 +106,9 @@ inline uint64_t UdhFileGroup::CountObservables() {
 }
 
 template <typename FilenameIt>
-inline std::vector<UdhFileGroup>
-GroupFiles(FilenameIt begin, FilenameIt end, uint64_t skip_first_n = 0,
-           OpenFunctionT open_function = &OpenFile) {
+std::vector<UdhFileGroup> GroupFiles(FilenameIt begin, FilenameIt end,
+                                     uint64_t skip_first_n = 0,
+                                     OpenFunctionT open_function = &OpenFile) {
     auto pairs = ReadUdhParametersFromFiles(begin, end, open_function);
     auto group_begin = pairs.begin();
     std::vector<UdhFileGroup> result;
