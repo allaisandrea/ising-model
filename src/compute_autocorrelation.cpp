@@ -1,8 +1,8 @@
 #include "udh_file_group.h"
 
 int main(int argc, char **argv) {
-    std::vector<UdhFileGroup> file_groups =
-        GroupFiles(argv + 1, argv + argc, 3);
+    auto pairs = ReadUdhParametersFromFiles(argv + 1, argv + argc);
+    std::vector<UdhFileGroup> file_groups = GroupFiles(pairs, 3);
     for (auto &group : file_groups) {
         std::cout << "Group ";
         PrintAsCsv(group.parameters(), &std::cout);

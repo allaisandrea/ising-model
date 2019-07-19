@@ -86,8 +86,13 @@ ReadUdhParametersFromFiles(FilenameIt begin, FilenameIt end,
                                      std::string(*file_name) + "\"");
         }
     }
-    std::sort(result.begin(), result.end(), [](const Pair &p1, const Pair &p2) {
+    return result;
+}
+
+inline void
+SortParametersArray(std::vector<std::pair<std::string, UdhParameters>> *pairs) {
+    using Pair = std::pair<std::string, UdhParameters>;
+    std::sort(pairs->begin(), pairs->end(), [](const Pair &p1, const Pair &p2) {
         return ParametersComp()(p1.second, p2.second);
     });
-    return result;
 }

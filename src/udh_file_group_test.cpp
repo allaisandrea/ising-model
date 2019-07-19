@@ -8,14 +8,13 @@
 namespace {
 
 struct TestFileDef {
-    UdhParameters parameters;
     uint64_t n_observables;
     uint64_t read_every;
 };
 
 std::string MakeTestingFile(uint64_t id, const TestFileDef &test_file_def) {
     std::ostringstream strm;
-    Write(test_file_def.parameters, &strm);
+    Write(UdhParameters(), &strm);
     UdhObservables observables;
     for (uint64_t i = 0; i < test_file_def.n_observables; ++i) {
         observables.set_sequence_id(i);
@@ -78,8 +77,8 @@ std::array<std::vector<ObsSummary>, 2>
 GetActualResult(uint64_t skip_first_n,
                 const std::vector<TestFileDef> &test_file_defs) {
     MockFileSystem mock_file_system = MakeTestingFiles(test_file_defs);
-    UdhFileGroup file_group(UdhParameters(), GetEntries(test_file_defs),
-                            skip_first_n, mock_file_system);
+    UdhFileGroup file_group(GetEntries(test_file_defs), skip_first_n,
+                            mock_file_system);
     UdhObservables observables;
     std::vector<ObsSummary> result1;
     while (file_group.NextObservables(&observables)) {
@@ -99,8 +98,8 @@ std::array<uint64_t, 2>
 GetObservablesCount(uint64_t skip_first_n,
                     const std::vector<TestFileDef> &test_file_defs) {
     MockFileSystem mock_file_system = MakeTestingFiles(test_file_defs);
-    UdhFileGroup file_group(UdhParameters(), GetEntries(test_file_defs),
-                            skip_first_n, mock_file_system);
+    UdhFileGroup file_group(GetEntries(test_file_defs), skip_first_n,
+                            mock_file_system);
     return {file_group.CountObservables(), file_group.CountObservables()};
 }
 
@@ -111,7 +110,6 @@ TEST(UdhFileGroup, UdhFileGroup) {
             std::vector<TestFileDef> file_defs;
             for (uint64_t i_file = 0; i_file < n_files; ++i_file) {
                 file_defs.emplace_back(TestFileDef{
-                    UdhParameters(),
                     std::uniform_int_distribution<uint64_t>(0, 16)(rng),
                     std::uniform_int_distribution<uint64_t>(1, 16)(rng)});
             }
