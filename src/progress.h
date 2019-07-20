@@ -5,7 +5,7 @@
 #include <string>
 
 inline std::string TimeString(std::time_t time) {
-    const char *time_string = std::asctime(std::localtime(&time));
+    const char *time_string = std::asctime(std::gmtime(&time));
     return std::string(time_string, time_string + 24);
 }
 
