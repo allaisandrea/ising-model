@@ -11,6 +11,11 @@ class UdhFileGroup {
         uint64_t read_every;
     };
 
+    struct Position {
+        size_t current_entry;
+        std::istream::pos_type file_pos;
+    };
+
     UdhFileGroup(const std::vector<Entry> &entries, uint64_t skip_first_n = 0,
                  OpenFunctionT open_function = &OpenFile);
 
@@ -18,6 +23,23 @@ class UdhFileGroup {
                          bool *same_file = nullptr);
     uint64_t CountObservables();
     const UdhParameters &parameters() const { return _parameters; }
+
+    Position GetPosition() const {
+        Position result;
+        result.current_entry = _current_entry;
+        if (_current_file) {
+            result.file_pos = _current_file->tellg();
+        }
+        return result;
+    }
+
+    void SetPosition(const Position &position) {
+        _current_entry = position.current_entry;
+        if (_current_entry < _entries.size()) {
+            _current_file = _open_function(current_entry().file_name);
+            _current_file->seekg(position.file_pos);
+        }
+    }
 
   private:
     static UdhParameters GetParameters(const std::vector<Entry> &entries,
