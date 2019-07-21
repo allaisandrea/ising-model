@@ -283,3 +283,18 @@ cc_test (
         "@gtest//:gtest_main" 
     ],
 )
+
+cc_test (
+    name = "compute_autocorrelation_test",
+    srcs = [
+        "compute_autocorrelation_test.cpp",
+        "compute_autocorrelation.h",
+        "eigen_expect_near.h",
+        "mock_file_system.h" ],
+    deps = [
+        ":udh_cc_proto",
+        ":udh_file_group",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main" 
+    ],
+)
