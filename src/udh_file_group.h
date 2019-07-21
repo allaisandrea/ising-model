@@ -14,7 +14,8 @@ class UdhFileGroup {
     UdhFileGroup(const std::vector<Entry> &entries, uint64_t skip_first_n = 0,
                  OpenFunctionT open_function = &OpenFile);
 
-    bool NextObservables(UdhObservables *observables);
+    bool NextObservables(UdhObservables *observables,
+                         bool *same_file = nullptr);
     uint64_t CountObservables();
     const UdhParameters &parameters() const { return _parameters; }
 
@@ -73,11 +74,18 @@ inline bool UdhFileGroup::OpenNextFile() {
     return false;
 }
 
-inline bool UdhFileGroup::NextObservables(UdhObservables *observables) {
+inline bool UdhFileGroup::NextObservables(UdhObservables *observables,
+                                          bool *same_file) {
+    if (same_file) {
+        *same_file = true;
+    }
     if (_current_entry >= _entries.size()) {
         _current_entry = -1;
         if (!OpenNextFile()) {
             return false;
+        }
+        if (same_file) {
+            *same_file = false;
         }
     }
     while (true) {
@@ -86,18 +94,23 @@ inline bool UdhFileGroup::NextObservables(UdhObservables *observables) {
             if (!OpenNextFile()) {
                 return false;
             }
+            if (same_file) {
+                *same_file = false;
+            }
             continue;
         }
         if (!Read(observables, _current_file.get())) {
             if (!OpenNextFile()) {
                 return false;
             }
+            if (same_file) {
+                *same_file = false;
+            }
             continue;
         } else {
-            break;
+            return true;
         }
     }
-    return _current_entry < _entries.size();
 }
 
 inline uint64_t UdhFileGroup::CountObservables() {
