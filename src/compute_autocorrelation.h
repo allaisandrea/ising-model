@@ -3,8 +3,11 @@
 #include "udh_file_group.h"
 #include <Eigen/Core>
 
-Eigen::Matrix3d ComputeAutocorrelation(uint64_t n_read,
-                                       UdhFileGroup *file_group) {
+inline Eigen::Matrix3d ComputeAutocorrelation(uint64_t n_read,
+                                              UdhFileGroup *file_group) {
+    if (n_read == 0) {
+        throw std::logic_error("n_read must be greater than zero");
+    }
     const UdhFileGroup::Position position = file_group->GetPosition();
     Eigen::Array3d mean;
     mean.setZero();
@@ -12,7 +15,9 @@ Eigen::Matrix3d ComputeAutocorrelation(uint64_t n_read,
     UdhObservables observables;
     for (uint64_t i = 0; i < n_read; ++i) {
         if (!file_group->NextObservables(&observables)) {
-            throw std::runtime_error("Reached end of data");
+            throw std::runtime_error(
+                "Reached end of data at i = " + std::to_string(i) + " / " +
+                std::to_string(n_read));
         }
         mean(0) += observables.n_down();
         mean(1) += observables.n_holes();
@@ -32,7 +37,9 @@ Eigen::Matrix3d ComputeAutocorrelation(uint64_t n_read,
     bool same_file;
     for (uint64_t i = 0; i < n_read; ++i) {
         if (!file_group->NextObservables(&observables, &same_file)) {
-            throw std::runtime_error("Reached end of data");
+            throw std::runtime_error(
+                "Reached end of data at i = " + std::to_string(i) + " / " +
+                std::to_string(n_read));
         }
         Eigen::Array3d delta;
         delta << observables.n_down(), observables.n_holes(),
@@ -47,6 +54,10 @@ Eigen::Matrix3d ComputeAutocorrelation(uint64_t n_read,
     }
     var /= n_read;
     cov /= cov_count;
+
+    if (cov_count == 0) {
+        throw std::logic_error("cov_count must be greater than zero");
+    }
 
     for (int j = 0; j < cov.cols(); ++j) {
         for (int i = 0; i < cov.rows(); ++i) {

@@ -105,6 +105,8 @@ cc_binary(
     name = "compute-autocorrelation",
     srcs = [
         "compute_autocorrelation.cpp",
+        "compute_autocorrelation.h",
+        "cross_validate.h",
         "udh_file_group.h",
         "udh_parameters_set.h",
         "udh_io.h",
