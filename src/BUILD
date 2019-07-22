@@ -107,6 +107,7 @@ cc_binary(
         "compute_autocorrelation.cpp",
         "compute_autocorrelation.h",
         "cross_validate.h",
+        "error_format.h",
         "udh_file_group.h",
         "udh_parameters_set.h",
         "udh_io.h",
