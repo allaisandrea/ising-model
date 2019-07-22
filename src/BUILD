@@ -300,3 +300,14 @@ cc_test (
         "@gtest//:gtest_main" 
     ],
 )
+
+cc_test (
+    name = "error_format_test",
+    srcs = [
+        "error_format_test.cpp",
+        "error_format.h" ],
+    deps = [
+        "@gtest//:gtest",
+        "@gtest//:gtest_main" 
+    ],
+)
