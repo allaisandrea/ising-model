@@ -9,6 +9,26 @@ int main(int argc, char **argv) {
     std::vector<const char *> row_headers = {"n_d0", "n_h0", "n_u0"};
     std::vector<const char *> col_headers = {"n_d1", "n_h1", "n_u1"};
     for (auto &group : file_groups) {
+        std::cout << "J: " << group.parameters().j() << "\n";
+        std::cout << "mu: " << group.parameters().mu() << "\n";
+        std::cout << "shape: [ ";
+        for (const auto &x : group.parameters().shape()) {
+            std::cout << x << " ";
+        }
+        std::cout << "]\n";
+        std::cout << "n_wolff: " << group.parameters().n_wolff() << "\n";
+        std::cout << "n_metropolis: " << group.parameters().n_metropolis()
+                  << "\n";
+        std::cout << "measure_every: " << group.parameters().measure_every()
+                  << "\n";
+
+        std::cout << "files:\n";
+        for (const auto &entry : group.entries()) {
+            std::cout << entry.file_name << " " << entry.read_every << "\n";
+        }
+
+        std::cout << "n_observables:" << group.CountObservables() << "\n";
+
         const CrossValidationStats stats = CrossValidate(
             /*n_batches=*/16,
             [](uint64_t n_read, UdhFileGroup *file_group) {
@@ -21,6 +41,7 @@ int main(int argc, char **argv) {
                 return result;
             },
             &group);
+        std::cout << "autocorrelation:\n";
         std::cout << std::setw(5) << "";
         for (int j = 0; j < 3; ++j) {
             std::cout << std::setw(15) << col_headers[j];
@@ -35,7 +56,5 @@ int main(int argc, char **argv) {
             }
             std::cout << std::endl;
         }
-
-        std::cout << stats.mean << "\n\n" << stats.std_dev << "\n\n";
     }
 }

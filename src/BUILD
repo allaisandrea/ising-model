@@ -125,6 +125,22 @@ cc_binary(
     deps = [":udh_cc_proto"],
 )
 
+cc_binary(
+    name = "compute-phase-diagram",
+    srcs = [
+        "compute_phase_diagram.cpp",
+        "compute_phase_diagram.h",
+        "cross_validate.h",
+        "udh_file_group.h",
+        "udh_parameters_set.h",
+        "udh_io.h",
+        "udh_arguments.h"],
+    deps = [":udh_cc_proto"],
+    linkopts = [
+        "-lboost_program_options"
+    ],
+)
+
 # Tests ##################################
 
 cc_test (

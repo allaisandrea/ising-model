@@ -41,6 +41,8 @@ class UdhFileGroup {
         }
     }
 
+    const std::vector<Entry> &entries() const { return _entries; }
+
   private:
     static UdhParameters GetParameters(const std::vector<Entry> &entries,
                                        OpenFunctionT open_function);
