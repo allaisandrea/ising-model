@@ -10,6 +10,23 @@ cc_proto_library(
     deps = [":udh_proto"]
 )
 
+proto_library(
+    name = "phase_diagram_proto",
+    srcs = ["phase_diagram.proto"]
+)
+
+cc_proto_library(
+    name = "phase_diagram_cc_proto",
+    deps = [":phase_diagram_proto"]
+)
+genrule(
+    name = "phase_diagram_py_proto",
+    srcs = ["phase_diagram.proto"],
+    outs = ["phase_diagram_pb2.py"],
+    cmd = "$(location @com_google_protobuf//:protoc) --python_out=$(@D) $<",
+    tools = ["@com_google_protobuf//:protoc"],
+)
+
 cc_library(
     name = "observables",
     hdrs = [
@@ -135,7 +152,9 @@ cc_binary(
         "udh_parameters_set.h",
         "udh_io.h",
         "udh_arguments.h"],
-    deps = [":udh_cc_proto"],
+    deps = [
+        ":udh_cc_proto",
+        ":phase_diagram_cc_proto"],
     linkopts = [
         "-lboost_program_options"
     ],

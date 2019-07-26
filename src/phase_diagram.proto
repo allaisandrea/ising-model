@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+message PhaseDiagram {
+    double j = 1;
+    double mu = 2;
+    repeated uint32 shape =3;
+    uint32 n_wolff = 4;
+    uint32 n_metropolis = 5;
+    uint32 measure_every = 6;
+    uint32 n_measure = 7;
+    repeated string file_names = 8;
+    int64 j_begin = 9;
+    int64 j_end = 10;
+    int64 log2_j_increment = 11;
+    int64 mu_begin = 12;
+    int64 mu_end = 13;
+    int64 log2_mu_increment = 14;
+    repeated double susceptibility = 15;
+    repeated double susceptibility_std = 16;
+    repeated double binder_cumulant = 17;
+    repeated double binder_cumulant_std = 18;
+};
