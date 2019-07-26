@@ -110,7 +110,8 @@ int main(int argc, const char **argv) {
         CopyArray(stats.mean, 0, n_copy, pd.mutable_susceptibility());
         CopyArray(stats.std_dev, 0, n_copy, pd.mutable_susceptibility_std());
         CopyArray(stats.mean, n_copy, n_copy, pd.mutable_binder_cumulant());
-        CopyArray(stats.std_dev, 0, n_copy, pd.mutable_binder_cumulant_std());
+        CopyArray(stats.std_dev, n_copy, n_copy,
+                  pd.mutable_binder_cumulant_std());
         std::ofstream out_file(GetRandomFileName(&rng), std::ios_base::binary);
         Write(pd, &out_file);
     }
