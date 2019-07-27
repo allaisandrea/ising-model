@@ -2,33 +2,28 @@
 #include "cross_validate.h"
 #include "error_format.h"
 #include "udh_file_group.h"
+#include <cmath>
 
 int main(int argc, char **argv) {
     auto pairs = ReadUdhParametersFromFiles(argv + 1, argv + argc);
     std::vector<UdhFileGroup> file_groups = GroupFiles(pairs, 3);
-    std::vector<const char *> row_headers = {"n_d0", "n_h0", "n_u0"};
-    std::vector<const char *> col_headers = {"n_d1", "n_h1", "n_u1"};
-    for (auto &group : file_groups) {
-        std::cout << "J: " << group.parameters().j() << "\n";
-        std::cout << "mu: " << group.parameters().mu() << "\n";
-        std::cout << "shape: [ ";
-        for (const auto &x : group.parameters().shape()) {
-            std::cout << x << " ";
-        }
-        std::cout << "]\n";
-        std::cout << "n_wolff: " << group.parameters().n_wolff() << "\n";
-        std::cout << "n_metropolis: " << group.parameters().n_metropolis()
-                  << "\n";
-        std::cout << "measure_every: " << group.parameters().measure_every()
-                  << "\n";
-
-        std::cout << "files:\n";
-        for (const auto &entry : group.entries()) {
-            std::cout << entry.file_name << " " << entry.read_every << "\n";
-        }
-
-        std::cout << "n_observables:" << group.CountObservables() << "\n";
-
+    std::cout << std::fixed << std::setprecision(3);
+    // clang-format off
+    std::cout << std::setw(3) << "grp" << ","
+              << std::setw(20) << "file_name" << ","
+              << std::setw(7) << "J" << ","
+              << std::setw(7) << "mu" << ","
+              << std::setw(3) << "L0" << ","
+              << std::setw(5) << "wolff" << ","
+              << std::setw(5) << "metrp" << ","
+              << std::setw(5) << "every" << ","
+              << std::setw(7) << "full" << ","
+              << std::setw(7) << "fullstd" << ","
+              << std::setw(7) << "hole" << ","
+              << std::setw(7) << "holestd" << "\n";
+    // clang-format on
+    for (uint64_t i = 0; i < file_groups.size(); ++i) {
+        auto &group = file_groups.at(i);
         const CrossValidationStats stats = CrossValidate(
             /*n_batches=*/16,
             [](uint64_t n_read, UdhFileGroup *file_group) {
@@ -41,20 +36,21 @@ int main(int argc, char **argv) {
                 return result;
             },
             &group);
-        std::cout << "autocorrelation:\n";
-        std::cout << std::setw(5) << "";
-        for (int j = 0; j < 3; ++j) {
-            std::cout << std::setw(15) << col_headers[j];
-        }
-        std::cout << std::endl;
-        for (int i = 0; i < 3; ++i) {
-            std::cout << std::setw(5) << row_headers[i];
-            for (int j = 0; j < 3; ++j) {
-                const int k = 3 * j + i;
-                std::cout << std::setw(15)
-                          << ErrorFormat(stats.mean(k), stats.std_dev(i));
-            }
-            std::cout << std::endl;
+        for (const auto &entry : group.entries()) {
+            // clang-format off
+            std::cout << std::setw(3) << i << ","
+                      << std::setw(20) << entry.file_name <<","
+                      << std::setw(7) << group.parameters().j() <<","
+                      << std::setw(7) << group.parameters().mu() <<","
+                      << std::setw(3) << group.parameters().shape(0) << ","
+                      << std::setw(5) << group.parameters().n_wolff() << ","
+                      << std::setw(5) << group.parameters().n_metropolis() << ","
+                      << std::setw(5) << group.parameters().measure_every() << ","
+                      << std::setw(7) << 0.5 * (stats.mean(0) + stats.mean(8)) << ","
+                      << std::setw(7) << std::sqrt(0.5 * (std::pow(stats.std_dev(0), 2) + std::pow(stats.std_dev(8), 2))) << ","
+                      << std::setw(7) << stats.mean(4) << ","
+                      << std::setw(7) << stats.std_dev(4) << "\n";
+            // clang-format on
         }
     }
 }

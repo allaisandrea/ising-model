@@ -54,8 +54,11 @@ Eigen::ArrayXd ComputePhaseDiagram(const ParameterRange &J_range,
     for (uint64_t i = 0; i < n_read; ++i) {
         const UdhObservables observables = GetObservables(file_group);
         const int64_t sum_si_sj = observables.sum_si_sj();
-        const int64_t sum_si_si = observables.n_down() + observables.n_up();
-        const int64_t phi = observables.n_up() - observables.n_down();
+        const int64_t n_down = observables.n_down();
+        const int64_t n_holes = observables.n_holes();
+        const int64_t n_up = observables.n_up();
+        const int64_t sum_si_si = n_down + n_up;
+        const double phi = double(n_up - n_down) / (n_down + n_holes + n_up);
         const double phi2 = std::pow(phi, 2);
         const double phi4 = std::pow(phi2, 2);
         for (int64_t i_J = 0; i_J < n_J; ++i_J) {
