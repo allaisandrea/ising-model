@@ -78,6 +78,7 @@ template <size_t nDim> int Run(const UdhParameters &parameters) {
     for (uint64_t i0 = 0; i0 < parameters.n_measure(); ++i0) {
         HiResTimer flip_cluster_timer, clear_flag_timer, metropolis_sweep_timer,
             measure_timer, serialize_timer;
+        uint64_t serialize_duration = 0;
         for (uint64_t i1 = 0; i1 < parameters.measure_every(); ++i1) {
             for (uint64_t i2 = 0; i2 < parameters.n_wolff(); ++i2) {
                 const Index<nDim> i0 = GetRandomIndex(lattice.shape(), &rng);
@@ -108,11 +109,12 @@ template <size_t nDim> int Run(const UdhParameters &parameters) {
         observables.set_metropolis_sweep_duration(
             metropolis_sweep_timer.elapsed().count());
         observables.set_measure_duration(measure_timer.elapsed().count());
-        observables.set_serialize_duration(serialize_timer.elapsed().count());
+        observables.set_serialize_duration(serialize_duration);
 
         serialize_timer.start();
         Write(observables, &out_file);
         serialize_timer.stop();
+        serialize_duration = serialize_timer.elapsed().count();
 
         log_file << progress_indicator.string(std::time(nullptr), i0 + 1)
                  << std::endl;

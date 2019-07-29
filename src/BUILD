@@ -123,6 +123,7 @@ cc_binary(
     srcs = [
         "compute_autocorrelation.cpp",
         "compute_autocorrelation.h",
+        "compute_timing.h",
         "cross_validate.h",
         "error_format.h",
         "udh_file_group.h",

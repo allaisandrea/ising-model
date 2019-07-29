@@ -19,4 +19,8 @@ message PhaseDiagram {
     repeated double susceptibility_std = 16;
     repeated double binder_cumulant = 17;
     repeated double binder_cumulant_std = 18;
+    repeated double hole_density = 19;
+    repeated double hole_density_std = 20;
+    repeated double si_sj = 21;
+    repeated double si_sj_std = 22;
 };
