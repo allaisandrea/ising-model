@@ -53,7 +53,19 @@ void CopyArray(const Eigen::ArrayXd &source, uint64_t offset, uint64_t n_copy,
 std::string GetRandomFileName(std::mt19937 *rng) {
     std::ostringstream strm;
     strm << std::hex << (*rng)() << (*rng)();
-    return strm.str() + ".phd";
+    return strm.str() + ".pd";
+}
+
+Eigen::ArrayXd MakeDistanceArray(uint64_t n_J, uint64_t n_mu) {
+    Eigen::ArrayXd result(n_J * n_mu);
+    Eigen::Map<Eigen::ArrayXXd> view(result.data(), n_J, n_mu);
+    for (uint64_t i_mu = 0; i_mu < n_mu; ++i_mu) {
+        for (uint64_t i_J = 0; i_J < n_J; ++i_J) {
+            view(i_J, i_mu) = std::sqrt(std::pow((i_J - 0.5 * n_J), 2) +
+                                        std::pow((i_mu - 0.5 * n_mu), 2));
+        }
+    }
+    return result;
 }
 
 int main(int argc, const char **argv) {
@@ -89,30 +101,43 @@ int main(int argc, const char **argv) {
             },
             &group);
         const uint64_t n_observables = group.CountObservables();
+        const Eigen::ArrayXXd distance_array =
+            MakeDistanceArray(args.n_J, args.n_mu);
+
+        PhaseDiagramParams pd_params;
+        pd_params.set_j(parameters.j());
+        pd_params.set_mu(parameters.mu());
+        *pd_params.mutable_shape() = parameters.shape();
+        pd_params.set_n_wolff(parameters.n_wolff());
+        pd_params.set_n_metropolis(parameters.n_metropolis());
+        pd_params.set_measure_every(parameters.measure_every());
+        pd_params.set_n_measure(n_observables);
+        for (const UdhFileGroup::Entry &entry : group.entries()) {
+            pd_params.mutable_file_names()->Add(std::string(entry.file_name));
+        }
+        pd_params.set_j_begin(J_range.begin);
+        pd_params.set_j_end(J_range.end);
+        pd_params.set_log2_j_increment(args.log2_J_increment);
+        pd_params.set_mu_begin(mu_range.begin);
+        pd_params.set_mu_end(mu_range.end);
+        pd_params.set_log2_mu_increment(args.log2_mu_increment);
 
         PhaseDiagram pd;
-        pd.set_j(parameters.j());
-        pd.set_mu(parameters.mu());
-        pd.set_n_wolff(parameters.n_wolff());
-        pd.set_n_metropolis(parameters.n_metropolis());
-        pd.set_measure_every(parameters.measure_every());
-        pd.set_n_measure(n_observables);
-        for (const UdhFileGroup::Entry &entry : group.entries()) {
-            pd.mutable_file_names()->Add(std::string(entry.file_name));
-        }
-        pd.set_j_begin(J_range.begin);
-        pd.set_j_end(J_range.end);
-        pd.set_log2_j_increment(args.log2_J_increment);
-        pd.set_mu_begin(mu_range.begin);
-        pd.set_mu_end(mu_range.end);
-        pd.set_log2_mu_increment(args.log2_mu_increment);
         const uint64_t n_copy = args.n_J * args.n_mu;
+        CopyArray(distance_array, 0, n_copy, pd.mutable_distance());
         CopyArray(stats.mean, 0, n_copy, pd.mutable_susceptibility());
         CopyArray(stats.std_dev, 0, n_copy, pd.mutable_susceptibility_std());
         CopyArray(stats.mean, n_copy, n_copy, pd.mutable_binder_cumulant());
         CopyArray(stats.std_dev, n_copy, n_copy,
                   pd.mutable_binder_cumulant_std());
+        CopyArray(stats.mean, 2 * n_copy, n_copy, pd.mutable_hole_density());
+        CopyArray(stats.std_dev, 2 * n_copy, n_copy,
+                  pd.mutable_hole_density_std());
+        CopyArray(stats.mean, 3 * n_copy, n_copy, pd.mutable_si_sj());
+        CopyArray(stats.std_dev, 2 * n_copy, n_copy, pd.mutable_si_sj_std());
+
         std::ofstream out_file(GetRandomFileName(&rng), std::ios_base::binary);
+        Write(pd_params, &out_file);
         Write(pd, &out_file);
     }
 

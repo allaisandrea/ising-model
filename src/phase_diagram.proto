@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-message PhaseDiagram {
+message PhaseDiagramParams {
     double j = 1;
     double mu = 2;
     repeated uint32 shape =3;
@@ -15,12 +15,16 @@ message PhaseDiagram {
     int64 mu_begin = 12;
     int64 mu_end = 13;
     int64 log2_mu_increment = 14;
-    repeated double susceptibility = 15;
-    repeated double susceptibility_std = 16;
-    repeated double binder_cumulant = 17;
-    repeated double binder_cumulant_std = 18;
-    repeated double hole_density = 19;
-    repeated double hole_density_std = 20;
-    repeated double si_sj = 21;
-    repeated double si_sj_std = 22;
+};
+
+message PhaseDiagram {
+    repeated double distance = 1;
+    repeated double susceptibility = 2;
+    repeated double susceptibility_std = 3;
+    repeated double binder_cumulant = 4;
+    repeated double binder_cumulant_std = 5;
+    repeated double hole_density = 6;
+    repeated double hole_density_std = 7;
+    repeated double si_sj = 8;
+    repeated double si_sj_std = 9;
 };

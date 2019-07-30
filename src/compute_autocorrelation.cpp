@@ -8,43 +8,29 @@
 int main(int argc, char **argv) {
     auto pairs = ReadUdhParametersFromFiles(argv + 1, argv + argc);
     std::vector<UdhFileGroup> file_groups = GroupFiles(pairs, 3);
-    std::cout << "group,file_name,J,mu,L0,n_wolff,n_metropolis,measure_every,"
-                 "ud_ac,ud_ac_std,hole_ac,hole_ac_std,t_wolff,t_metropolis,t_"
-                 "measure,t_serialize,t_residual\n";
+    std::cout << "J,mu,L0,wolf,metr,every,"
+                 "ud_ac,ud_ac_std,h_ac,h_ac_std,ud_log_ac,ud_log_ac_std,"
+                 "h_log_ac,h_log_ac_std,t_wolf,t_metr,t_meas,t_ser,t_res\n";
     for (uint64_t i = 0; i < file_groups.size(); ++i) {
         auto &group = file_groups.at(i);
         const CrossValidationStats autocorrelation = CrossValidate(
-            /*n_batches=*/16,
-            [](uint64_t n_read, UdhFileGroup *file_group) {
-                const Eigen::Matrix3d R =
-                    ComputeAutocorrelation(n_read, file_group);
-                Eigen::ArrayXd result(9, 1);
-                for (int i = 0; i < R.size(); ++i) {
-                    result(i) = R(i);
-                }
-                return result;
-            },
-            &group);
+            /*n_batches=*/16, &ComputeAutocorrelation, &group);
         const CrossValidationStats timing = CrossValidate(
             /*n_batches=*/16, &ComputeTiming, &group);
-        const double ud_ac =
-            0.5 * (autocorrelation.mean(0) + autocorrelation.mean(8));
-        const double ud_ac_std =
-            std::sqrt(0.5 * (std::pow(autocorrelation.std_dev(0), 2) +
-                             std::pow(autocorrelation.std_dev(8), 2)));
-        for (const auto &entry : group.entries()) {
-            std::cout << i << "," << entry.file_name << ","
-                      << group.parameters().j() << ","
-                      << group.parameters().mu() << ","
-                      << group.parameters().shape(0) << ","
-                      << group.parameters().n_wolff() << ","
-                      << group.parameters().n_metropolis() << ","
-                      << group.parameters().measure_every() << "," << ud_ac
-                      << "," << ud_ac_std << "," << autocorrelation.mean(4)
-                      << "," << autocorrelation.std_dev(4) << ","
-                      << timing.mean(0) << "," << timing.mean(1) << ","
-                      << timing.mean(2) << "," << timing.mean(3) << ","
-                      << timing.mean(4) << "\n";
-        }
+        std::cout << group.parameters().j() << "," << group.parameters().mu()
+                  << "," << group.parameters().shape(0) << ","
+                  << group.parameters().n_wolff() << ","
+                  << group.parameters().n_metropolis() << ","
+                  << group.parameters().measure_every() << ","
+                  << autocorrelation.mean(0) << ","
+                  << autocorrelation.std_dev(0) << ","
+                  << autocorrelation.mean(1) << ","
+                  << autocorrelation.std_dev(1) << ","
+                  << autocorrelation.mean(2) << ","
+                  << autocorrelation.std_dev(2) << ","
+                  << autocorrelation.mean(3) << ","
+                  << autocorrelation.std_dev(3) << "," << timing.mean(0) << ","
+                  << timing.mean(1) << "," << timing.mean(2) << ","
+                  << timing.mean(3) << "," << timing.mean(4) << "\n";
     }
 }

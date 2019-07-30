@@ -45,7 +45,7 @@ Eigen::ArrayXd ComputePhaseDiagram(const ParameterRange &J_range,
         }
     }
 
-    std::array<Eigen::ArrayXXd, 3> moments;
+    std::array<Eigen::ArrayXXd, 5> moments;
     for (auto &slice : moments) {
         slice.setZero(n_J, n_mu);
     }
@@ -58,9 +58,12 @@ Eigen::ArrayXd ComputePhaseDiagram(const ParameterRange &J_range,
         const int64_t n_holes = observables.n_holes();
         const int64_t n_up = observables.n_up();
         const int64_t sum_si_si = n_down + n_up;
-        const double phi = double(n_up - n_down) / (n_down + n_holes + n_up);
+        const int64_t volume = n_down + n_holes + n_up;
+        const double rho = double(n_holes) / volume;
+        const double phi = double(n_up - n_down) / volume;
         const double phi2 = std::pow(phi, 2);
         const double phi4 = std::pow(phi2, 2);
+        const double sum_si_sj_intensive = double(sum_si_sj) / volume;
         for (int64_t i_J = 0; i_J < n_J; ++i_J) {
             const double J = (J_range.begin + i_J) * J_range.increment;
             for (int64_t i_mu = 0; i_mu < n_mu; ++i_mu) {
@@ -72,16 +75,25 @@ Eigen::ArrayXd ComputePhaseDiagram(const ParameterRange &J_range,
                 moments[0](i_J, i_mu) += weight;
                 moments[1](i_J, i_mu) += weight * phi2;
                 moments[2](i_J, i_mu) += weight * phi4;
+                moments[3](i_J, i_mu) += weight * rho;
+                moments[4](i_J, i_mu) += weight * sum_si_sj_intensive;
             }
         }
     }
-    moments[1] /= moments[0];
-    moments[2] /= moments[0];
+    for (uint64_t i = 1; i < moments.size(); ++i) {
+        moments[i] /= moments[0];
+    }
 
-    Eigen::ArrayXd result(2 * n_J * n_mu);
+    Eigen::ArrayXd result(4 * n_J * n_mu);
     Eigen::Map<Eigen::ArrayXXd> chi_view(result.data(), n_J, n_mu);
     Eigen::Map<Eigen::ArrayXXd> u_view(result.data() + n_J * n_mu, n_J, n_mu);
+    Eigen::Map<Eigen::ArrayXXd> rho_view(result.data() + 2 * n_J * n_mu, n_J,
+                                         n_mu);
+    Eigen::Map<Eigen::ArrayXXd> sum_si_sj_view(result.data() + 3 * n_J * n_mu,
+                                               n_J, n_mu);
     chi_view = moments[1];
     u_view = 1.0 - moments[2] / (3.0 * moments[1].square());
+    rho_view = moments[3];
+    sum_si_sj_view = moments[4];
     return result;
 }
