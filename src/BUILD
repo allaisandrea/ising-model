@@ -104,6 +104,7 @@ cc_binary(
     srcs = [
         "udh_run_simulation.cpp",
         "progress.h",
+        "throttle.h",
         "udh_measure.h",
         "udh_spin.h",
         "udh_metropolis_algorithm.h",

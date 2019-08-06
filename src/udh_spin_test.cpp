@@ -1,7 +1,7 @@
 #include "udh_spin.h"
 
-#include <gtest/gtest.h>
 #include <bitset>
+#include <gtest/gtest.h>
 
 namespace {
 

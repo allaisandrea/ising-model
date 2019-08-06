@@ -1,12 +1,12 @@
+#include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <sstream>
 #include <string>
-#include <algorithm>
 
 inline std::string ErrorFormat(double x, double s) {
-    const int64_t log_s =
-        std::floor(std::log10(std::max<double>({s, 1.0e-8 * std::abs(x), 1.0e-100})));
+    const int64_t log_s = std::floor(
+        std::log10(std::max<double>({s, 1.0e-8 * std::abs(x), 1.0e-100})));
     const int64_t log_x =
         std::floor(std::log10(std::max(std::abs(x), 1.0e-100)));
     std::ostringstream strm;

@@ -2,6 +2,7 @@
 
 #include "progress.h"
 #include "tensor.h"
+#include "throttle.h"
 #include "timer.h"
 #include "udh_arguments.h"
 #include "udh_io.h"
@@ -76,6 +77,9 @@ template <size_t nDim> int Run(const UdhParameters &parameters) {
     HiResTimer simulation_timer;
     simulation_timer.start();
     uint64_t serialize_duration = 0;
+    using period = std::chrono::steady_clock::period;
+    Throttle<std::chrono::steady_clock> throttle(
+        std::chrono::steady_clock::duration(1 * period::den / period::num));
     for (uint64_t i0 = 0; i0 < parameters.n_measure(); ++i0) {
         HiResTimer flip_cluster_timer, clear_flag_timer, metropolis_sweep_timer,
             measure_timer, serialize_timer;
@@ -116,8 +120,10 @@ template <size_t nDim> int Run(const UdhParameters &parameters) {
         serialize_timer.stop();
         serialize_duration = serialize_timer.elapsed().count();
 
-        log_file << progress_indicator.string(std::time(nullptr), i0 + 1)
-                 << std::endl;
+        throttle([&log_file, i0, &progress_indicator]() {
+            log_file << progress_indicator.string(std::time(nullptr), i0 + 1)
+                     << std::endl;
+        });
     }
     return 0;
 }
