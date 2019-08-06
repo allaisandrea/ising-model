@@ -22,7 +22,7 @@ inline Eigen::ArrayXd ComputeTiming(uint64_t n_read, UdhFileGroup *file_group) {
                    observables.clear_flag_duration();
         mean(1) += observables.metropolis_sweep_duration();
         mean(2) += observables.measure_duration();
-        if (i > 0) {
+        if (observables.serialize_duration() > 0) {
             mean(3) += observables.serialize_duration();
             mean(4) += observables.stamp() - previous_stamp -
                        observables.flip_cluster_duration() -
@@ -30,8 +30,8 @@ inline Eigen::ArrayXd ComputeTiming(uint64_t n_read, UdhFileGroup *file_group) {
                        observables.metropolis_sweep_duration() -
                        observables.measure_duration() -
                        observables.serialize_duration();
-            previous_stamp = observables.stamp();
         }
+        previous_stamp = observables.stamp();
     }
     mean.topRows<3>() /= n_read;
     mean.bottomRows<2>() /= n_read - 1;

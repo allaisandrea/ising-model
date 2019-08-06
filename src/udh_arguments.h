@@ -39,10 +39,6 @@ bool ParseArgs(int argc, const char *argv[], UdhParameters *parameters) {
     }
     notify(vm);
 
-    if (!(n_wolff == 1 || n_metropolis == 1)) {
-        throw std::invalid_argument("Either n-wolff or n-metropolis must be 1");
-    }
-
     parameters->set_j(J);
     parameters->set_mu(mu);
     parameters->mutable_shape()->Clear();

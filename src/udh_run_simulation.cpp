@@ -75,10 +75,10 @@ template <size_t nDim> int Run(const UdhParameters &parameters) {
              << std::endl;
     HiResTimer simulation_timer;
     simulation_timer.start();
+    uint64_t serialize_duration = 0;
     for (uint64_t i0 = 0; i0 < parameters.n_measure(); ++i0) {
         HiResTimer flip_cluster_timer, clear_flag_timer, metropolis_sweep_timer,
             measure_timer, serialize_timer;
-        uint64_t serialize_duration = 0;
         for (uint64_t i1 = 0; i1 < parameters.measure_every(); ++i1) {
             for (uint64_t i2 = 0; i2 < parameters.n_wolff(); ++i2) {
                 const Index<nDim> i0 = GetRandomIndex(lattice.shape(), &rng);
