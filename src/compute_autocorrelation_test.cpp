@@ -55,7 +55,7 @@ TEST(ComputeAutocorrelation, ComputeAutocorrelation) {
     for (int i = 0; i < 1; ++i) {
         Eigen::Array3d lambda;
         const uint64_t log_n_obs =
-            std::uniform_int_distribution<double>(16, 16)(rng);
+            std::uniform_int_distribution<uint64_t>(16, 16)(rng);
         const uint64_t n_obs = 1ul << log_n_obs;
         lambda << std::uniform_real_distribution<double>(0.0, 1.0e-4)(rng),
             std::uniform_real_distribution<double>(0.0, 1.0e-4)(rng),
