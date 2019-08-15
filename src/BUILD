@@ -10,6 +10,14 @@ cc_proto_library(
     deps = [":udh_proto"]
 )
 
+genrule(
+    name = "udh_py_proto",
+    srcs = ["udh.proto"],
+    outs = ["udh_pb2.py"],
+    cmd = "$(location @com_google_protobuf//:protoc) --python_out=$(@D) $<",
+    tools = ["@com_google_protobuf//:protoc"],
+)
+
 proto_library(
     name = "phase_diagram_proto",
     srcs = ["phase_diagram.proto"]
@@ -19,6 +27,7 @@ cc_proto_library(
     name = "phase_diagram_cc_proto",
     deps = [":phase_diagram_proto"]
 )
+
 genrule(
     name = "phase_diagram_py_proto",
     srcs = ["phase_diagram.proto"],
