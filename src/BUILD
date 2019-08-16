@@ -358,3 +358,27 @@ cc_test (
         "@gtest//:gtest_main" 
     ],
 )
+
+cc_test (
+    name = "chebyshev_test",
+    srcs = [
+        "chebyshev.h",
+        "eigen_expect_near.h",
+        "chebyshev_test.cpp"],
+    deps = [
+        "@gtest//:gtest",
+        "@gtest//:gtest_main" 
+    ],
+)
+
+cc_test (
+    name = "udh_critical_line_test",
+    srcs = [
+        "chebyshev.h",
+        "udh_critical_line.h",
+        "udh_critical_line_test.cpp"],
+    deps = [
+        "@gtest//:gtest",
+        "@gtest//:gtest_main" 
+    ],
+)
