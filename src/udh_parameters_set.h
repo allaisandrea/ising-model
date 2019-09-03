@@ -10,13 +10,13 @@ struct ParametersComp {
             return true;
         } else if (p1.shape().size() > p2.shape().size()) {
             return false;
-        } else if (p1.j() < p2.j()) {
-            return true;
-        } else if (p1.j() > p2.j()) {
-            return false;
         } else if (p1.mu() < p2.mu()) {
             return true;
         } else if (p1.mu() > p2.mu()) {
+            return false;
+        } else if (p1.j() < p2.j()) {
+            return true;
+        } else if (p1.j() > p2.j()) {
             return false;
         }
         for (int i = 0; i < p1.shape().size(); ++i) {
