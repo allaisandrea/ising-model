@@ -171,6 +171,24 @@ cc_binary(
     ],
 )
 
+cc_binary(
+    name = "resample-stats",
+    srcs = [
+        "resample_stats.cpp",
+        "compute_phase_diagram.h",
+        "cross_validate.h",
+        "udh_file_group.h",
+        "udh_critical_line.h",
+        "chebyshev.h",
+        "udh_parameters_set.h",
+        "udh_io.h",
+        "udh_arguments.h"],
+    deps = [ ":udh_cc_proto" ],
+    linkopts = [
+        "-lboost_program_options"
+    ],
+)
+
 # Tests ##################################
 
 cc_test (
