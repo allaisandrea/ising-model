@@ -117,6 +117,7 @@ template <size_t nDim> int Run(const UdhParameters &parameters) {
 
         serialize_timer.start();
         Write(observables, &out_file);
+        out_file.flush();
         serialize_timer.stop();
         serialize_duration = serialize_timer.elapsed().count();
 
