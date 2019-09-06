@@ -39,7 +39,7 @@ def start_queued_jobs(max_running_jobs, state):
     while len(state.running_jobs) < max_running_jobs and len(state.queued_jobs) > 0:
         job = state.queued_jobs.pop(0)
         try:
-            popen = subprocess.Popen(shlex.split(job.args))
+            popen = subprocess.Popen(['/bin/bash', '-c', job.args])
         except OSError as err:
             print('OS error: {}'.format(err))
             continue
