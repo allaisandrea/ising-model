@@ -6,6 +6,7 @@ import subprocess
 import time
 import tabulate
 import sys
+import readline
 
 
 QueuedJob = collections.namedtuple(
