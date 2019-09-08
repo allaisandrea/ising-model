@@ -18,9 +18,13 @@ Eigen::MatrixXd EvaluateChebyshevPolynomial(const Eigen::ArrayBase<Derived> &x,
 }
 
 template <typename Derived>
-Eigen::VectorXd FitChebyshevPolynomial(const Eigen::ArrayBase<Derived> &x,
-                                       const Eigen::ArrayBase<Derived> &y,
-                                       int n) {
+std::tuple<Eigen::VectorXd, Eigen::MatrixXd>
+FitChebyshevPolynomial(const Eigen::ArrayBase<Derived> &x,
+                       const Eigen::ArrayBase<Derived> &y,
+                       const Eigen::ArrayBase<Derived> &sy, int n) {
     const Eigen::MatrixXd P = EvaluateChebyshevPolynomial(x, n);
-    return P.fullPivHouseholderQr().solve(y.matrix());
+    const Eigen::MatrixXd Q = P.array().colwise() / sy;
+    const Eigen::MatrixXd A = Q.transpose() * Q;
+    return {Q.fullPivHouseholderQr().solve((y / sy).matrix()),
+            A.fullPivHouseholderQr().inverse()};
 }

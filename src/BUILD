@@ -394,6 +394,7 @@ cc_test (
     srcs = [
         "chebyshev.h",
         "udh_critical_line.h",
+        "eigen_expect_near.h",
         "udh_critical_line_test.cpp"],
     deps = [
         "@gtest//:gtest",

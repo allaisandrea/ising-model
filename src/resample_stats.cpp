@@ -22,8 +22,6 @@ bool ParseArgs(int argc, const char *argv[], Arguments *args) {
     add_option("help,h", "Show usage");
     add_option("n-J", value<uint64_t>(&(args->n_J))->required());
     add_option("n-mu", value<uint64_t>(&(args->n_mu))->required());
-    add_option("log2-J-increment",
-               value<int64_t>(&(args->log2_J_increment))->required());
     add_option("log2-mu-increment",
                value<int64_t>(&(args->log2_mu_increment))->required());
     add_option("files", value<std::vector<std::string>>(&(args->file_names))
@@ -60,8 +58,7 @@ int main(int argc, const char **argv) {
     std::mt19937 rng(seed);
 
     const int64_t n_J = args.n_J;
-    ParameterRange J_range, mu_range;
-    J_range.increment = std::pow(2.0, args.log2_J_increment);
+    ParameterRange mu_range;
     mu_range.increment = std::pow(2.0, args.log2_mu_increment);
     auto pairs = ReadUdhParametersFromFiles(args.file_names.begin(),
                                             args.file_names.end());
@@ -99,9 +96,14 @@ int main(int argc, const char **argv) {
 
         for (int64_t i_mu = mu_range.begin; i_mu < mu_range.end; ++i_mu) {
             const double mu = mu_range.increment * i_mu;
-            const double J = GetCriticalJ(n_dim, mu);
-            J_range.begin = std::round(J / J_range.increment) - args.n_J / 2;
-            J_range.end = J_range.begin + args.n_J;
+            const auto pair = GetCriticalJ(n_dim, mu);
+            const double J = pair(0);
+            const double sJ = pair(1);
+            ParameterRange J_range;
+            J_range.increment =
+                std::pow(2.0, std::ceil(std::log2(6 * sJ / n_J)));
+            J_range.begin = std::round(J / J_range.increment) - n_J / 2;
+            J_range.end = J_range.begin + n_J;
 
             ParameterRange mu_range_1{i_mu, i_mu + 1, mu_range.increment};
             const CrossValidationStats stats = CrossValidate(
@@ -126,6 +128,7 @@ int main(int argc, const char **argv) {
                 const int64_t i_J = J_range.begin + i;
                 const double J = i_J * J_range.increment;
                 // clang-format off
+                std::cout << std::setprecision(12);
                 std::cout << parameters.j() << ","
                           << parameters.mu() << ","
                           << parameters.shape(0) << ","

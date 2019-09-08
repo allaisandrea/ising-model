@@ -24,7 +24,10 @@ TEST(Chebyshev, Chebyshev) {
             y += c(i) * x.pow(i);
         }
 
-        const Eigen::VectorXd d = FitChebyshevPolynomial(x, y, n);
+        const Eigen::ArrayXd sy = Eigen::ArrayXd::Ones(x.rows(), 1);
+
+        const auto pair = FitChebyshevPolynomial(x, y, sy, n);
+        const auto &d = std::get<0>(pair);
 
         Eigen::ArrayXd x_test;
         x_test.setLinSpaced(32, -1.0, 1.0);
