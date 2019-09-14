@@ -1,2 +1,4 @@
 *.ipynb
 .ipynb_checkpoints
+*.swo
+*_pb2.py
