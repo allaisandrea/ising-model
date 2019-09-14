@@ -3,27 +3,29 @@
 #include <iostream>
 
 Eigen::ArrayX3d GetCriticalPointsTable3D() {
-    Eigen::ArrayX3d result(5, 3);
+    Eigen::ArrayX3d result(6, 3);
     // clang-format off
-    result << 0.00, 0.31288, 0.001,
-              1.00, 0.44566, 0.001,
-              1.50, 0.55755, 0.001,
-              1.75, 0.62635, 0.001,
-              2.00, 0.70325, 0.001;
+    result << -1.0e128, 0.22165, 0.0001,
+                  0.00, 0.31288, 0.0001,
+                  1.00, 0.44566, 0.0001,
+                  1.50, 0.55755, 0.0001,
+                  1.75, 0.62635, 0.0001,
+                  2.00, 0.70325, 0.0001;
     // clang-format on
     return result;
 }
 
 Eigen::ArrayX3d GetCriticalPointsTable4D() {
-    Eigen::ArrayX3d result(7, 3);
+    Eigen::ArrayX3d result(8, 3);
     // clang-format off
-    result << -1.0e128, 0.14970, 0.000100,
-                 0.000, 0.21575, 0.002000,
-                 1.000, 0.31670, 0.001000,
-                 1.500, 0.40745, 0.000025,
-                 1.625, 0.43540, 0.000050,
-                 1.750, 0.46572, 0.000020,
-                 2.000, 0.52500, 0.002000;
+    result << -1.0e128, 0.149700, 0.000100,
+                0.0000, 0.215750, 0.002000,
+                1.0000, 0.316700, 0.001000,
+                1.5000, 0.407480, 0.000010,
+                1.6250, 0.435480, 0.000020,
+                1.6875, 0.450300, 0.000020,
+                1.7500, 0.465715, 0.000010,
+                2.0000, 0.530000, 0.005000;
     // clang-format on
     return result;
 }
@@ -63,7 +65,7 @@ std::tuple<Eigen::VectorXd, Eigen::MatrixXd> FitCriticalLine(uint64_t n_dim) {
     const Eigen::ArrayXd x_fit = ChemicalPotentialToFitAbscissa(table.col(0));
     const Eigen::ArrayXd y_fit = (1.0 - x_fit) * table.col(1);
     const Eigen::ArrayXd sy_fit = (1.0 - x_fit) * table.col(2);
-    return FitChebyshevPolynomial(x_fit, y_fit, sy_fit, table.rows());
+    return FitChebyshevPolynomial(x_fit, y_fit, sy_fit, 50.0, 32);
 }
 
 Eigen::ArrayX2d GetCriticalJ(int n_dim, const Eigen::ArrayXd &mu) {

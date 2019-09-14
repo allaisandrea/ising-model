@@ -26,7 +26,7 @@ TEST(Chebyshev, Chebyshev) {
 
         const Eigen::ArrayXd sy = Eigen::ArrayXd::Ones(x.rows(), 1);
 
-        const auto pair = FitChebyshevPolynomial(x, y, sy, n);
+        const auto pair = FitChebyshevPolynomial(x, y, sy, 20, 1.0);
         const auto &d = std::get<0>(pair);
 
         Eigen::ArrayXd x_test;
