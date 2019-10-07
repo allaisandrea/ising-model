@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import collections
+import signal
 import threading
 import shlex
 import subprocess
@@ -136,7 +137,11 @@ def quit(state):
 
 
 def process_user_interaction(state):
-    command = input('> ')
+    try:
+        command = input('> ')
+    except EOFError:
+        print('Type quit to exit')
+        return True
     pair = command.split(' ', 1)
     if len(pair) == 0:
         print('Cannot parse "{}"'.format(command))
@@ -187,6 +192,8 @@ def main():
     except ValueError:
         print('job_manager.py max_processes')
         sys.exit(-1)
+
+    signal.signal(signal.SIGINT,signal.SIG_IGN)
 
     state = State(
         lock=threading.Lock(),
