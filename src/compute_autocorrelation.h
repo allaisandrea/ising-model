@@ -75,15 +75,13 @@ inline Eigen::ArrayXd ComputeAutocorrelation(uint64_t n_read,
     }
     const int n_result = autocovariance.cols() - 1;
     Eigen::ArrayXd result(2 * n_result, 1);
-    Eigen::Map<Eigen::ArrayXXd> log_ac(result.data(), 2, n_result);
+    Eigen::Map<Eigen::ArrayXXd> autocorrelation(result.data(), 2, n_result);
     for (int i = 0; i < n_result; ++i) {
-        log_ac(0, i) =
-            -0.5 *
-            (std::log2(std::abs(autocovariance(0, i) / autocovariance(0, 0))) +
-             std::log2(std::abs(autocovariance(2, i) / autocovariance(2, 0))));
+        autocorrelation(0, i) =
+            0.5 * (autocovariance(0, i) / autocovariance(0, 0) +
+                   autocovariance(2, i) / autocovariance(2, 0));
 
-        log_ac(1, i) =
-            -std::log2(std::abs(autocovariance(1, i) / autocovariance(1, 0)));
+        autocorrelation(1, i) = autocovariance(1, i) / autocovariance(1, 0);
     }
     return result;
 }
