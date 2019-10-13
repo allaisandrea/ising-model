@@ -136,9 +136,9 @@ cc_binary(
 )
 
 cc_binary(
-    name = "resample-stats",
+    name = "reweight",
     srcs = [
-        "resample_stats.cpp",
+        "reweight.cpp",
         "cross_validate.h",
         "udh_file_group.h",
         "udh_critical_line.h",
