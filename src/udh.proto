@@ -26,3 +26,25 @@ message UdhObservables {
     uint64 n_up = 10;
     int64 sum_si_sj = 11;
 }
+
+message UdhAggregateObservables {
+    double j0 = 1;
+    double mu0 = 2;
+    repeated uint32 shape = 3;
+    uint32 n_wolff = 4;
+    uint32 n_metropolis = 5;
+    uint32 measure_every = 6;
+    repeated string origin_files = 7;
+    double j = 8;
+    double mu = 9;
+    uint32 count = 10;
+    double susceptibility = 11;
+    double susceptibility_std = 12;
+    double binder_cumulant = 13;
+    double binder_cumulant_std = 14;
+    double hole_density = 15;
+    double hole_density_std = 16;
+    double sum_si_sj = 17;
+    double sum_si_sj_std = 18;
+}
+

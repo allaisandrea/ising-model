@@ -1,3 +1,4 @@
+#include "google/protobuf/text_format.h"
 #include <Eigen/Core>
 #include <array>
 #include <boost/program_options.hpp>
@@ -92,8 +93,8 @@ struct Arguments {
     int64_t log2_J_increment;
     uint64_t measure_every;
     uint64_t skip_first_n;
-    bool print_header;
     std::vector<std::string> file_names;
+    std::string out_file;
 };
 
 bool ParseArgs(int argc, const char *argv[], Arguments *args) {
@@ -110,8 +111,7 @@ bool ParseArgs(int argc, const char *argv[], Arguments *args) {
                value<uint64_t>(&(args->measure_every))->required());
     add_option("skip_first_n",
                value<uint64_t>(&(args->skip_first_n))->default_value(4));
-    add_option("print-header",
-               value<bool>(&(args->print_header))->default_value(false));
+    add_option("out-file", value<std::string>(&(args->out_file))->required());
     add_option("files", value<std::vector<std::string>>(&(args->file_names))
                             ->required()
                             ->multitoken());
@@ -126,16 +126,6 @@ bool ParseArgs(int argc, const char *argv[], Arguments *args) {
     return true;
 }
 
-std::string GetFilesString(const UdhFileGroup &group) {
-    std::ostringstream strm;
-    strm << "\"";
-    for (const UdhFileGroup::Entry &entry : group.entries()) {
-        strm << entry.file_name << ";";
-    }
-    strm << "\"";
-    return strm.str();
-}
-
 std::vector<UdhFileGroup::Entry>
 GetUdhFileGroupEntries(const std::vector<std::string> &file_names,
                        uint64_t measure_every) {
@@ -144,6 +134,9 @@ GetUdhFileGroupEntries(const std::vector<std::string> &file_names,
     for (uint64_t i = 0; i < file_names.size(); ++i) {
         const auto &file_name = file_names[i];
         std::ifstream file(file_name);
+        if (!file.good()) {
+            throw std::runtime_error("Unable to open \"" + file_name + "\"");
+        }
         if (!Read(&params, &file)) {
             throw std::runtime_error("Unable to read parameters from file \"" +
                                      file_name + "\"");
@@ -176,27 +169,6 @@ int main(int argc, const char **argv) {
         args.skip_first_n);
     const UdhParameters &parameters = group.parameters();
 
-    if (args.print_header) {
-        // clang-format off
-        std::cout << "J0" << ","
-                  << "mu0" << ","
-                  << "L0" << ","
-                  << "n_wolff" << ","
-                  << "n_measure" << ","
-                  << "files" << ","
-                  << "J" << ","
-                  << "mu" << ","
-                  << "susc" << ","
-                  << "susc_std" << ","
-                  << "binder" << ","
-                  << "binder_std" << ","
-                  << "hole_density" << ","
-                  << "hole_density_std" << ","
-                  << "sum_si_sj" << ","
-                  << "sum_si_sj_std" << "\n";
-        // clang-format on
-    }
-
     const CrossValidationStats stats = CrossValidate(
         /*n_batches=*/16,
         [args](uint64_t n_read, UdhFileGroup *file_group) {
@@ -204,7 +176,7 @@ int main(int argc, const char **argv) {
                                        args.n_J, n_read, file_group);
         },
         &group);
-    const uint64_t n_measure = group.CountObservables();
+    const uint64_t count = group.CountObservables();
 
     constexpr int n_cols = 4;
     if (stats.mean.size() != int64_t(n_cols * args.n_J)) {
@@ -213,28 +185,37 @@ int main(int argc, const char **argv) {
     Eigen::Map<const Eigen::ArrayXXd> mean(stats.mean.data(), args.n_J, n_cols);
     Eigen::Map<const Eigen::ArrayXXd> std_dev(stats.std_dev.data(), args.n_J,
                                               n_cols);
+    std::ofstream out_file(args.out_file, std::ios_base::out |
+                                              std::ios_base::app |
+                                              std::ios_base::binary);
+    if (!out_file.good()) {
+        throw std::runtime_error("Unable to open \"" + args.out_file + "\"");
+    }
     for (uint64_t i_J = 0; i_J < args.n_J; ++i_J) {
         const double J =
             args.J_begin + (args.J_end - args.J_begin) * i_J / args.n_J;
-        // clang-format off
-                std::cout << std::setprecision(12);
-                std::cout << parameters.j() << ","
-                          << parameters.mu() << ","
-                          << parameters.shape(0) << ","
-                          << parameters.n_wolff() << ","
-                          << n_measure << ","
-                          << GetFilesString(group) << ","
-                          << J << ","
-                          << args.mu << ","
-                          << mean(i_J, 0) << ","
-                          << std_dev(i_J, 0) << ","
-                          << mean(i_J, 1) << ","
-                          << std_dev(i_J, 1) << ","
-                          << mean(i_J, 2) << ","
-                          << std_dev(i_J, 2) << ","
-                          << mean(i_J, 3) << ","
-                          << std_dev(i_J, 3) << "\n";
-        // clang-format on
+        UdhAggregateObservables obs;
+        obs.set_j0(parameters.j());
+        obs.set_mu0(parameters.mu());
+        *obs.mutable_shape() = parameters.shape();
+        obs.set_n_wolff(parameters.n_wolff());
+        obs.set_n_metropolis(parameters.n_metropolis());
+        obs.set_measure_every(args.measure_every);
+        for (const auto &file_name : args.file_names) {
+            obs.add_origin_files(file_name);
+        }
+        obs.set_mu(args.mu);
+        obs.set_j(J);
+        obs.set_count(count);
+        obs.set_susceptibility(mean(i_J, 0));
+        obs.set_susceptibility_std(std_dev(i_J, 0));
+        obs.set_binder_cumulant(mean(i_J, 1));
+        obs.set_binder_cumulant_std(std_dev(i_J, 1));
+        obs.set_hole_density(mean(i_J, 2));
+        obs.set_hole_density_std(std_dev(i_J, 2));
+        obs.set_sum_si_sj(mean(i_J, 3));
+        obs.set_sum_si_sj_std(std_dev(i_J, 3));
+        Write(obs, &out_file);
     }
 
     return 0;
