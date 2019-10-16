@@ -48,3 +48,24 @@ message UdhAggregateObservables {
     double sum_si_sj_std = 18;
 }
 
+message UdhAutocorrelationPoint {
+    double j = 1;
+    double mu = 2;
+    repeated uint32 shape = 3;
+    uint32 n_wolff = 4;
+    uint32 n_metropolis = 5;
+    uint32 measure_every = 6;
+    repeated string origin_files = 7;
+    uint32 count = 8;
+    uint32 tau = 9;
+    double ud_autocorrelation = 10;
+    double ud_autocorrelation_std = 11;
+    double h_autocorrelation = 12;
+    double h_autocorrelation_std = 13;
+    double t_wolff = 14;
+    double t_metropolis = 15;
+    double t_measure = 16;
+    double t_serialize = 17;
+    double t_residual = 18;
+}
+

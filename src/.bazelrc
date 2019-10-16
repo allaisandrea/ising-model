@@ -1,1 +1,1 @@
-build --cxxopt="-Wall" --cxxopt="-Wextra" --cxxopt="-Wpedantic" --cxxopt="-std=c++11" --cxxopt="-O3" --cxxopt="-Wno-c99-extensions"
+build --cxxopt="-Wall" --cxxopt="-Wextra" --cxxopt="-Wpedantic" --cxxopt="-std=c++11" --cxxopt="-O3" --cxxopt="-Wno-c99-extensions" --cxxopt="-g"

@@ -123,6 +123,9 @@ cc_binary(
         "udh_io.h",
         "udh_arguments.h"],
     deps = [":udh_cc_proto"],
+    linkopts = [
+        "-lboost_program_options"
+    ],
 )
 
 cc_binary(

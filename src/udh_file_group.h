@@ -179,3 +179,36 @@ GroupFiles(const std::vector<std::pair<std::string, UdhParameters>> &pairs,
     }
     return groups;
 }
+
+inline std::vector<UdhFileGroup::Entry>
+GetUdhFileGroupEntries(const std::vector<std::string> &file_names,
+                       uint64_t measure_every) {
+    std::vector<UdhFileGroup::Entry> result;
+    UdhParameters params, prev_params;
+    for (uint64_t i = 0; i < file_names.size(); ++i) {
+        const auto &file_name = file_names[i];
+        std::ifstream file(file_name);
+        if (!file.good()) {
+            throw std::runtime_error("Unable to open \"" + file_name + "\"");
+        }
+        if (!Read(&params, &file)) {
+            throw std::runtime_error("Unable to read parameters from file \"" +
+                                     file_name + "\"");
+        }
+        if (measure_every % params.measure_every() != 0) {
+            throw std::runtime_error(
+                "Incompatible value of measure_every for file \"" + file_name +
+                "\"");
+        }
+        if (i > 0 && !OutputCanBeJoined(params, prev_params)) {
+            throw std::runtime_error("File \"" + file_name + "\" and \"" +
+                                     file_names[i - 1] +
+                                     "\" have incompatible parameters \"");
+        }
+        result.emplace_back(UdhFileGroup::Entry{
+            .file_name = file_name,
+            .read_every = measure_every / params.measure_every()});
+        prev_params = params;
+    }
+    return result;
+}
