@@ -1,7 +1,6 @@
 #include "compute_autocorrelation.h"
 #include "compute_timing.h"
 #include "cross_validate.h"
-#include "error_format.h"
 #include "udh_file_group.h"
 #include <boost/program_options.hpp>
 #include <cmath>

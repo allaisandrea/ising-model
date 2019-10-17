@@ -1,6 +1,5 @@
 #pragma once
 #include "udh_io.h"
-#include "udh_parameters_set.h"
 #include <fstream>
 #include <stdexcept>
 
@@ -147,37 +146,24 @@ inline uint64_t UdhFileGroup::CountObservables() {
     return result;
 }
 
-inline std::vector<std::vector<UdhFileGroup::Entry>> MakeUdhFileGroupEntries(
-    std::vector<std::pair<std::string, UdhParameters>> pairs) {
-    SortParametersArray(&pairs);
-    auto group_begin = pairs.begin();
-    std::vector<std::vector<UdhFileGroup::Entry>> result;
-    while (group_begin != pairs.end()) {
-        result.emplace_back();
-        std::vector<UdhFileGroup::Entry> &entries = result.back();
-        entries.emplace_back(UdhFileGroup::Entry{group_begin->first, 1});
-        auto pair = std::next(group_begin);
-        for (; pair != pairs.end() &&
-               OutputCanBeJoined(group_begin->second, pair->second);
-             ++pair) {
-            const uint64_t read_every = group_begin->second.measure_every() /
-                                        pair->second.measure_every();
-            entries.emplace_back(UdhFileGroup::Entry{pair->first, read_every});
-        }
-        group_begin = pair;
+inline bool OutputCanBeJoined(const UdhParameters &p1,
+                              const UdhParameters &p2) {
+    bool result = true;
+    // clang-format off
+    result = p1.shape().size() == p2.shape().size() && 
+             p1.j() == p2.j() &&
+             p1.mu() == p2.mu() && 
+             p1.n_wolff() == p2.n_wolff() &&
+             p1.n_metropolis() == p2.n_metropolis() &&
+             p1.measure_every() % p2.measure_every() == 0 &&
+             p1.seed() != p2.seed();
+    // clang-format on
+    if (!result)
+        return false;
+    for (int i = 0; i < p1.shape().size(); ++i) {
+        result = result && p1.shape(i) == p2.shape(i);
     }
     return result;
-}
-
-inline std::vector<UdhFileGroup>
-GroupFiles(const std::vector<std::pair<std::string, UdhParameters>> &pairs,
-           uint64_t skip_first_n) {
-    const auto entries_array = MakeUdhFileGroupEntries(pairs);
-    std::vector<UdhFileGroup> groups;
-    for (const auto entries : entries_array) {
-        groups.emplace_back(entries, skip_first_n);
-    }
-    return groups;
 }
 
 inline std::vector<UdhFileGroup::Entry>

@@ -66,8 +66,7 @@ cc_library(
     name = "udh_file_group",
     hdrs = [
         "udh_file_group.h",
-        "udh_io.h",
-        "udh_parameters_set.h"],
+        "udh_io.h"],
 )
 
 # Binaries  ##################################
@@ -117,9 +116,7 @@ cc_binary(
         "compute_autocorrelation.h",
         "compute_timing.h",
         "cross_validate.h",
-        "error_format.h",
         "udh_file_group.h",
-        "udh_parameters_set.h",
         "udh_io.h",
         "udh_arguments.h"],
     deps = [":udh_cc_proto"],
@@ -129,24 +126,11 @@ cc_binary(
 )
 
 cc_binary(
-    name = "print-parameters-table",
-    srcs = [
-        "print_parameters_table.cpp",
-        "udh_parameters_set.h",
-        "udh_io.h",
-        "udh_arguments.h"],
-    deps = [":udh_cc_proto"],
-)
-
-cc_binary(
     name = "reweight",
     srcs = [
         "reweight.cpp",
         "cross_validate.h",
         "udh_file_group.h",
-        "udh_critical_line.h",
-        "chebyshev.h",
-        "udh_parameters_set.h",
         "udh_io.h",
         "udh_arguments.h"],
     deps = [ ":udh_cc_proto" ],
@@ -332,38 +316,3 @@ cc_test (
     ],
 )
 
-cc_test (
-    name = "error_format_test",
-    srcs = [
-        "error_format_test.cpp",
-        "error_format.h" ],
-    deps = [
-        "@gtest//:gtest",
-        "@gtest//:gtest_main" 
-    ],
-)
-
-cc_test (
-    name = "chebyshev_test",
-    srcs = [
-        "chebyshev.h",
-        "eigen_expect_near.h",
-        "chebyshev_test.cpp"],
-    deps = [
-        "@gtest//:gtest",
-        "@gtest//:gtest_main" 
-    ],
-)
-
-cc_test (
-    name = "udh_critical_line_test",
-    srcs = [
-        "chebyshev.h",
-        "udh_critical_line.h",
-        "eigen_expect_near.h",
-        "udh_critical_line_test.cpp"],
-    deps = [
-        "@gtest//:gtest",
-        "@gtest//:gtest_main" 
-    ],
-)
