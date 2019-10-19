@@ -1,35 +1,68 @@
 import struct
 import numpy
 import pandas
-from ising_model.udh_pb2 import UdhParameters, UdhObservables
+from ising_model import udh_pb2
+
+def _read_next_chunk(stream):
+    byte_array = stream.read(8)
+    if len(byte_array) == 0:
+        raise EOFError
+    assert len(byte_array) == 8
+    chunk_size = struct.unpack('Q', byte_array)[0]
+    assert chunk_size < (1 << 20)
+    byte_array = stream.read(chunk_size)
+    assert len(byte_array) == chunk_size
+    return byte_array
+
+def _read_next_protobuf(stream, ProtobufClass):
+    result = ProtobufClass()
+    result.ParseFromString(_read_next_chunk(stream))
+    return result
 
 def load_params(file_name):
-    with open(file_name, 'rb') as in_file:
-        n_read = struct.unpack('Q', in_file.read(8))[0]
-        assert n_read < (1 << 20), "Corrupt file"
-        params = UdhParameters()
-        params.ParseFromString(in_file.read(n_read))
-    return params
+    with open(file_name, 'rb') as stream:
+        return _read_next_protobuf(stream, udh_pb2.UdhParameters)
 
 def load_observables(file_name):
     observables_list = []
-    with open(file_name, 'rb') as in_file:
-        n_read = struct.unpack('Q', in_file.read(8))[0]
-        assert n_read < (1 << 20), "Corrupt file"
-        in_file.read(n_read)
-        while True:
-            chunk = in_file.read(8)
-            if len(chunk) < 8:
-                break
-            n_read = struct.unpack('Q', chunk)[0]
-            assert n_read < (1 << 20), "Corrupt file"
-            observables = UdhObservables()
-            chunk = in_file.read(n_read)
-            if len(chunk) < n_read:
-                break
-            observables.ParseFromString(chunk)
-            observables_list.append(observables)
+    try:
+        with open(file_name, 'rb') as stream:
+            _read_next_chunk(stream)
+            while True:
+                observables_list.append( _read_next_protobuf(stream, udh_pb2.UdhObservables))
+    except EOFError:
+        pass
     return observables_list
+
+def load_autocorrelation_table(file_name):
+    ac_points = []
+    try:
+        with open(file_name, 'rb') as stream:
+            while True:
+                ac_points.append(_read_next_protobuf(stream, udh_pb2.UdhAutocorrelationPoint))
+    except EOFError:
+        pass
+    table = []
+    for ac_point in ac_points:
+        table.append({
+            "J": ac_point.j,
+            "mu": ac_point.mu,
+            "L0": ac_point.shape[0],
+            "n_wolff": ac_point.n_wolff,
+            "n_metropolis": ac_point.n_metropolis,
+            "measure_every": ac_point.measure_every,
+            "count": ac_point.count,
+            "tau": ac_point.tau,
+            "ud_ac": ac_point.ud_autocorrelation,
+            "ud_ac_std": ac_point.ud_autocorrelation_std,
+            "h_ac": ac_point.h_autocorrelation,
+            "h_ac_std": ac_point.h_autocorrelation_std,
+            "t_wolff": ac_point.t_wolff,
+            "t_metropolis": ac_point.t_metropolis,
+            "t_measure": ac_point.t_measure,
+            "t_serialize": ac_point.t_serialize,
+            "t_residual": ac_point.t_residual})
+    return pandas.DataFrame(table)
 
 def load_params_table(file_names):
     table = []
@@ -138,11 +171,11 @@ def get_critical_J(dim, mu, reg):
 # Phase diagram related stuff #################################################################
 
 def load_pd_params(file_name):
-    with open(file_name, 'rb') as in_file:
-        n_read = struct.unpack('Q', in_file.read(8))[0]
+    with open(file_name, 'rb') as stream:
+        n_read = struct.unpack('Q', stream.read(8))[0]
         assert n_read < (1 << 20), "Corrupt file"
         params = PhaseDiagramParams()
-        params.ParseFromString(in_file.read(n_read))
+        params.ParseFromString(stream.read(n_read))
     return params
 
 def make_pd_params_table(file_names):
@@ -168,15 +201,15 @@ def make_pd_params_table(file_names):
     return table
         
 def load_pd_data(file_name):
-    with open(file_name, 'rb') as in_file:
-        n_read = struct.unpack('Q', in_file.read(8))[0]
+    with open(file_name, 'rb') as stream:
+        n_read = struct.unpack('Q', stream.read(8))[0]
         assert n_read < (1 << 20), "Corrupt file"
         params = PhaseDiagramParams()
-        params.ParseFromString(in_file.read(n_read))
-        n_read = struct.unpack('Q', in_file.read(8))[0]
+        params.ParseFromString(stream.read(n_read))
+        n_read = struct.unpack('Q', stream.read(8))[0]
         assert n_read < (1 << 20), "Corrupt file"
         pd = PhaseDiagram()
-        pd.ParseFromString(in_file.read(n_read))
+        pd.ParseFromString(stream.read(n_read))
         n_J = params.j_end - params.j_begin
         n_mu = params.mu_end - params.mu_begin
         J_increment = numpy.power(2.0, params.log2_j_increment)
@@ -206,15 +239,15 @@ def load_pd_data(file_name):
         }
 
 def load_pd_data_as_table(file_name):
-    with open(file_name, 'rb') as in_file:
-        n_read = struct.unpack('Q', in_file.read(8))[0]
+    with open(file_name, 'rb') as stream:
+        n_read = struct.unpack('Q', stream.read(8))[0]
         assert n_read < (1 << 20), "Corrupt file"
         params = PhaseDiagramParams()
-        params.ParseFromString(in_file.read(n_read))
-        n_read = struct.unpack('Q', in_file.read(8))[0]
+        params.ParseFromString(stream.read(n_read))
+        n_read = struct.unpack('Q', stream.read(8))[0]
         assert n_read < (1 << 20), "Corrupt file"
         pd = PhaseDiagram()
-        pd.ParseFromString(in_file.read(n_read))
+        pd.ParseFromString(stream.read(n_read))
         n_J = params.j_end - params.j_begin
         n_mu = params.mu_end - params.mu_begin
         J_increment = numpy.power(2.0, params.log2_j_increment)
