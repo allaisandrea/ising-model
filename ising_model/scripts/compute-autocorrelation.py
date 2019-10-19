@@ -1,17 +1,34 @@
 #!/usr/bin/env python3
 import sys
 import pandas
+import json
+import subprocess
+import os
 
-def main(argv):
-    if len(argv) != 2:
-        sys.stderr.write("Usage compute-autocorrelation.py file_groups.yaml")
-        return -1;
+def compute_autocorrelation(json_db, dest_file_name):
+    file_groups_table = pandas.DataFrame(**json_db["file_groups"])
+    measure_every_table = pandas.DataFrame(**json_db["measure_every"])
+    try:
+        os.remove(dest_file_name)
+    except OSError:
+        pass
 
-    file_groups = pandas.read_csv(argv[1], skipinitialspace=True)
-    for key, group in file_groups.groupby('group_id'):
-        print(group)
-
-    return 0
+    for row in measure_every_table.itertuples():
+        file_names = file_groups_table.loc[
+                file_groups_table['group_id'] == row.group_id, 'file_name']
+        command = [
+           'compute-autocorrelation', 
+           '--measure-every', str(row.measure_every),
+           '--out-file', dest_file_name,
+           '--files' ] + list(file_names)
+        print(' '.join(command))
+        subprocess.call(command)
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+    if len(sys.argv) != 3:
+        sys.exit("Usage:\ncompute-autocorrelation.py file_groups.json autocorrelation.bin")
+
+    with open (sys.argv[1]) as in_file:
+        json_db = json.load(in_file)
+
+    compute_autocorrelation(json_db, sys.argv[2])
