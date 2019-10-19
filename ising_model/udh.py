@@ -1,7 +1,7 @@
 import struct
 import numpy
 import pandas
-from udh_pb2 import UdhParameters, UdhObservables
+from ising_model.udh_pb2 import UdhParameters, UdhObservables
 
 def load_params(file_name):
     with open(file_name, 'rb') as in_file:
