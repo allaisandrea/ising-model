@@ -48,7 +48,9 @@ def load_observables(file_name):
 
 
 def load_autocorrelation_table(file_name):
-    ac_points = _read_protobuf_array(stream, udh_pb2.UdhAutocorrelationPoint)
+    with open(file_name, 'rb') as stream:
+        ac_points = _read_protobuf_array(
+            stream, udh_pb2.UdhAutocorrelationPoint)
     table = []
     for ac_point in ac_points:
         table.append({
@@ -70,6 +72,34 @@ def load_autocorrelation_table(file_name):
             "t_measure": ac_point.t_measure,
             "t_serialize": ac_point.t_serialize,
             "t_residual": ac_point.t_residual})
+    return pandas.DataFrame(table)
+
+
+def load_aggregate_observables_table(file_name):
+    with open(file_name, 'rb') as stream:
+        agg_obs_list = _read_protobuf_array(
+            stream, udh_pb2.UdhAggregateObservables)
+    table = []
+    for agg_obs in agg_obs_list:
+        table.append({
+            "J0": agg_obs.j0,
+            "mu0": agg_obs.mu0,
+            "L0": agg_obs.shape[0],
+            "n_wolff": agg_obs.n_wolff,
+            "n_metropolis": agg_obs.n_metropolis,
+            "measure_every": agg_obs.measure_every,
+            "file_group": agg_obs.file_group,
+            "J": agg_obs.j,
+            "mu": agg_obs.mu,
+            "count": agg_obs.count,
+            "susceptibility": agg_obs.susceptibility,
+            "susceptibility_std": agg_obs.susceptibility_std,
+            "binder_cumulant": agg_obs.binder_cumulant,
+            "binder_cumulant_std": agg_obs.binder_cumulant_std,
+            "hole_density": agg_obs.hole_density,
+            "hole_density_std": agg_obs.hole_density_std,
+            "sum_si_sj": agg_obs.sum_si_sj,
+            "sum_si_sj_std": agg_obs.sum_si_sj_std})
     return pandas.DataFrame(table)
 
 
