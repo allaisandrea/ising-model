@@ -8,6 +8,7 @@
 struct Arguments {
     uint64_t measure_every;
     uint64_t skip_first_n;
+    uint64_t file_group;
     std::vector<std::string> file_names;
     std::string out_file;
 };
@@ -23,6 +24,7 @@ bool ParseArgs(int argc, const char *argv[], Arguments *args) {
     add_option("skip_first_n",
                value<uint64_t>(&(args->skip_first_n))->default_value(4));
     add_option("out-file", value<std::string>(&(args->out_file))->required());
+    add_option("file-group", value<uint64_t>(&(args->file_group))->required());
     add_option("files", value<std::vector<std::string>>(&(args->file_names))
                             ->required()
                             ->multitoken());
@@ -66,9 +68,7 @@ int main(int argc, const char *argv[]) {
         *pt.mutable_shape() = group.parameters().shape();
         pt.set_n_wolff(group.parameters().n_wolff());
         pt.set_n_metropolis(group.parameters().n_metropolis());
-        for (const auto &file_name : args.file_names) {
-            pt.add_origin_files(file_name);
-        }
+        pt.set_file_group(args.file_group);
         pt.set_count(count);
         pt.set_tau(tau);
         pt.set_ud_autocorrelation(autocorrelation.mean(2 * tau));

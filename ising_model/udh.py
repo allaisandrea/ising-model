@@ -51,6 +51,7 @@ def load_autocorrelation_table(file_name):
             "n_wolff": ac_point.n_wolff,
             "n_metropolis": ac_point.n_metropolis,
             "measure_every": ac_point.measure_every,
+            "file_group": ac_point.file_group,
             "count": ac_point.count,
             "tau": ac_point.tau,
             "ud_ac": ac_point.ud_autocorrelation,
