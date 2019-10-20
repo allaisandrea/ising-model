@@ -69,22 +69,17 @@ def load_params_table(file_names):
     table = []
     for file_name in file_names:
         params = load_params(file_name)
-        table.append((
-            params.j,
-            params.mu,
-            params.shape[0],
-            params.n_wolff,
-            params.n_metropolis,
-            params.measure_every,
-            params.n_measure,
-            params.seed,
-            params.id))
-    table = pandas.DataFrame(
-        table, 
-        columns=[
-            'J', 'mu', 'L0', 'n_wolff', 'n_metropolis', 
-            'measure_every', 'n_measure', 'seed', 'id'])
-    return table
+        table.append({
+            "J": params.j,
+            "mu": params.mu,
+            "L0": params.shape[0],
+            "n_wolff": params.n_wolff,
+            "n_metropolis": params.n_metropolis,
+            "measure_every": params.measure_every,
+            "n_measure": params.n_measure,
+            "seed": params.seed,
+            "id": params.id})
+    return pandas.DataFrame(table)
 
 def get_chebyshev_matrix(x, n):
     x = numpy.array(x)
@@ -169,169 +164,3 @@ def get_critical_J(dim, mu, reg):
 
     return numpy.stack([J_ev, sJ_ev])
 
-# Phase diagram related stuff #################################################################
-
-def load_pd_params(file_name):
-    with open(file_name, 'rb') as stream:
-        n_read = struct.unpack('Q', stream.read(8))[0]
-        assert n_read < (1 << 20), "Corrupt file"
-        params = PhaseDiagramParams()
-        params.ParseFromString(stream.read(n_read))
-    return params
-
-def make_pd_params_table(file_names):
-    table = []
-    for file_name in file_names:
-        params = load_pd_params(file_name)
-        table.append((
-            file_name, 
-            params.j, 
-            params.mu,
-            params.shape[0],
-            params.n_wolff,
-            params.n_metropolis))
-    table = pandas.DataFrame(
-        table, 
-        columns=[
-            'file_name',
-            'J',
-            'mu',
-            'L0',
-            'wolf',
-            'metr'])
-    return table
-        
-def load_pd_data(file_name):
-    with open(file_name, 'rb') as stream:
-        n_read = struct.unpack('Q', stream.read(8))[0]
-        assert n_read < (1 << 20), "Corrupt file"
-        params = PhaseDiagramParams()
-        params.ParseFromString(stream.read(n_read))
-        n_read = struct.unpack('Q', stream.read(8))[0]
-        assert n_read < (1 << 20), "Corrupt file"
-        pd = PhaseDiagram()
-        pd.ParseFromString(stream.read(n_read))
-        n_J = params.j_end - params.j_begin
-        n_mu = params.mu_end - params.mu_begin
-        J_increment = numpy.power(2.0, params.log2_j_increment)
-        mu_increment = numpy.power(2.0, params.log2_mu_increment)
-        return {
-            'J0': [params.j],
-            'mu0': [params.mu],
-            'J_begin': params.j_begin,
-            'J_end': params.j_end,
-            'log2_J_increment': params.log2_j_increment,
-            'mu_begin': params.mu_begin,
-            'log2_mu_increment': params.log2_mu_increment,
-            'mu_end':params.mu_end,
-            'J_range': ((params.j_begin - 0.5) * J_increment, 
-                        (params.j_end - 0.5) * J_increment),
-            'mu_range': ((params.mu_begin - 0.5) * mu_increment, 
-                         (params.mu_end - 0.5) * mu_increment),
-            'distance': numpy.array(pd.distance).reshape((n_mu, n_J)),
-            'susc': numpy.array(pd.susceptibility).reshape((n_mu, n_J)),
-            'susc_std': numpy.array(pd.susceptibility_std).reshape((n_mu, n_J)),
-            'binder': numpy.array(pd.binder_cumulant).reshape((n_mu, n_J)),
-            'binder_std': numpy.array(pd.binder_cumulant_std).reshape((n_mu, n_J)),
-            'hole_density': numpy.array(pd.hole_density).reshape((n_mu, n_J)),
-            'hole_density_std': numpy.array(pd.hole_density_std).reshape((n_mu, n_J)),
-            'si_sj': numpy.array(pd.si_sj).reshape((n_mu, n_J)),
-            'si_sj_std': numpy.array(pd.si_sj_std).reshape((n_mu, n_J)),
-        }
-
-def load_pd_data_as_table(file_name):
-    with open(file_name, 'rb') as stream:
-        n_read = struct.unpack('Q', stream.read(8))[0]
-        assert n_read < (1 << 20), "Corrupt file"
-        params = PhaseDiagramParams()
-        params.ParseFromString(stream.read(n_read))
-        n_read = struct.unpack('Q', stream.read(8))[0]
-        assert n_read < (1 << 20), "Corrupt file"
-        pd = PhaseDiagram()
-        pd.ParseFromString(stream.read(n_read))
-        n_J = params.j_end - params.j_begin
-        n_mu = params.mu_end - params.mu_begin
-        J_increment = numpy.power(2.0, params.log2_j_increment)
-        mu_increment = numpy.power(2.0, params.log2_mu_increment)
-        table = []
-        for i_mu in range(params.mu_begin, params.mu_end):
-            for i_J in range(params.j_begin, params.j_end):            
-                k = (i_mu - params.mu_begin) * n_J + i_J - params.j_begin
-                table.append([
-                    params.j,
-                    params.mu,
-                    i_J * J_increment,
-                    i_mu * mu_increment,
-                    params.shape[0],
-                    pd.susceptibility[k],
-                    pd.susceptibility_std[k],
-                    pd.binder_cumulant[k],
-                    pd.binder_cumulant_std[k],
-                    pd.hole_density[k],
-                    pd.hole_density_std[k],
-                    pd.si_sj[k],
-                    pd.si_sj_std[k]
-                ])
-        return pandas.DataFrame(table, columns=[
-            'J0', 'mu0', 'J', 'mu', 'L0', 'susc', 
-            'susc_std', 'binder', 'binder_std', 'hole_density',
-            'hole_density_std', 'si_sj', 'si_sj_std'])
-
-def merge_pds(pds):
-    assert len(pds) > 0
-    res = {
-        "J0": pds[0]['J0'],
-        "mu0": pds[0]['mu0'],
-        "J_begin": pds[0]['J_begin'],
-        "J_end": pds[0]['J_end'],
-        "log2_J_increment": pds[0]['log2_J_increment'],
-        "mu_begin": pds[0]['mu_begin'],
-        "mu_end": pds[0]['mu_end'],
-        "log2_mu_increment": pds[0]['log2_mu_increment'],
-    }
-
-    for pd in pds[1:]:
-        assert pd['log2_J_increment'] == res['log2_J_increment']
-        assert pd['log2_mu_increment'] == res['log2_mu_increment']
-        res['J0'].extend(pd['J0'])
-        res['mu0'].extend(pd['mu0'])
-        res['J_begin'] = min(res['J_begin'], pd['J_begin'])
-        res['mu_begin'] = min(res['mu_begin'], pd['mu_begin'])
-        res['J_end'] = max(res['J_end'], pd['J_end'])
-        res['mu_end'] = max(res['mu_end'], pd['mu_end'])
-        
-    J_increment = numpy.power(2.0, res['log2_J_increment'])
-    mu_increment = numpy.power(2.0, res['log2_mu_increment'])
-    res['J_range'] = ((res['J_begin'] - 0.5) * J_increment, 
-                      (res['J_end'] - 0.5) * J_increment)
-    res['mu_range'] = ((res['mu_begin'] - 0.5) * mu_increment, 
-                       (res['mu_end'] - 0.5) * mu_increment)
-    
-    n_J = res['J_end'] - res['J_begin']
-    n_mu = res['mu_end'] - res['mu_begin']
-    keys = [
-        ['susc', 'susc_std'],
-        ['susc_std', 'susc_std'],
-        ['binder', 'binder_std'],
-        ['binder_std', 'binder_std'],
-        ['hole_density', 'hole_density_std'],
-        ['hole_density_std', 'hole_density_std'],
-        ['si_sj', 'si_sj_std'],
-        ['si_sj_std','si_sj_std'],
-        ['distance', 'distance']]
-    
-    for key, _ in keys:
-        res[key] = numpy.full((n_mu, n_J), numpy.inf)
-
-    for pd in pds:
-        J0 = pd['J_begin'] - res['J_begin']
-        J1 = pd['J_end'] - res['J_begin']
-        mu0 = pd['mu_begin'] - res['mu_begin']
-        mu1 = pd['mu_end'] - res['mu_begin']
-
-        for key, std_key in keys:
-            #std_key = 'distance'
-            res[key][mu0:mu1, J0:J1] = numpy.where(
-                res[std_key][mu0:mu1, J0:J1] > pd[std_key],
-                pd[key], res[key][mu0:mu1, J0:J1])
-    return res
