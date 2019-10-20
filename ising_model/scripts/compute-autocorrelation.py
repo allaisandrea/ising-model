@@ -17,6 +17,10 @@ def compute_autocorrelation(json_db, dest_file_name):
     for row in measure_every_table.itertuples():
         file_names = file_names_table.loc[
             file_names_table['group_id'] == row.group_id, 'file_name']
+        if len(file_names) == 0:
+            sys.error(
+                "No entry in \"file_names\" table for group {}\n".format(row.group_id))
+            continue
         command = [
             'compute-autocorrelation',
             '--measure-every', str(row.measure_every),

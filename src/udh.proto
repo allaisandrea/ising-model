@@ -34,7 +34,7 @@ message UdhAggregateObservables {
     uint32 n_wolff = 4;
     uint32 n_metropolis = 5;
     uint32 measure_every = 6;
-    repeated string origin_files = 7;
+    uint32 file_group = 7;
     double j = 8;
     double mu = 9;
     uint32 count = 10;

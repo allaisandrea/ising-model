@@ -91,6 +91,7 @@ struct Arguments {
     uint64_t n_J;
     uint64_t measure_every;
     uint64_t skip_first_n;
+    uint64_t file_group;
     std::vector<std::string> file_names;
     std::string out_file;
 };
@@ -109,6 +110,7 @@ bool ParseArgs(int argc, const char *argv[], Arguments *args) {
                value<uint64_t>(&(args->measure_every))->required());
     add_option("skip_first_n",
                value<uint64_t>(&(args->skip_first_n))->default_value(4));
+    add_option("file-group", value<uint64_t>(&(args->file_group))->required());
     add_option("out-file", value<std::string>(&(args->out_file))->required());
     add_option("files", value<std::vector<std::string>>(&(args->file_names))
                             ->required()
@@ -167,9 +169,7 @@ int main(int argc, const char **argv) {
         obs.set_n_wolff(parameters.n_wolff());
         obs.set_n_metropolis(parameters.n_metropolis());
         obs.set_measure_every(args.measure_every);
-        for (const auto &file_name : args.file_names) {
-            obs.add_origin_files(file_name);
-        }
+        obs.set_file_group(args.file_group);
         obs.set_mu(args.mu);
         obs.set_j(J);
         obs.set_count(count);
