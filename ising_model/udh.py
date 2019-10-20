@@ -5,13 +5,12 @@ from ising_model import udh_pb2
 
 def _read_next_chunk(stream):
     byte_array = stream.read(8)
-    if len(byte_array) == 0:
+    if len(byte_array) < 8:
         raise EOFError
-    assert len(byte_array) == 8
     chunk_size = struct.unpack('Q', byte_array)[0]
-    assert chunk_size < (1 << 20)
     byte_array = stream.read(chunk_size)
-    assert len(byte_array) == chunk_size
+    if len(byte_array) < chunk_size:
+        raise EOFError
     return byte_array
 
 def _read_next_protobuf(stream, ProtobufClass):
@@ -25,23 +24,23 @@ def load_params(file_name):
 
 def load_observables(file_name):
     observables_list = []
-    try:
-        with open(file_name, 'rb') as stream:
-            _read_next_chunk(stream)
+    with open(file_name, 'rb') as stream:
+        _read_next_chunk(stream)
+        try:
             while True:
                 observables_list.append( _read_next_protobuf(stream, udh_pb2.UdhObservables))
-    except EOFError:
-        pass
+        except EOFError:
+            pass
     return observables_list
 
 def load_autocorrelation_table(file_name):
     ac_points = []
-    try:
-        with open(file_name, 'rb') as stream:
+    with open(file_name, 'rb') as stream:
+        try:
             while True:
                 ac_points.append(_read_next_protobuf(stream, udh_pb2.UdhAutocorrelationPoint))
-    except EOFError:
-        pass
+        except EOFError:
+            pass
     table = []
     for ac_point in ac_points:
         table.append({
