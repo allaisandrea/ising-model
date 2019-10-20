@@ -8,13 +8,13 @@ import os
 
 def compute_autocorrelation(json_db, dest_file_name):
     file_names_table = pandas.DataFrame(**json_db["file_names"])
-    file_groups_table = pandas.DataFrame(**json_db["file_groups"])
+    measure_every_table = pandas.DataFrame(**json_db["measure_every"])
     try:
         os.remove(dest_file_name)
     except OSError:
         pass
 
-    for row in file_groups_table.itertuples():
+    for row in measure_every_table.itertuples():
         file_names = file_names_table.loc[
             file_names_table['group_id'] == row.group_id, 'file_name']
         command = [
