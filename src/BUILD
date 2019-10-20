@@ -126,9 +126,9 @@ cc_binary(
 )
 
 cc_binary(
-    name = "reweight",
+    name = "compute-aggregate-observables",
     srcs = [
-        "reweight.cpp",
+        "compute_aggregate_observables.cpp",
         "cross_validate.h",
         "udh_file_group.h",
         "udh_io.h",

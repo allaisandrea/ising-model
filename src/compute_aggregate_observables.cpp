@@ -15,9 +15,10 @@ UdhObservables GetObservables(UdhFileGroup *file_group) {
     return observables;
 }
 
-Eigen::ArrayXd ReweightObservables(double mu, double J_begin, double J_end,
-                                   uint64_t n_J, uint64_t n_read,
-                                   UdhFileGroup *file_group) {
+Eigen::ArrayXd ComputeAggregateObservables(double mu, double J_begin,
+                                           double J_end, uint64_t n_J,
+                                           uint64_t n_read,
+                                           UdhFileGroup *file_group) {
     const UdhFileGroup::Position position = file_group->GetPosition();
 
     const double J0 = file_group->parameters().j();
@@ -136,8 +137,9 @@ int main(int argc, const char **argv) {
     const CrossValidationStats stats = CrossValidate(
         /*n_batches=*/16,
         [args](uint64_t n_read, UdhFileGroup *file_group) {
-            return ReweightObservables(args.mu, args.J_begin, args.J_end,
-                                       args.n_J, n_read, file_group);
+            return ComputeAggregateObservables(args.mu, args.J_begin,
+                                               args.J_end, args.n_J, n_read,
+                                               file_group);
         },
         &group);
     const uint64_t count = group.CountObservables();
