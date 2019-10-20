@@ -6,16 +6,28 @@ from ising_model import udh_pb2
 def _read_next_chunk(stream):
     byte_array = stream.read(8)
     if len(byte_array) < 8:
-        raise EOFError
+        return None
     chunk_size = struct.unpack('Q', byte_array)[0]
     byte_array = stream.read(chunk_size)
     if len(byte_array) < chunk_size:
-        raise EOFError
+        return None
     return byte_array
 
 def _read_next_protobuf(stream, ProtobufClass):
+    chunk = _read_next_chunk(stream)
+    if chunk is None:
+        return None
     result = ProtobufClass()
-    result.ParseFromString(_read_next_chunk(stream))
+    result.ParseFromString(chunk)
+    return result
+
+def _read_protobuf_array(stream, ProtobufClass):
+    result = list()
+    while True:
+        next_protobuf = _read_next_protobuf(stream, ProtobufClass)
+        if next_protobuf is None:
+            break
+        result.append(next_protobuf)
     return result
 
 def load_params(file_name):
@@ -25,22 +37,12 @@ def load_params(file_name):
 def load_observables(file_name):
     observables_list = []
     with open(file_name, 'rb') as stream:
-        _read_next_chunk(stream)
-        try:
-            while True:
-                observables_list.append( _read_next_protobuf(stream, udh_pb2.UdhObservables))
-        except EOFError:
-            pass
-    return observables_list
+        if _read_next_chunk(stream) is None:
+            return []
+        return _read_protobuf_array(stream, udh_pb2.UdhObservables)
 
 def load_autocorrelation_table(file_name):
-    ac_points = []
-    with open(file_name, 'rb') as stream:
-        try:
-            while True:
-                ac_points.append(_read_next_protobuf(stream, udh_pb2.UdhAutocorrelationPoint))
-        except EOFError:
-            pass
+    ac_points = _read_protobuf_array(stream, udh_pb2.UdhAutocorrelationPoint)
     table = []
     for ac_point in ac_points:
         table.append({
