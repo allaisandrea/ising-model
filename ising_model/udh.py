@@ -3,6 +3,7 @@ import numpy
 import pandas
 from ising_model import udh_pb2
 
+
 def _read_next_chunk(stream):
     byte_array = stream.read(8)
     if len(byte_array) < 8:
@@ -13,6 +14,7 @@ def _read_next_chunk(stream):
         return None
     return byte_array
 
+
 def _read_next_protobuf(stream, ProtobufClass):
     chunk = _read_next_chunk(stream)
     if chunk is None:
@@ -20,6 +22,7 @@ def _read_next_protobuf(stream, ProtobufClass):
     result = ProtobufClass()
     result.ParseFromString(chunk)
     return result
+
 
 def _read_protobuf_array(stream, ProtobufClass):
     result = list()
@@ -30,9 +33,11 @@ def _read_protobuf_array(stream, ProtobufClass):
         result.append(next_protobuf)
     return result
 
+
 def load_params(file_name):
     with open(file_name, 'rb') as stream:
         return _read_next_protobuf(stream, udh_pb2.UdhParameters)
+
 
 def load_observables(file_name):
     observables_list = []
@@ -40,6 +45,7 @@ def load_observables(file_name):
         if _read_next_chunk(stream) is None:
             return []
         return _read_protobuf_array(stream, udh_pb2.UdhObservables)
+
 
 def load_autocorrelation_table(file_name):
     ac_points = _read_protobuf_array(stream, udh_pb2.UdhAutocorrelationPoint)
@@ -66,6 +72,7 @@ def load_autocorrelation_table(file_name):
             "t_residual": ac_point.t_residual})
     return pandas.DataFrame(table)
 
+
 def load_params_table(file_names):
     table = []
     for file_name in file_names:
@@ -82,6 +89,7 @@ def load_params_table(file_names):
             "id": params.id})
     return pandas.DataFrame(table)
 
+
 def get_chebyshev_matrix(x, n):
     x = numpy.array(x)
     A = [[1.0] * len(x), x]
@@ -89,16 +97,19 @@ def get_chebyshev_matrix(x, n):
         A.append(2.0 * x * A[-1] - A[-2])
     return numpy.vstack(A[:n]).transpose()
 
+
 def get_reg_matrix(n):
-    A = numpy.zeros((n - 2, n));
+    A = numpy.zeros((n - 2, n))
     for i in range(0, n - 2):
         A[i, i + 2] = (i + 1) * (i + 2)
     return A
 
+
 def evaluate_chebyshev_polynomial(c, sc, x):
     A = get_chebyshev_matrix(x, len(c))
-    return (numpy.matmul(A, c), 
+    return (numpy.matmul(A, c),
             numpy.matmul(numpy.matmul(A, sc), numpy.transpose(A)))
+
 
 def fit_chebyshev_polynomial(x, y, sy, reg, n):
     x = numpy.array(x)
@@ -109,30 +120,32 @@ def fit_chebyshev_polynomial(x, y, sy, reg, n):
     A = numpy.concatenate([A, reg * get_reg_matrix(n)])
     b = numpy.concatenate([y / sy, numpy.zeros(n-2)])
     return (
-        numpy.linalg.lstsq(A,b , rcond=-1)[0],
+        numpy.linalg.lstsq(A, b, rcond=-1)[0],
         numpy.linalg.inv(numpy.matmul(numpy.transpose(A), A)))
+
 
 def get_critical_points_table(dim):
     assert dim in [3, 4]
     if dim == 3:
         return numpy.array((
             (-1.0e128, 0.22165, 0.0001),
-            (    0.00, 0.31288, 0.0001),
-            (    1.00, 0.44566, 0.0001),
-            (    1.50, 0.55755, 0.0001),
-            (    1.75, 0.62635, 0.0001),
-            (    2.00, 0.70325, 0.0001)))
+            (0.00, 0.31288, 0.0001),
+            (1.00, 0.44566, 0.0001),
+            (1.50, 0.55755, 0.0001),
+            (1.75, 0.62635, 0.0001),
+            (2.00, 0.70325, 0.0001)))
     elif dim == 4:
         return numpy.array((
-            (  -1.0e128, 0.149700, 0.000100),
-            (  0.000000, 0.215750, 0.002000),
-            (  1.000000, 0.316700, 0.001000),
-            (  1.500000, 0.407470, 0.000010),
-            (  1.625000, 0.435490, 0.000010),
-            (  1.656250, 0.442830, 0.000010),
-            (  1.687500, 0.450340, 0.000010),
-            (  1.703125, 0.454150, 0.000010),
-            (  2.000000, 0.530000, 0.005000)))
+            (-1.0e128, 0.149700, 0.000100),
+            (0.000000, 0.215750, 0.002000),
+            (1.000000, 0.316700, 0.001000),
+            (1.500000, 0.407470, 0.000010),
+            (1.625000, 0.435490, 0.000010),
+            (1.656250, 0.442830, 0.000010),
+            (1.687500, 0.450340, 0.000010),
+            (1.703125, 0.454150, 0.000010),
+            (2.000000, 0.530000, 0.005000)))
+
 
 def mu_to_x(mu):
     if isinstance(mu, float):
@@ -144,10 +157,11 @@ def mu_to_x(mu):
     else:
         return numpy.array([mu_to_x(mu_i) for mu_i in mu])
 
+
 def get_critical_J(dim, mu, reg):
 
     if isinstance(mu, float):
-        return get_critical_J(dim, numpy.array([mu]), reg)[:,0]
+        return get_critical_J(dim, numpy.array([mu]), reg)[:, 0]
     elif isinstance(mu, list):
         return get_critical_J(dim, numpy.array(mu), reg)
 
@@ -164,4 +178,3 @@ def get_critical_J(dim, mu, reg):
     sJ_ev = numpy.sqrt(numpy.diagonal(y_ev_cov)) / (1 - x_ev)
 
     return numpy.stack([J_ev, sJ_ev])
-

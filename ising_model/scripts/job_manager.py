@@ -193,7 +193,7 @@ def main():
         print('job_manager.py max_processes')
         sys.exit(-1)
 
-    signal.signal(signal.SIGINT,signal.SIG_IGN)
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
 
     state = State(
         lock=threading.Lock(),

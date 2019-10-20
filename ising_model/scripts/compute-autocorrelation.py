@@ -5,6 +5,7 @@ import json
 import subprocess
 import os
 
+
 def compute_autocorrelation(json_db, dest_file_name):
     file_groups_table = pandas.DataFrame(**json_db["file_groups"])
     measure_every_table = pandas.DataFrame(**json_db["measure_every"])
@@ -15,21 +16,23 @@ def compute_autocorrelation(json_db, dest_file_name):
 
     for row in measure_every_table.itertuples():
         file_names = file_groups_table.loc[
-                file_groups_table['group_id'] == row.group_id, 'file_name']
+            file_groups_table['group_id'] == row.group_id, 'file_name']
         command = [
-           'compute-autocorrelation', 
-           '--measure-every', str(row.measure_every),
-           '--out-file', dest_file_name,
-           '--file-group', str(row.group_id),
-           '--files' ] + list(file_names)
+            'compute-autocorrelation',
+            '--measure-every', str(row.measure_every),
+            '--out-file', dest_file_name,
+            '--file-group', str(row.group_id),
+            '--files'] + list(file_names)
         print(' '.join(command))
         subprocess.call(command)
 
+
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        sys.exit("Usage:\ncompute-autocorrelation.py file_groups.json autocorrelation.bin")
+        sys.exit(
+            "Usage:\ncompute-autocorrelation.py file_groups.json autocorrelation.bin")
 
-    with open (sys.argv[1]) as in_file:
+    with open(sys.argv[1]) as in_file:
         json_db = json.load(in_file)
 
     compute_autocorrelation(json_db, sys.argv[2])
