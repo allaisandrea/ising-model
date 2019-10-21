@@ -68,6 +68,7 @@ int main(int argc, const char *argv[]) {
         *pt.mutable_shape() = group.parameters().shape();
         pt.set_n_wolff(group.parameters().n_wolff());
         pt.set_n_metropolis(group.parameters().n_metropolis());
+        pt.set_measure_every(args.measure_every);
         pt.set_file_group(args.file_group);
         pt.set_count(count);
         pt.set_tau(tau);

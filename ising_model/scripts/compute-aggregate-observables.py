@@ -19,15 +19,15 @@ def compute_aggregate_observables(json_db, dest_file_name):
         file_names = file_names_table.loc[
             file_names_table['group_id'] == row.group_id, 'file_name']
         if len(file_names) == 0:
-            sys.error("No entry in \"file_names\" "
-                      "table for group {}\n".format(row.group_id))
+            print("No entry in \"file_names\" "
+                  "table for group {}\n".format(row.group_id))
             continue
 
         measure_every = measure_every_table.loc[
             measure_every_table['group_id'] == row.group_id, 'measure_every']
         if len(measure_every) != 1:
-            sys.error("No entry or multiple entries in \"measure_every\" "
-                      "table for group {}\n".format(row.group_id))
+            print("No entry or multiple entries in \"measure_every\" "
+                  "table for group {}\n".format(row.group_id))
             continue
         command = [
             'compute-aggregate-observables',
@@ -35,7 +35,7 @@ def compute_aggregate_observables(json_db, dest_file_name):
             '--J-begin', str(row.J_begin),
             '--J-end', str(row.J_end),
             '--n-J', str(row.n_J),
-            '--measure-every', str(measure_every[0]),
+            '--measure-every', str(measure_every.iloc[0]),
             '--out-file', dest_file_name,
             '--file-group', str(row.group_id),
             '--files'] + list(file_names)
