@@ -11,6 +11,7 @@ message UdhParameters {
     uint32 seed = 8;
     string id = 9;
     string tag = 10;
+    bool quenched_holes = 11;
 }
 
 message UdhObservables {

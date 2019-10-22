@@ -58,6 +58,46 @@ GetInitialConfiguration(const Index<nDim> &shape,
     return TileTensor(lattice8, n_tiles);
 }
 
+template <size_t nDim> double GetCriticalJ();
+template <> double GetCriticalJ<2>() { return 0.44070; }
+template <> double GetCriticalJ<3>() { return 0.22165; }
+template <> double GetCriticalJ<4>() { return 0.1497; }
+template <> double GetCriticalJ<5>() { return 0.0; }
+
+template <size_t nDim>
+Tensor<nDim, UdhSpin>
+GetInitialConfigurationQuenchedHoles(const Index<nDim> &shape,
+                                     uint32_t hole_prob, std::mt19937 *rng) {
+    const uint32_t p_no_add = GetNoAddProbabilityFromJ(GetCriticalJ<nDim>());
+    Tensor<nDim, UdhSpin> lattice4(HypercubeShape<nDim>(4), UdhSpinDown());
+    std::queue<Index<nDim>> queue;
+    for (uint64_t i = 0; i < 32; ++i) {
+        const Index<nDim> i0 = GetRandomIndex(lattice4.shape(), rng);
+        FlipCluster(p_no_add, i0, &lattice4, rng, &queue);
+        ClearVisitedFlag(i0, &lattice4, &queue);
+    }
+
+    Tensor<nDim, UdhSpin> lattice8 =
+        TileTensor(lattice4, HypercubeShape<nDim>(2));
+
+    for (uint64_t i = 0; i < 512; ++i) {
+        const Index<nDim> i0 = GetRandomIndex(lattice8.shape(), rng);
+        FlipCluster(p_no_add, i0, &lattice8, rng, &queue);
+        ClearVisitedFlag(i0, &lattice8, &queue);
+    }
+
+    const Index<nDim> n_tiles = GetNumberOfTiles<nDim>(shape, 8);
+    Tensor<nDim, UdhSpin> lattice = TileTensor(lattice8, n_tiles);
+
+    for (auto &spin : lattice) {
+        if ((*rng)() < hole_prob) {
+            spin = UdhSpinHole();
+        }
+    }
+
+    return lattice;
+}
+
 template <size_t nDim> int Run(const UdhParameters &parameters) {
     const std::string out_file_name = parameters.id() + ".udh";
     std::ofstream out_file(out_file_name, std::ios_base::binary);
@@ -86,8 +126,14 @@ template <size_t nDim> int Run(const UdhParameters &parameters) {
 
     const uint32_t p_no_add = GetNoAddProbabilityFromJ(parameters.j());
 
-    Tensor<nDim, UdhSpin> lattice =
-        GetInitialConfiguration<nDim>(shape, transition_probs, &rng);
+    Tensor<nDim, UdhSpin> lattice(shape, UdhSpinDown());
+    if (parameters.quenched_holes()) {
+        const uint32_t hole_prob = std::round((1ul << 32) * parameters.mu());
+        lattice =
+            GetInitialConfigurationQuenchedHoles<nDim>(shape, hole_prob, &rng);
+    } else {
+        lattice = GetInitialConfiguration<nDim>(shape, transition_probs, &rng);
+    }
 
     std::queue<Index<nDim>> queue;
     UdhObservables observables;

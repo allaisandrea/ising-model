@@ -10,6 +10,7 @@ bool ParseArgs(int argc, const char *argv[], UdhParameters *parameters) {
     std::vector<uint32_t> shape;
     double J, mu;
     uint32_t n_wolff, n_metropolis, measure_every, n_measure, seed;
+    bool quenched_holes;
     std::string id, tag;
     seed = std::random_device()();
     std::mt19937 rng(seed);
@@ -29,6 +30,8 @@ bool ParseArgs(int argc, const char *argv[], UdhParameters *parameters) {
     add_option("n-metropolis", value<uint32_t>(&n_metropolis)->required());
     add_option("measure-every", value<uint32_t>(&measure_every)->required());
     add_option("n-measure", value<uint32_t>(&n_measure)->required());
+    add_option("quenched-holes",
+               value<bool>(&quenched_holes)->default_value(false));
     add_option("seed", value<uint32_t>(&seed));
     add_option("id", value<std::string>(&id));
     add_option("tag", value<std::string>(&tag));
@@ -40,6 +43,21 @@ bool ParseArgs(int argc, const char *argv[], UdhParameters *parameters) {
         return false;
     }
     notify(vm);
+
+    if (quenched_holes) {
+        if (mu < 0.0 || mu > 1.0) {
+            throw std::invalid_argument(
+                "For quenched holes mu must be between 0.0 and 1.0");
+        }
+        if (n_metropolis != 0) {
+            throw std::invalid_argument(
+                "Metropolis algorithm is not compatible with quenched holes.");
+        }
+        if (n_wolff != 1) {
+            throw std::invalid_argument(
+                "With quenched holes, n_wolff must be 1.");
+        }
+    }
 
     parameters->set_j(J);
     parameters->set_mu(mu);
@@ -57,5 +75,6 @@ bool ParseArgs(int argc, const char *argv[], UdhParameters *parameters) {
     parameters->set_seed(seed);
     parameters->set_id(id);
     parameters->set_tag(tag);
+    parameters->set_quenched_holes(quenched_holes);
     return true;
 }
