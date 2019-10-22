@@ -52,7 +52,7 @@ std::string MakeMockData(uint64_t n, const Eigen::Array3d &lambda,
 TEST(ComputeAutocorrelation, ComputeAutocorrelation) {
     std::mt19937 rng;
     MockFileSystem mock_file_system;
-    for (int i = 0; i < 1; ++i) {
+    for (int i = 0; i < 8; ++i) {
         Eigen::Array3d lambda;
         const uint64_t log_n_obs =
             std::uniform_int_distribution<uint64_t>(16, 16)(rng);
@@ -71,9 +71,11 @@ TEST(ComputeAutocorrelation, ComputeAutocorrelation) {
             MakeMockData(n_obs, lambda, alpha, rng);
         UdhFileGroup file_group({{"file1", 1}}, 0, mock_file_system);
         const Eigen::ArrayXd result =
-            ComputeAutocorrelation(n_obs, &file_group);
-        EXPECT_NEAR(result(0), alpha(0), 3.0 / std::sqrt(n_obs));
-        EXPECT_NEAR(result(1), alpha(1), 3.0 / std::sqrt(n_obs));
+            ComputeAutocorrelation(2, n_obs, &file_group);
+        EXPECT_NEAR(result(0), 1.0, 1.0e-12);
+        EXPECT_NEAR(result(1), 1.0, 1.0e-12);
+        EXPECT_NEAR(result(2), alpha(0), 3.0 / std::sqrt(n_obs));
+        EXPECT_NEAR(result(3), alpha(1), 3.0 / std::sqrt(n_obs));
     }
 }
 } // namespace

@@ -49,12 +49,16 @@ int main(int argc, const char *argv[]) {
         GetUdhFileGroupEntries(args.file_names, args.measure_every),
         args.skip_first_n);
 
+    const uint64_t n_tau = 32;
     const CrossValidationStats autocorrelation = CrossValidate(
-        /*n_batches=*/16, &ComputeAutocorrelation, &group);
+        /*n_batches=*/16,
+        [](uint64_t n_read, UdhFileGroup *file_group) {
+            return ComputeAutocorrelation(n_tau, n_read, file_group);
+        },
+        &group);
     const CrossValidationStats timing = CrossValidate(
         /*n_batches=*/16, &ComputeTiming, &group);
     const uint64_t count = group.CountObservables();
-    const uint64_t n_tau = autocorrelation.mean.size() / 2;
     std::ofstream out_file(args.out_file, std::ios_base::out |
                                               std::ios_base::app |
                                               std::ios_base::binary);
