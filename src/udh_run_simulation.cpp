@@ -12,19 +12,50 @@
 #include "wolff_algorithm.h"
 
 namespace {
+template <size_t nDim>
+Index<nDim> GetStaticShape(const UdhParameters &parameters) {
+    if (parameters.shape_size() != nDim) {
+        throw std::logic_error(
+            "\"nDim\" does not match \"parameters\" specification");
+    }
+    Index<nDim> shape;
+    for (size_t d = 0; d < nDim; ++d) {
+        shape[d] = parameters.shape(d);
+    }
+    return shape;
+}
 
 template <size_t nDim>
-Index<nDim> GetNumberOfTiles(const UdhParameters &parameters,
-                             uint64_t tile_size) {
+Index<nDim> GetNumberOfTiles(const Index<nDim> &shape, uint64_t tile_size) {
     Index<nDim> n_tiles;
     for (size_t d = 0; d < nDim; ++d) {
-        if (parameters.shape(d) % tile_size != 0) {
+        if (shape[d] % tile_size != 0) {
             throw std::invalid_argument("dimensions should be multiples of " +
                                         std::to_string(tile_size));
         }
-        n_tiles[d] = parameters.shape(d) / tile_size;
+        n_tiles[d] = shape[d] / tile_size;
     }
     return n_tiles;
+}
+
+template <size_t nDim>
+Tensor<nDim, UdhSpin>
+GetInitialConfiguration(const Index<nDim> &shape,
+                        const UdhTransitionProbsArray<nDim> &transition_probs,
+                        std::mt19937 *rng) {
+    Tensor<nDim, UdhSpin> lattice4(HypercubeShape<nDim>(4), UdhSpinDown());
+    for (uint64_t i = 0; i < 16; ++i) {
+        UdhMetropolisSweep(transition_probs, &lattice4, rng);
+    }
+
+    Tensor<nDim, UdhSpin> lattice8 =
+        TileTensor(lattice4, HypercubeShape<nDim>(2));
+    for (uint64_t i = 0; i < 512; ++i) {
+        UdhMetropolisSweep(transition_probs, &lattice8, rng);
+    }
+
+    const Index<nDim> n_tiles = GetNumberOfTiles<nDim>(shape, 8);
+    return TileTensor(lattice8, n_tiles);
 }
 
 template <size_t nDim> int Run(const UdhParameters &parameters) {
@@ -49,24 +80,14 @@ template <size_t nDim> int Run(const UdhParameters &parameters) {
     Write(parameters, &out_file);
     std::mt19937 rng(parameters.seed());
 
+    const Index<nDim> shape = GetStaticShape<nDim>(parameters);
     const UdhTransitionProbsArray<nDim> transition_probs =
         ComputeUdhTransitionProbs<nDim>(parameters.j(), parameters.mu());
 
-    Tensor<nDim, UdhSpin> lattice4(HypercubeShape<nDim>(4), UdhSpinDown());
-    for (uint64_t i = 0; i < 16; ++i) {
-        UdhMetropolisSweep(transition_probs, &lattice4, &rng);
-    }
-
-    Tensor<nDim, UdhSpin> lattice8 =
-        TileTensor(lattice4, HypercubeShape<nDim>(2));
-    for (uint64_t i = 0; i < 512; ++i) {
-        UdhMetropolisSweep(transition_probs, &lattice8, &rng);
-    }
-
-    const Index<nDim> n_tiles = GetNumberOfTiles<nDim>(parameters, 8);
-    Tensor<nDim, UdhSpin> lattice = TileTensor(lattice8, n_tiles);
-
     const uint32_t p_no_add = GetNoAddProbabilityFromJ(parameters.j());
+
+    Tensor<nDim, UdhSpin> lattice =
+        GetInitialConfiguration<nDim>(shape, transition_probs, &rng);
 
     std::queue<Index<nDim>> queue;
     UdhObservables observables;
