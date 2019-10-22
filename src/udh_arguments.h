@@ -1,6 +1,7 @@
 #pragma once
 #include "udh.pb.h"
 #include <boost/program_options.hpp>
+#include <iomanip>
 #include <random>
 
 bool ParseArgs(int argc, const char *argv[], UdhParameters *parameters) {
@@ -13,7 +14,8 @@ bool ParseArgs(int argc, const char *argv[], UdhParameters *parameters) {
     seed = std::random_device()();
     std::mt19937 rng(seed);
     std::ostringstream strm;
-    strm << std::hex << rng() << rng();
+    strm << std::hex << std::setfill('0') << std::setw(8) << rng()
+         << std::setw(8) << rng();
     id = strm.str();
 
     options_description description{"Options"};
