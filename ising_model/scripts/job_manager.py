@@ -14,14 +14,14 @@ QueuedJob = collections.namedtuple(
     'QueuedJob', ['job_id', 'args', 'queued_time'])
 RunningJob = collections.namedtuple(
     'RunningJob', ['job_id', 'args', 'start_time', 'popen'])
-CompletedJob = collections.namedtuple(
-    'CompletedJob', ['job_id', 'args', 'start_time', 'end_time', 'return_code'])
+FinishedJob = collections.namedtuple(
+    'FinishedJob', ['job_id', 'args', 'start_time', 'end_time', 'status'])
 State = collections.namedtuple(
     'State', ['lock', 'queued_jobs', 'running_jobs',
-              'completed_jobs', 'next_job_id', 'keep_running'])
+              'finished_jobs', 'next_job_id', 'keep_running'])
 
 
-def clear_completed_jobs(state):
+def clear_finished_jobs(state):
     old_running_jobs = list(state.running_jobs)
     state.running_jobs.clear()
     for job in old_running_jobs:
@@ -29,12 +29,12 @@ def clear_completed_jobs(state):
         if return_code is None:
             state.running_jobs.append(job)
         else:
-            state.completed_jobs.append(CompletedJob(
+            state.finished_jobs.append(FinishedJob(
                 job_id=job.job_id,
                 args=job.args,
                 start_time=job.start_time,
                 end_time=time.time(),
-                return_code=return_code))
+                status="completed"))
 
 
 def start_queued_jobs(max_running_jobs, state):
@@ -59,7 +59,7 @@ def process_queues(max_running_jobs, state):
                 job.popen.kill()
             return False
 
-        clear_completed_jobs(state)
+        clear_finished_jobs(state)
         start_queued_jobs(max_running_jobs, state)
         return True
 
@@ -74,16 +74,16 @@ def list_jobs(state):
         now = time.time()
 
         print_list = list()
-        for job in state.completed_jobs:
+        for job in state.finished_jobs:
             print_list.append((
                 job.job_id,
                 job.args,
                 time.asctime(time.gmtime(job.start_time)),
                 time.asctime(time.gmtime(job.end_time)),
-                job.return_code))
+                job.status))
         print("Completed:")
         print(tabulate.tabulate(
-            print_list, headers=['job_id', 'args', 'start_time', 'end_time', 'return_code']))
+            print_list, headers=['job_id', 'args', 'start_time', 'end_time', 'status']))
 
         print_list = list()
         for job in state.running_jobs:
@@ -123,11 +123,23 @@ def cancel_job(job_id, state):
             if job.job_id == job_id:
                 job.popen.kill()
                 state.running_jobs.remove(job)
+                state.finished_jobs.append(FinishedJob(
+                    job_id=job.job_id,
+                    args=job.args,
+                    start_time=job.start_time,
+                    end_time=time.time(),
+                    status="canceled"))
                 break
 
         for job in state.queued_jobs:
             if job.job_id == job_id:
                 state.queued_jobs.remove(job)
+                state.finished_jobs.append(FinishedJob(
+                    job_id=job.job_id,
+                    args=job.args,
+                    start_time=time.time(),
+                    end_time=time.time(),
+                    status="canceled"))
                 break
 
 
@@ -199,7 +211,7 @@ def main():
         lock=threading.Lock(),
         queued_jobs=list(),
         running_jobs=list(),
-        completed_jobs=list(),
+        finished_jobs=list(),
         next_job_id=[0],
         keep_running=[True])
     scheduler_thread = threading.Thread(
