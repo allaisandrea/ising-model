@@ -158,18 +158,18 @@ def process_user_interaction(state):
     if len(pair) == 0:
         print('Cannot parse "{}"'.format(command))
         return True
-    command = pair[0]
-    if command == 'ls':
+    verb = pair[0]
+    if verb == 'ls':
         if len(pair) != 1:
             print('Cannot parse "{}"'.format(command))
             return True
         list_jobs(state)
-    elif command == 'sub':
+    elif verb == 'sub':
         if len(pair) != 2:
             print('Cannot parse "{}"'.format(command))
             return True
         submit_job(pair[1], state)
-    elif command == 'cancel':
+    elif verb == 'cancel':
         if len(pair) != 2:
             print('Cannot parse "{}"'.format(command))
             return True
@@ -179,7 +179,7 @@ def process_user_interaction(state):
             print('Cannot parse "{}"'.format(command))
             return True
         cancel_job(job_id, state)
-    elif command == 'quit':
+    elif verb == 'quit':
         if len(pair) != 1:
             print('Cannot parse "{}"'.format(command))
             return True
