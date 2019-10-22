@@ -143,6 +143,16 @@ def cancel_job(job_id, state):
                 break
 
 
+def load_jobs_from_file(file_name, state):
+    try:
+        with open(file_name, 'r') as stream:
+            for line in stream.readlines():
+                if not (line.startswith('#') or line.startswith('\n')):
+                    submit_job(line, state)
+    except FileNotFoundError:
+        print("Cannot open file \"{}\"".format(file_name))
+
+
 def quit(state):
     with state.lock:
         state.keep_running[0] = False
@@ -154,33 +164,38 @@ def process_user_interaction(state):
     except EOFError:
         print('Type quit to exit')
         return True
-    pair = command.split(' ', 1)
-    if len(pair) == 0:
+    tokens = command.split(' ', 1)
+    if len(tokens) == 0:
         print('Cannot parse "{}"'.format(command))
         return True
-    verb = pair[0]
+    verb = tokens[0]
     if verb == 'ls':
-        if len(pair) != 1:
+        if len(tokens) != 1:
             print('Cannot parse "{}"'.format(command))
             return True
         list_jobs(state)
     elif verb == 'sub':
-        if len(pair) != 2:
+        if len(tokens) != 2:
             print('Cannot parse "{}"'.format(command))
             return True
-        submit_job(pair[1], state)
+        submit_job(tokens[1], state)
     elif verb == 'cancel':
-        if len(pair) != 2:
+        if len(tokens) != 2:
             print('Cannot parse "{}"'.format(command))
             return True
         try:
-            job_id = int(pair[1])
+            job_id = int(tokens[1])
         except ValueError:
             print('Cannot parse "{}"'.format(command))
             return True
         cancel_job(job_id, state)
+    elif verb == 'load':
+        if len(tokens) != 2:
+            print('Cannot parse "{}"'.format(command))
+            return True
+        load_jobs_from_file(tokens[1], state)
     elif verb == 'quit':
-        if len(pair) != 1:
+        if len(tokens) != 1:
             print('Cannot parse "{}"'.format(command))
             return True
         quit(state)
