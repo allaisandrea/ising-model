@@ -155,6 +155,8 @@ inline bool OutputCanBeJoined(const UdhParameters &p1,
              p1.mu() == p2.mu() && 
              p1.n_wolff() == p2.n_wolff() &&
              p1.n_metropolis() == p2.n_metropolis() &&
+             p1.metropolis_stride() == p2.metropolis_stride() &&
+             p1.quenched_holes() == p2.quenched_holes() &&
              p1.measure_every() % p2.measure_every() == 0 &&
              p1.seed() != p2.seed();
     // clang-format on

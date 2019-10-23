@@ -59,6 +59,7 @@ def load_autocorrelation_table(file_name):
             "L0": ac_point.shape[0],
             "n_wolff": ac_point.n_wolff,
             "n_metropolis": ac_point.n_metropolis,
+            "metropolis_stride": ac_point.metropolis_stride,
             "measure_every": ac_point.measure_every,
             "file_group": ac_point.file_group,
             "count": ac_point.count,
@@ -87,6 +88,7 @@ def load_aggregate_observables_table(file_name):
             "L0": agg_obs.shape[0],
             "n_wolff": agg_obs.n_wolff,
             "n_metropolis": agg_obs.n_metropolis,
+            "metropolis_stride": agg_obs.metropolis_stride,
             "measure_every": agg_obs.measure_every,
             "file_group": agg_obs.file_group,
             "J": agg_obs.j,
@@ -116,7 +118,8 @@ def load_params_table(file_names):
             "measure_every": params.measure_every,
             "n_measure": params.n_measure,
             "seed": params.seed,
-            "id": params.id})
+            "id": params.id,
+            "file_name": file_name})
     return pandas.DataFrame(table)
 
 

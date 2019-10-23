@@ -12,6 +12,7 @@ message UdhParameters {
     string id = 9;
     string tag = 10;
     bool quenched_holes = 11;
+    uint32 metropolis_stride =12;
 }
 
 message UdhObservables {
@@ -34,6 +35,7 @@ message UdhAggregateObservables {
     repeated uint32 shape = 3;
     uint32 n_wolff = 4;
     uint32 n_metropolis = 5;
+    uint32 metropolis_stride = 19;
     uint32 measure_every = 6;
     uint32 file_group = 7;
     double j = 8;
@@ -55,6 +57,7 @@ message UdhAutocorrelationPoint {
     repeated uint32 shape = 3;
     uint32 n_wolff = 4;
     uint32 n_metropolis = 5;
+    uint32 metropolis_stride = 19;
     uint32 measure_every = 6;
     uint32 file_group = 7;
     uint32 count = 8;

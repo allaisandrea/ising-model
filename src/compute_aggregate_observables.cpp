@@ -168,6 +168,7 @@ int main(int argc, const char **argv) {
         *obs.mutable_shape() = parameters.shape();
         obs.set_n_wolff(parameters.n_wolff());
         obs.set_n_metropolis(parameters.n_metropolis());
+        obs.set_metropolis_stride(group.parameters().metropolis_stride());
         obs.set_measure_every(args.measure_every);
         obs.set_file_group(args.file_group);
         obs.set_mu(args.mu);

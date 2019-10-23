@@ -9,7 +9,8 @@ bool ParseArgs(int argc, const char *argv[], UdhParameters *parameters) {
 
     std::vector<uint32_t> shape;
     double J, mu;
-    uint32_t n_wolff, n_metropolis, measure_every, n_measure, seed;
+    uint32_t n_wolff, n_metropolis, measure_every, n_measure, seed,
+        metropolis_stride;
     bool quenched_holes;
     std::string id, tag;
     seed = std::random_device()();
@@ -28,6 +29,8 @@ bool ParseArgs(int argc, const char *argv[], UdhParameters *parameters) {
                value<std::vector<uint32_t>>(&shape)->required()->multitoken());
     add_option("n-wolff", value<uint32_t>(&n_wolff)->required());
     add_option("n-metropolis", value<uint32_t>(&n_metropolis)->required());
+    add_option("metropolis-stride",
+               value<uint32_t>(&metropolis_stride)->default_value(0));
     add_option("measure-every", value<uint32_t>(&measure_every)->required());
     add_option("n-measure", value<uint32_t>(&n_measure)->required());
     add_option("quenched-holes",
@@ -70,6 +73,7 @@ bool ParseArgs(int argc, const char *argv[], UdhParameters *parameters) {
     }
     parameters->set_n_wolff(n_wolff);
     parameters->set_n_metropolis(n_metropolis);
+    parameters->set_metropolis_stride(metropolis_stride);
     parameters->set_measure_every(measure_every);
     parameters->set_n_measure(n_measure);
     parameters->set_seed(seed);

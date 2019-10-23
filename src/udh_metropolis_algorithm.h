@@ -88,6 +88,18 @@ void UdhMetropolisSweep(
 }
 
 template <size_t nDim>
+void UdhMetropolisStridedSweep(
+    const UdhTransitionProbsArray<nDim> &transition_probs_array,
+    uint64_t stride, Index<nDim> *starting_index,
+    Tensor<nDim, UdhSpin> *lattice, std::mt19937 *rng) {
+    Index<nDim> i = *starting_index;
+    do {
+        UdhMetropolisMove(transition_probs_array, i, lattice, rng);
+    } while (NextIndex(&i, lattice->shape(), stride));
+    NextIndex(starting_index, HypercubeShape<nDim>(stride));
+}
+
+template <size_t nDim>
 Index<2> ComputeEnergies(const Tensor<nDim, UdhSpin> &lattice) {
     Index<2> energies{};
     Index<nDim> i{};

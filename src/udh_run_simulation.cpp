@@ -136,6 +136,7 @@ template <size_t nDim> int Run(const UdhParameters &parameters) {
     }
 
     std::queue<Index<nDim>> queue;
+    Index<nDim> sweep_starting_index{};
     UdhObservables observables;
     ProgressIndicator progress_indicator(std::time(nullptr),
                                          parameters.n_measure());
@@ -164,7 +165,13 @@ template <size_t nDim> int Run(const UdhParameters &parameters) {
             }
             metropolis_sweep_timer.start();
             for (uint64_t i2 = 0; i2 < parameters.n_metropolis(); ++i2) {
-                UdhMetropolisSweep(transition_probs, &lattice, &rng);
+                if (parameters.metropolis_stride() == 0) {
+                    UdhMetropolisSweep(transition_probs, &lattice, &rng);
+                } else {
+                    UdhMetropolisStridedSweep(
+                        transition_probs, parameters.metropolis_stride() + 1,
+                        &sweep_starting_index, &lattice, &rng);
+                }
             }
             metropolis_sweep_timer.stop();
         }
