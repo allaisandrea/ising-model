@@ -80,6 +80,40 @@ TEST(Tensor, NextIndex3D) {
     EXPECT_EQ(i, expected_indices.size());
 }
 
+template <size_t nDim>
+void TestNextIndexStrided(const Index<nDim> &shape, uint64_t stride,
+                          const Index<nDim> &starting_index,
+                          const std::vector<Index<nDim>> &expected_indices) {
+    Index<nDim> index = starting_index;
+    size_t i = 0;
+    do {
+        EXPECT_EQ(index, expected_indices.at(i));
+        ++i;
+    } while (NextIndex(&index, shape, /*stride=*/stride));
+    EXPECT_EQ(i, expected_indices.size());
+}
+
+TEST(Tensor, NextIndexStrided2D) {
+    // clang-format off
+    TestNextIndexStrided<2>({6, 4}, 2, {0, 0}, {{
+        {0, 0}, {2, 0}, {4, 0},
+        {0, 2}, {2, 2}, {4, 2}
+    }});
+    TestNextIndexStrided<2>({6, 4}, 2, {1, 0}, {{
+        {1, 0}, {3, 0}, {5, 0},
+        {1, 2}, {3, 2}, {5, 2}
+    }});
+    TestNextIndexStrided<2>({6, 4}, 2, {0, 1}, {{
+        {0, 1}, {2, 1}, {4, 1},
+        {0, 3}, {2, 3}, {4, 3}
+    }});
+    TestNextIndexStrided<2>({6, 4}, 2, {1, 1}, {{
+        {1, 1}, {3, 1}, {5, 1},
+        {1, 3}, {3, 3}, {5, 3}
+    }});
+    // clang-format on
+}
+
 TEST(Tensor, HypercubeShape) {
     EXPECT_EQ(HypercubeShape<2>(5), (Index<2>{5, 5}));
     EXPECT_EQ(HypercubeShape<3>(7), (Index<3>{7, 7, 7}));

@@ -87,6 +87,23 @@ bool NextIndex(Index<nDim> *i, const Index<nDim> &shape) {
     return false;
 }
 
+// Advance vector index in lexicographic order. Returns false if the highest
+// possible index has been passed and index is now all zeros again, otherwise
+// returns true.
+template <size_t nDim>
+bool NextIndex(Index<nDim> *i, const Index<nDim> &shape,
+               const uint_fast16_t stride) {
+    for (size_t d = 0; d < nDim; ++d) {
+        (*i)[d] += stride;
+        if ((*i)[d] < shape[d]) {
+            return true;
+        } else {
+            (*i)[d] -= shape[d];
+        }
+    }
+    return false;
+}
+
 template <size_t nDim>
 std::array<Index<nDim>, 2 * nDim> GetFirstNeighbors(const Index<nDim> &i,
                                                     const Index<nDim> &shape) {
