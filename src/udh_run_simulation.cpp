@@ -58,17 +58,10 @@ GetInitialConfiguration(const Index<nDim> &shape,
     return TileTensor(lattice8, n_tiles);
 }
 
-template <size_t nDim> double GetCriticalJ();
-template <> double GetCriticalJ<2>() { return 0.44070; }
-template <> double GetCriticalJ<3>() { return 0.22165; }
-template <> double GetCriticalJ<4>() { return 0.1497; }
-template <> double GetCriticalJ<5>() { return 0.0; }
-
 template <size_t nDim>
-Tensor<nDim, UdhSpin>
-GetInitialConfigurationQuenchedHoles(const Index<nDim> &shape,
-                                     uint32_t hole_prob, std::mt19937 *rng) {
-    const uint32_t p_no_add = GetNoAddProbabilityFromJ(GetCriticalJ<nDim>());
+Tensor<nDim, UdhSpin> GetInitialConfigurationWolff(const Index<nDim> &shape,
+                                                   const uint32_t p_no_add,
+                                                   std::mt19937 *rng) {
     Tensor<nDim, UdhSpin> lattice4(HypercubeShape<nDim>(4), UdhSpinDown());
     std::queue<Index<nDim>> queue;
     for (uint64_t i = 0; i < 32; ++i) {
@@ -87,7 +80,23 @@ GetInitialConfigurationQuenchedHoles(const Index<nDim> &shape,
     }
 
     const Index<nDim> n_tiles = GetNumberOfTiles<nDim>(shape, 8);
-    Tensor<nDim, UdhSpin> lattice = TileTensor(lattice8, n_tiles);
+    return TileTensor(lattice8, n_tiles);
+}
+
+template <size_t nDim> double GetCriticalJ();
+template <> double GetCriticalJ<2>() { return 0.44070; }
+template <> double GetCriticalJ<3>() { return 0.22165; }
+template <> double GetCriticalJ<4>() { return 0.1497; }
+template <> double GetCriticalJ<5>() { return 0.0; }
+
+template <size_t nDim>
+Tensor<nDim, UdhSpin>
+GetInitialConfigurationQuenchedHoles(const Index<nDim> &shape,
+                                     uint32_t hole_prob, std::mt19937 *rng) {
+    const uint32_t p_no_add = GetNoAddProbabilityFromJ(GetCriticalJ<nDim>());
+
+    Tensor<nDim, UdhSpin> lattice =
+        GetInitialConfigurationWolff<nDim>(shape, p_no_add, rng);
 
     for (auto &spin : lattice) {
         if ((*rng)() < hole_prob) {
@@ -131,6 +140,8 @@ template <size_t nDim> int Run(const UdhParameters &parameters) {
         const uint32_t hole_prob = std::round((1ul << 32) * parameters.mu());
         lattice =
             GetInitialConfigurationQuenchedHoles<nDim>(shape, hole_prob, &rng);
+    } else if (parameters.n_metropolis() == 0) {
+        lattice = GetInitialConfigurationWolff<nDim>(shape, p_no_add, &rng);
     } else {
         lattice = GetInitialConfiguration<nDim>(shape, transition_probs, &rng);
     }
