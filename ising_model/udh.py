@@ -1,6 +1,7 @@
 import struct
 import numpy
 import pandas
+import json
 from ising_model import udh_pb2
 
 
@@ -110,6 +111,29 @@ def load_params_table(file_names):
     for file_name in file_names:
         params = load_params(file_name)
         table.append({
+            "J": params.j,
+            "mu": params.mu,
+            "L0": params.shape[0],
+            "n_wolff": params.n_wolff,
+            "n_metropolis": params.n_metropolis,
+            "metropolis_stride": params.metropolis_stride,
+            "measure_every": params.measure_every,
+            "n_measure": params.n_measure,
+            "seed": params.seed,
+            "id": params.id,
+            "file_name": file_name})
+    return pandas.DataFrame(table)
+
+
+def load_file_groups_table(path):
+    with open(path + "/file-groups.json", 'r') as stream:
+        json_db = json.load(stream)
+
+    table = []
+    for group_id, file_name in json_db['file_names']['data']:
+        params = load_params(path + "/" + file_name)
+        table.append({
+            "group": group_id,
             "J": params.j,
             "mu": params.mu,
             "L0": params.shape[0],
