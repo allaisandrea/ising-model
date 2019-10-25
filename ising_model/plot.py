@@ -51,7 +51,7 @@ def plot_autocorrelation(
 
 def plot_J_cut(data, observable, xlim=None, ylim=None,
                groupby=['mu', 'J0', 'L0', 'n_wolff', 'file_group'], fig_size=(9, 5),
-               label_format='g:{file_group:3} mu:{mu:9.6f} L:{L0:3} J:{J:9.6f} wolff:{n_wolff:4}',
+               label_format='g:{file_group:3} mu:{mu:9.6f} L:{L0:3} J0:{J0:9.6f} wolff:{n_wolff:4}',
                show_cpu_time=False):
     groups = data.groupby(groupby)
 
