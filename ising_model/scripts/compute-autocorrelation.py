@@ -8,17 +8,17 @@ import os
 
 def compute_autocorrelation(json_db, dest_file_name):
     file_names_table = pandas.DataFrame(**json_db["file_names"])
-    measure_every_table = pandas.DataFrame(**json_db["measure_every"])
+    ac_args_table = pandas.DataFrame(**json_db["ac_args"])
     try:
         os.remove(dest_file_name)
     except OSError:
         pass
 
-    for row in measure_every_table.itertuples():
+    for row in ac_args_table.itertuples():
         file_names = file_names_table.loc[
             file_names_table['group_id'] == row.group_id, 'file_name']
         if len(file_names) == 0:
-            sys.error(
+            sys.stderr.write(
                 "No entry in \"file_names\" table for group {}\n".format(row.group_id))
             continue
         command = [

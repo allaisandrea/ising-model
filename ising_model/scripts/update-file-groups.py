@@ -5,6 +5,7 @@ from ising_model import udh
 import pandas
 import glob
 import os
+import math
 
 
 def update_file_groups(directory, json_db):
@@ -22,11 +23,11 @@ def update_file_groups(directory, json_db):
             continue
         json_db["file_names"]["data"].append(
             [group_id, file_name])
-        json_db["measure_every"]["data"].append(
+        json_db["ac_args"]["data"].append(
             [group_id, row.measure_every])
-        json_db["reweight_range"]["data"].append(
-            [group_id, row.mu, round(row.J - 1.0 / row.L0, 5),
-             round(row.J + 1.0 / row.L0, 5), 128])
+        json_db["reweight_args"]["data"].append(
+            [group_id, row.mu, round(row.J, 6),
+             round(math.pow(row.L0, -2), 6), row.measure_every])
         group_id += 1
     return json_db
 
@@ -46,9 +47,9 @@ def print_table(name, fields, stream):
     stream.write("    \"data\": [\n")
     if name == "file_names":
         print_data(fields["data"], "{:4}, \"{:>20}\"", stream)
-    elif name == "measure_every":
+    elif name == "ac_args":
         print_data(fields["data"], "{:4}, {:4}", stream)
-    elif name == "reweight_range":
+    elif name == "reweight_args":
         print_data(fields["data"],
                    "{:4}, {:9.6f}, {:9.6f}, {:9.6f}, {:4}", stream)
     stream.write("    ]\n")
@@ -71,8 +72,10 @@ if __name__ == "__main__":
         sys.exit(
             "Usage:\ncompute-autocorrelation.py directory file_groups.json")
 
-    with open(sys.argv[2]) as in_file:
+    with open(sys.argv[2], 'r') as in_file:
         json_db = json.loads(in_file.read())
 
     json_db = update_file_groups(sys.argv[1], json_db)
-    print_json_db(json_db, sys.stdout)
+
+    with open(sys.argv[2], 'w') as out_file:
+        print_json_db(json_db, out_file)

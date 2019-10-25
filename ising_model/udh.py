@@ -115,6 +115,7 @@ def load_params_table(file_names):
             "L0": params.shape[0],
             "n_wolff": params.n_wolff,
             "n_metropolis": params.n_metropolis,
+            "metropolis_stride": params.metropolis_stride,
             "measure_every": params.measure_every,
             "n_measure": params.n_measure,
             "seed": params.seed,

@@ -8,14 +8,13 @@ import os
 
 def compute_aggregate_observables(json_db, dest_file_name):
     file_names_table = pandas.DataFrame(**json_db["file_names"])
-    measure_every_table = pandas.DataFrame(**json_db["measure_every"])
-    reweight_range_table = pandas.DataFrame(**json_db["reweight_range"])
+    reweight_args_table = pandas.DataFrame(**json_db["reweight_args"])
     try:
         os.remove(dest_file_name)
     except OSError:
         pass
 
-    for row in reweight_range_table.itertuples():
+    for row in reweight_args_table.itertuples():
         file_names = file_names_table.loc[
             file_names_table['group_id'] == row.group_id, 'file_name']
         if len(file_names) == 0:
@@ -23,19 +22,13 @@ def compute_aggregate_observables(json_db, dest_file_name):
                   "table for group {}\n".format(row.group_id))
             continue
 
-        measure_every = measure_every_table.loc[
-            measure_every_table['group_id'] == row.group_id, 'measure_every']
-        if len(measure_every) != 1:
-            print("No entry or multiple entries in \"measure_every\" "
-                  "table for group {}\n".format(row.group_id))
-            continue
         command = [
             'compute-aggregate-observables',
             '--mu', str(row.mu),
-            '--J-begin', str(row.J_begin),
-            '--J-end', str(row.J_end),
-            '--n-J', str(row.n_J),
-            '--measure-every', str(measure_every.iloc[0]),
+            '--J-begin', str(round(row.J - row.dJ, 6)),
+            '--J-end', str(round(row.J + row.dJ, 6)),
+            '--n-J', '128',
+            '--measure-every', str(row.measure_every),
             '--out-file', dest_file_name,
             '--file-group', str(row.group_id),
             '--files'] + list(file_names)

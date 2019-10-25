@@ -1,0 +1,17 @@
+{
+  "file_names": {
+    "columns": ["group_id", "file_name"],
+    "data": [
+    ]
+  },
+  "ac_args": {
+    "columns": ["group_id", "measure_every"],
+    "data": [
+    ]
+  },
+  "reweight_args": {
+    "columns": ["group_id", "mu", "J", "dJ", "measure_every"],
+    "data": [
+    ]
+  }
+}
