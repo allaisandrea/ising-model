@@ -40,8 +40,16 @@ def clear_finished_jobs(state):
 def start_queued_jobs(max_running_jobs, state):
     while len(state.running_jobs) < max_running_jobs and len(state.queued_jobs) > 0:
         job = state.queued_jobs.pop(0)
+        tokens = shlex.split(job.args)
+        if len(tokens) == 0:
+            return
+        if tokens[0].startswith('CWD='):
+            cwd = tokens[0][4:]
+            tokens = tokens[1:]
+        else:
+            cwd = None
         try:
-            popen = subprocess.Popen(['/bin/bash', '-c', job.args])
+            popen = subprocess.Popen(tokens, cwd=cwd)
         except OSError as err:
             print('OS error: {}'.format(err))
             continue
