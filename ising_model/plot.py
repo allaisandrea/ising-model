@@ -72,13 +72,18 @@ def plot_J_cut(data, observable, xlim=None, ylim=None,
     if ylim:
         axes[0].set_ylim(ylim)
 
-    axes[0].axhline(0.27052, linewidth=0.5, color='r')
+    if observable == 'binder_cumulant':
+        axes[0].axhline(0.27052, linewidth=0.5, color='r')
+
+    for J0 in data['J0'].unique():
+        axes[0].axvline(J0, linestyle='--', linewidth=0.5)
+
     axes[0].set_title(observable)
     axes[0].grid()
 
     figure.legend(
         loc='upper left',
-        bbox_to_anchor=(0, 1, 1, 0.2), ncol=1,
+        bbox_to_anchor=(0, 1, 1, 0.05 * len(groups)), ncol=1,
         mode='expand', prop={'family': 'Monospace'})
     figure.tight_layout()
     return figure, axes
@@ -86,7 +91,7 @@ def plot_J_cut(data, observable, xlim=None, ylim=None,
 
 def get_J_range(dim, mu):
     J_range_table = {
-        (4, -8.0): (0.14969, 0.0001)
+        (4, -8.0): (0.14969, 0.00002)
     }
     J_range_table = {key: (J[0] - J[1], J[0] + J[1])
                      for key, J in J_range_table.items()}
