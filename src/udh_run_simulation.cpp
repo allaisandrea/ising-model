@@ -1,5 +1,6 @@
 #include <fstream>
 
+#include "google/protobuf/text_format.h"
 #include "progress.h"
 #include "tensor.h"
 #include "throttle.h"
@@ -26,6 +27,16 @@ Index<nDim> GetStaticShape(const UdhParameters &parameters) {
 }
 
 template <size_t nDim>
+bool ShapeCanBeTiled(const Index<nDim> &shape, uint64_t tile_size) {
+    for (size_t d = 0; d < nDim; ++d) {
+        if (shape[d] % tile_size != 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+template <size_t nDim>
 Index<nDim> GetNumberOfTiles(const Index<nDim> &shape, uint64_t tile_size) {
     Index<nDim> n_tiles;
     for (size_t d = 0; d < nDim; ++d) {
@@ -38,73 +49,64 @@ Index<nDim> GetNumberOfTiles(const Index<nDim> &shape, uint64_t tile_size) {
     return n_tiles;
 }
 
+template <size_t nDim> struct GetNextConfigurationParameters {
+    uint32_t p_no_add;
+    UdhTransitionProbsArray<nDim> transition_probs;
+    uint64_t measure_every;
+    uint64_t n_wolff;
+    uint64_t n_metropolis;
+};
+
+struct MonteCarloDurations {
+    HiResTimer::Clock::duration::rep flip_cluster;
+    HiResTimer::Clock::duration::rep clear_flag;
+    HiResTimer::Clock::duration::rep metropolis_sweep;
+};
+
+template <size_t nDim>
+MonteCarloDurations
+GetNextConfiguration(const GetNextConfigurationParameters<nDim> &params,
+                     Tensor<nDim, UdhSpin> *lattice,
+                     std::queue<Index<nDim>> *queue, std::mt19937 *rng) {
+    HiResTimer flip_cluster_timer, clear_flag_timer, metropolis_sweep_timer;
+    for (uint64_t i1 = 0; i1 < params.measure_every; ++i1) {
+        for (uint64_t i2 = 0; i2 < params.n_wolff; ++i2) {
+            const Index<nDim> i0 = GetRandomIndex(lattice->shape(), rng);
+            if ((*lattice)[i0] != UdhSpinHole()) {
+                flip_cluster_timer.start();
+                FlipCluster(params.p_no_add, i0, lattice, rng, queue);
+                flip_cluster_timer.stop();
+                clear_flag_timer.start();
+                ClearVisitedFlag(i0, lattice, queue);
+                clear_flag_timer.stop();
+            }
+        }
+        metropolis_sweep_timer.start();
+        for (uint64_t i2 = 0; i2 < params.n_metropolis; ++i2) {
+            UdhMetropolisSweep(params.transition_probs, lattice, rng);
+        }
+        metropolis_sweep_timer.stop();
+    }
+    return {.flip_cluster = flip_cluster_timer.elapsed().count(),
+            .clear_flag = clear_flag_timer.elapsed().count(),
+            .metropolis_sweep = metropolis_sweep_timer.elapsed().count()};
+}
+
 template <size_t nDim>
 Tensor<nDim, UdhSpin>
 GetInitialConfiguration(const Index<nDim> &shape,
-                        const UdhTransitionProbsArray<nDim> &transition_probs,
+                        const GetNextConfigurationParameters<nDim> &params,
                         std::mt19937 *rng) {
-    Tensor<nDim, UdhSpin> lattice4(HypercubeShape<nDim>(4), UdhSpinDown());
-    for (uint64_t i = 0; i < 16; ++i) {
-        UdhMetropolisSweep(transition_probs, &lattice4, rng);
-    }
 
-    Tensor<nDim, UdhSpin> lattice8 =
-        TileTensor(lattice4, HypercubeShape<nDim>(2));
-    for (uint64_t i = 0; i < 512; ++i) {
-        UdhMetropolisSweep(transition_probs, &lattice8, rng);
-    }
-
-    const Index<nDim> n_tiles = GetNumberOfTiles<nDim>(shape, 8);
-    return TileTensor(lattice8, n_tiles);
-}
-
-template <size_t nDim>
-Tensor<nDim, UdhSpin> GetInitialConfigurationWolff(const Index<nDim> &shape,
-                                                   const uint32_t p_no_add,
-                                                   std::mt19937 *rng) {
-    Tensor<nDim, UdhSpin> lattice4(HypercubeShape<nDim>(4), UdhSpinDown());
+    Tensor<nDim, UdhSpin> tile(HypercubeShape<nDim>(2), UdhSpinDown());
     std::queue<Index<nDim>> queue;
-    for (uint64_t i = 0; i < 32; ++i) {
-        const Index<nDim> i0 = GetRandomIndex(lattice4.shape(), rng);
-        FlipCluster(p_no_add, i0, &lattice4, rng, &queue);
-        ClearVisitedFlag(i0, &lattice4, &queue);
-    }
-
-    Tensor<nDim, UdhSpin> lattice8 =
-        TileTensor(lattice4, HypercubeShape<nDim>(2));
-
-    for (uint64_t i = 0; i < 512; ++i) {
-        const Index<nDim> i0 = GetRandomIndex(lattice8.shape(), rng);
-        FlipCluster(p_no_add, i0, &lattice8, rng, &queue);
-        ClearVisitedFlag(i0, &lattice8, &queue);
-    }
-
-    const Index<nDim> n_tiles = GetNumberOfTiles<nDim>(shape, 8);
-    return TileTensor(lattice8, n_tiles);
-}
-
-template <size_t nDim> double GetCriticalJ();
-template <> double GetCriticalJ<2>() { return 0.44070; }
-template <> double GetCriticalJ<3>() { return 0.22165; }
-template <> double GetCriticalJ<4>() { return 0.1497; }
-template <> double GetCriticalJ<5>() { return 0.0; }
-
-template <size_t nDim>
-Tensor<nDim, UdhSpin>
-GetInitialConfigurationQuenchedHoles(const Index<nDim> &shape,
-                                     uint32_t hole_prob, std::mt19937 *rng) {
-    const uint32_t p_no_add = GetNoAddProbabilityFromJ(GetCriticalJ<nDim>());
-
-    Tensor<nDim, UdhSpin> lattice =
-        GetInitialConfigurationWolff<nDim>(shape, p_no_add, rng);
-
-    for (auto &spin : lattice) {
-        if ((*rng)() < hole_prob) {
-            spin = UdhSpinHole();
+    while (ShapeCanBeTiled(shape, 2 * tile.shape(0))) {
+        tile = TileTensor(tile, HypercubeShape<nDim>(2));
+        for (int i = 0; i < 8; ++i) {
+            GetNextConfiguration(params, &tile, &queue, rng);
         }
     }
-
-    return lattice;
+    return TileTensor(tile, GetNumberOfTiles<nDim>(shape, tile.shape(0)));
 }
 
 template <size_t nDim> int Run(const UdhParameters &parameters) {
@@ -123,31 +125,33 @@ template <size_t nDim> int Run(const UdhParameters &parameters) {
                   << std::endl;
         return -1;
     }
+
+    Write(parameters, &out_file);
+    out_file.flush();
+
+    std::string parameters_str;
+    google::protobuf::TextFormat::PrintToString(parameters, &parameters_str);
+    log_file << parameters_str;
+    log_file.flush();
+
+    const Index<nDim> shape = GetStaticShape<nDim>(parameters);
+    const GetNextConfigurationParameters<nDim>
+        get_next_configuration_parameters{
+            .p_no_add = GetNoAddProbabilityFromJ(parameters.j()),
+            .transition_probs = ComputeUdhTransitionProbs<nDim>(
+                parameters.j(), parameters.mu()),
+            .measure_every = parameters.measure_every(),
+            .n_wolff = parameters.n_wolff(),
+            .n_metropolis = parameters.n_metropolis()};
+
     log_file << TimeString(std::time(nullptr)) << " Starting warm-up"
              << std::endl;
 
-    Write(parameters, &out_file);
     std::mt19937 rng(parameters.seed());
-
-    const Index<nDim> shape = GetStaticShape<nDim>(parameters);
-    const UdhTransitionProbsArray<nDim> transition_probs =
-        ComputeUdhTransitionProbs<nDim>(parameters.j(), parameters.mu());
-
-    const uint32_t p_no_add = GetNoAddProbabilityFromJ(parameters.j());
-
-    Tensor<nDim, UdhSpin> lattice(shape, UdhSpinDown());
-    if (parameters.quenched_holes()) {
-        const uint32_t hole_prob = std::round((1ul << 32) * parameters.mu());
-        lattice =
-            GetInitialConfigurationQuenchedHoles<nDim>(shape, hole_prob, &rng);
-    } else if (parameters.n_metropolis() == 0) {
-        lattice = GetInitialConfigurationWolff<nDim>(shape, p_no_add, &rng);
-    } else {
-        lattice = GetInitialConfiguration<nDim>(shape, transition_probs, &rng);
-    }
+    Tensor<nDim, UdhSpin> lattice =
+        GetInitialConfiguration(shape, get_next_configuration_parameters, &rng);
 
     std::queue<Index<nDim>> queue;
-    Index<nDim> sweep_starting_index{};
     UdhObservables observables;
     ProgressIndicator progress_indicator(std::time(nullptr),
                                          parameters.n_measure());
@@ -160,43 +164,18 @@ template <size_t nDim> int Run(const UdhParameters &parameters) {
     Throttle<std::chrono::steady_clock> throttle(
         std::chrono::steady_clock::duration(1 * period::den / period::num));
     for (uint64_t i0 = 0; i0 < parameters.n_measure(); ++i0) {
-        HiResTimer flip_cluster_timer, clear_flag_timer, metropolis_sweep_timer,
-            measure_timer, serialize_timer;
-        for (uint64_t i1 = 0; i1 < parameters.measure_every(); ++i1) {
-            for (uint64_t i2 = 0; i2 < parameters.n_wolff(); ++i2) {
-                const Index<nDim> i0 = GetRandomIndex(lattice.shape(), &rng);
-                if (lattice[i0] != UdhSpinHole()) {
-                    flip_cluster_timer.start();
-                    FlipCluster(p_no_add, i0, &lattice, &rng, &queue);
-                    flip_cluster_timer.stop();
-                    clear_flag_timer.start();
-                    ClearVisitedFlag(i0, &lattice, &queue);
-                    clear_flag_timer.stop();
-                }
-            }
-            metropolis_sweep_timer.start();
-            for (uint64_t i2 = 0; i2 < parameters.n_metropolis(); ++i2) {
-                if (parameters.metropolis_stride() == 0) {
-                    UdhMetropolisSweep(transition_probs, &lattice, &rng);
-                } else {
-                    UdhMetropolisStridedSweep(
-                        transition_probs, parameters.metropolis_stride() + 1,
-                        &sweep_starting_index, &lattice, &rng);
-                }
-            }
-            metropolis_sweep_timer.stop();
-        }
+        HiResTimer measure_timer, serialize_timer;
+        const auto durations = GetNextConfiguration<nDim>(
+            get_next_configuration_parameters, &lattice, &queue, &rng);
         measure_timer.start();
         Measure(lattice, &observables);
         measure_timer.stop();
 
         observables.set_sequence_id(i0);
         observables.set_stamp(simulation_timer.elapsed().count());
-        observables.set_flip_cluster_duration(
-            flip_cluster_timer.elapsed().count());
-        observables.set_clear_flag_duration(clear_flag_timer.elapsed().count());
-        observables.set_metropolis_sweep_duration(
-            metropolis_sweep_timer.elapsed().count());
+        observables.set_flip_cluster_duration(durations.flip_cluster);
+        observables.set_clear_flag_duration(durations.clear_flag);
+        observables.set_metropolis_sweep_duration(durations.metropolis_sweep);
         observables.set_measure_duration(measure_timer.elapsed().count());
         observables.set_serialize_duration(serialize_duration);
 
