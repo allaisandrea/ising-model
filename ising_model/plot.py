@@ -110,6 +110,10 @@ def get_J_range(dim, mu):
 
 
 def plot_time_series(file_name, max_length=8192):
+    params = ising_model.udh.load_params(file_name)
+    vol = 1
+    for L in params.shape:
+        vol *= L
     observables_array = ising_model.udh.load_observables(file_name)
     time_series = collections.defaultdict(lambda: list())
     for observables in observables_array:
@@ -119,8 +123,8 @@ def plot_time_series(file_name, max_length=8192):
         time_series['measure'].append(observables.measure_duration)
         time_series['serialize'].append(observables.serialize_duration)
         time_series['phi2'].append(numpy.square(
-            observables.n_up - observables.n_down))
-        time_series['n_holes'].append(observables.n_holes)
+            (observables.n_up - observables.n_down) / vol))
+        time_series['n_holes'].append(observables.n_holes / vol)
         if len(time_series) >= max_length:
             break
 
