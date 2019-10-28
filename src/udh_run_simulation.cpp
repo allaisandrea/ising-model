@@ -106,7 +106,13 @@ void GetInitialConfiguration(const Index<nDim> &shape,
             GetNextConfiguration(params, &tile, &queue, rng);
         }
     }
-    TileTensor(tile, GetNumberOfTiles<nDim>(shape, tile.shape(0)), result);
+    const Index<nDim> number_of_tiles =
+        GetNumberOfTiles<nDim>(shape, tile.shape(0));
+    if (GetSize(number_of_tiles) > 1) {
+        TileTensor(tile, number_of_tiles, result);
+    } else {
+        std::swap(*result, tile);
+    }
 }
 
 template <size_t nDim> int Run(const UdhParameters &parameters) {
