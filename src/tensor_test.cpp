@@ -148,7 +148,8 @@ void TestTileTensor(const Index<nDim> &tile_shape, const Index<nDim> &n_tiles,
     for (uint64_t i = 0; i < tile.size(); ++i) {
         tile[i] = i;
     }
-    const Tensor<nDim, uint64_t> tiled = TileTensor(tile, n_tiles);
+    Tensor<nDim, uint64_t> tiled;
+    TileTensor(tile, n_tiles, &tiled);
     for (size_t i = 0; i < expected_values.size(); ++i) {
         EXPECT_EQ(tiled[i], expected_values[i]);
     }

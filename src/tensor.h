@@ -160,8 +160,23 @@ template <size_t nDim, typename Scalar> class Tensor {
     std::vector<Scalar> _nodes;
 
   public:
+    Tensor() : _shape{}, _size{}, _nodes{} {}
     Tensor(const Index<nDim> &shape, const Scalar &node)
         : _shape(shape), _size(GetSize(_shape)), _nodes(_size, node) {}
+
+    void resize(const Index<nDim> &shape, const Scalar &node) {
+        _shape = shape;
+        _size = GetSize(_shape);
+        _nodes.clear();
+        _nodes.resize(_size, node);
+    }
+
+    friend void swap(Tensor<nDim, Scalar> &t1, Tensor<nDim, Scalar> &t2) {
+        std::swap(t1._shape, t2._shape);
+        std::swap(t1._size, t2._size);
+        std::swap(t1._nodes, t2._nodes);
+    }
+
     const Index<nDim> &shape() const { return _shape; }
     size_t shape(size_t d) const { return _shape[d]; }
     size_t size() const { return _size; };
@@ -190,18 +205,17 @@ template <size_t nDim, typename Scalar> class Tensor {
 };
 
 template <size_t nDim, typename Scalar>
-Tensor<nDim, Scalar> TileTensor(const Tensor<nDim, Scalar> &tile,
-                                const Index<nDim> &n_tiles) {
+void TileTensor(const Tensor<nDim, Scalar> &tile, const Index<nDim> &n_tiles,
+                Tensor<nDim, Scalar> *result) {
     if (tile.size() == 0) {
         throw std::invalid_argument("Cannot tile tensor of zero size");
     }
-    Tensor<nDim, Scalar> result(tile.shape() * n_tiles, tile[0]);
+    result->resize(tile.shape() * n_tiles, tile[0]);
     Index<nDim> tile_index{};
     do {
         Index<nDim> i{};
         do {
-            result[tile.shape() * tile_index + i] = tile[i];
+            (*result)[tile.shape() * tile_index + i] = tile[i];
         } while (NextIndex(&i, tile.shape()));
     } while (NextIndex(&tile_index, n_tiles));
-    return result;
 }

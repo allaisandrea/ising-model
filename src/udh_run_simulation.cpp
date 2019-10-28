@@ -93,20 +93,20 @@ GetNextConfiguration(const GetNextConfigurationParameters<nDim> &params,
 }
 
 template <size_t nDim>
-Tensor<nDim, UdhSpin>
-GetInitialConfiguration(const Index<nDim> &shape,
-                        const GetNextConfigurationParameters<nDim> &params,
-                        std::mt19937 *rng) {
+void GetInitialConfiguration(const Index<nDim> &shape,
+                             const GetNextConfigurationParameters<nDim> &params,
+                             Tensor<nDim, UdhSpin> *result, std::mt19937 *rng) {
 
     Tensor<nDim, UdhSpin> tile(HypercubeShape<nDim>(2), UdhSpinDown());
     std::queue<Index<nDim>> queue;
     while (ShapeCanBeTiled(shape, 2 * tile.shape(0))) {
-        tile = TileTensor(tile, HypercubeShape<nDim>(2));
+        TileTensor(tile, HypercubeShape<nDim>(2), result);
+        std::swap(tile, *result);
         for (int i = 0; i < 8; ++i) {
             GetNextConfiguration(params, &tile, &queue, rng);
         }
     }
-    return TileTensor(tile, GetNumberOfTiles<nDim>(shape, tile.shape(0)));
+    TileTensor(tile, GetNumberOfTiles<nDim>(shape, tile.shape(0)), result);
 }
 
 template <size_t nDim> int Run(const UdhParameters &parameters) {
@@ -148,8 +148,9 @@ template <size_t nDim> int Run(const UdhParameters &parameters) {
              << std::endl;
 
     std::mt19937 rng(parameters.seed());
-    Tensor<nDim, UdhSpin> lattice =
-        GetInitialConfiguration(shape, get_next_configuration_parameters, &rng);
+    Tensor<nDim, UdhSpin> lattice;
+    GetInitialConfiguration(shape, get_next_configuration_parameters, &lattice,
+                            &rng);
 
     std::queue<Index<nDim>> queue;
     UdhObservables observables;
