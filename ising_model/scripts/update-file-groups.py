@@ -11,6 +11,8 @@ import math
 def update_file_groups(directory, json_db):
     file_names = glob.glob(directory + "/*.udh")
     parameters_table = udh.load_params_table(file_names)
+    parameters_table = parameters_table.sort_values(
+        ["mu", "J", "L0", "n_wolff"])
     file_names_table = pandas.DataFrame(**json_db["file_names"])
     existing_files = set(file_names_table['file_name'])
     if len(file_names_table) > 0:
