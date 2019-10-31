@@ -51,7 +51,7 @@ def plot_autocorrelation(
 
 def plot_J_cut(data, observable, xlim=None, ylim=None,
                groupby=['mu', 'J0', 'L0', 'n_wolff', 'file_group'], fig_size=(9, 5),
-               label_format='g:{file_group:3} mu:{mu:9.6f} L:{L0:3} J0:{J0:9.6f} wolff:{n_wolff:4}',
+               label_format='g:{file_group:3} mu:{mu:9.6f} L:{L0:3} J0:{J0:10.7f} wolff:{n_wolff:4}',
                show_cpu_time=False):
     groups = data.groupby(groupby)
 
@@ -83,7 +83,7 @@ def plot_J_cut(data, observable, xlim=None, ylim=None,
 
     figure.legend(
         loc='upper left',
-        bbox_to_anchor=(0, 1, 1, 0.05 * len(groups)), ncol=1,
+        bbox_to_anchor=(0, 1, 1, 0.3), ncol=1,
         mode='expand', prop={'family': 'Monospace'})
     figure.tight_layout()
     return figure, axes
@@ -91,7 +91,7 @@ def plot_J_cut(data, observable, xlim=None, ylim=None,
 
 def get_J_range(dim, mu):
     J_range_table = {
-        (4, -1024.000): (0.149694, 0.000010),
+        (4, -1024.000): (0.149694, 0.000002),
         (4, -1.000000): (0.175000, 0.005000),
         (4,  0.000000): (0.215600, 0.000500),
         (4,  1.000000): (0.316500, 0.000500),
