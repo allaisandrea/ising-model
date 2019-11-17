@@ -108,7 +108,7 @@ bool ParseArgs(int argc, const char *argv[], Arguments *args) {
     add_option("n-J", value<uint64_t>(&(args->n_J))->required());
     add_option("measure-every",
                value<uint64_t>(&(args->measure_every))->required());
-    add_option("skip_first_n",
+    add_option("skip-first-n",
                value<uint64_t>(&(args->skip_first_n))->default_value(4));
     add_option("file-group", value<uint64_t>(&(args->file_group))->required());
     add_option("out-file", value<std::string>(&(args->out_file))->required());

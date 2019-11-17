@@ -50,7 +50,7 @@ def plot_autocorrelation(
 
 
 def plot_J_cut(data, observable, xlim=None, ylim=None,
-               groupby=['mu', 'J0', 'L0', 'n_wolff', 'file_group'], fig_size=(9, 5),
+               groupby=['mu', 'L0', 'J0', 'n_wolff', 'file_group'], fig_size=(9, 5),
                label_format='g:{file_group:3} mu:{mu:9.6f} L:{L0:3} J0:{J0:10.7f} wolff:{n_wolff:4}',
                show_cpu_time=False):
     groups = data.groupby(groupby)
@@ -98,7 +98,7 @@ def get_J_range(dim, mu):
         (4,  1.500000): (0.407480, 0.000050),
         (4,  1.625000): (0.435490, 0.000050),
         (4,  1.656250): (0.442860, 0.000050),
-        (4,  1.687500): (0.450350, 0.000050),
+        (4,  1.687500): (0.450341, 0.000005),
         (4,  1.703125): (0.454150, 0.000050),
         (4,  1.718750): (0.457980, 0.000050),
         (4,  1.750000): (0.465000, 0.005000),
@@ -116,23 +116,26 @@ def plot_time_series(file_name, max_length=8192):
         vol *= L
     observables_array = ising_model.udh.load_observables(file_name)
     time_series = collections.defaultdict(lambda: list())
+    i = 0
     for observables in observables_array:
-        time_series['flip_cluster'].append(observables.flip_cluster_duration)
-        time_series['clear_flag'].append(observables.clear_flag_duration)
-        time_series['metropolis'].append(observables.metropolis_sweep_duration)
-        time_series['measure'].append(observables.measure_duration)
-        time_series['serialize'].append(observables.serialize_duration)
+        #time_series['flip_cluster'].append(observables.flip_cluster_duration)
+        #time_series['clear_flag'].append(observables.clear_flag_duration)
+        #time_series['metropolis'].append(observables.metropolis_sweep_duration)
+        #time_series['measure'].append(observables.measure_duration)
+        #time_series['serialize'].append(observables.serialize_duration)
         time_series['phi2'].append(numpy.square(
             (observables.n_up - observables.n_down) / vol))
         time_series['n_holes'].append(observables.n_holes / vol)
-        if len(time_series) >= max_length:
+        i += 1
+        if i >= max_length:
             break
 
-    figure, axes = pyplot.subplots(len(time_series), 1, squeeze=False)
-    axes = numpy.reshape(axes, (axes.size,))
-    figure.set_size_inches(9, 12)
+    figure, axes = pyplot.subplots(len(time_series), 2, squeeze=False)
+    figure.set_size_inches(9, 4)
     for i, (key, value) in enumerate(time_series.items()):
-        axes[i].plot(value, marker='o', linestyle='None', markersize=1)
-        axes[i].set_title(key)
+        axes[i, 0].plot(value, marker='o', linestyle='None', markersize=1)
+        axes[i, 0].set_title(key)
+        axes[i, 1].hist(value, bins=round(len(value) / 64))
     figure.tight_layout()
     return figure, axes
+

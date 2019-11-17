@@ -29,6 +29,7 @@ def compute_aggregate_observables(json_db, dest_file_name):
             '--J-end', str(round(row.J + row.dJ, 6)),
             '--n-J', '128',
             '--measure-every', str(row.measure_every),
+            '--skip-first-n', str(row.skip_first_n),
             '--out-file', dest_file_name,
             '--file-group', str(row.group_id),
             '--files'] + list(file_names)

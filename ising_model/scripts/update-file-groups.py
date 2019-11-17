@@ -29,7 +29,7 @@ def update_file_groups(directory, json_db):
             [group_id, row.measure_every])
         json_db["reweight_args"]["data"].append(
             [group_id, row.mu, round(row.J, 6),
-             round(math.pow(row.L0, -2), 6), row.measure_every])
+             round(math.pow(row.L0, -2), 6), row.measure_every, 4])
         group_id += 1
     return json_db
 
