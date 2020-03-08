@@ -109,7 +109,7 @@ def get_J_range(dim, mu):
     return J_range_table[(dim, mu)]
 
 
-def plot_time_series(file_name, max_length=8192):
+def plot_time_series_single(file_name, max_length, use_stamp,  axes):
     params = ising_model.udh.load_params(file_name)
     vol = 1
     for L in params.shape:
@@ -117,6 +117,7 @@ def plot_time_series(file_name, max_length=8192):
     observables_array = ising_model.udh.load_observables(file_name)
     time_series = collections.defaultdict(lambda: list())
     i = 0
+    stamps = []
     for observables in observables_array:
         #time_series['flip_cluster'].append(observables.flip_cluster_duration)
         #time_series['clear_flag'].append(observables.clear_flag_duration)
@@ -126,16 +127,25 @@ def plot_time_series(file_name, max_length=8192):
         time_series['phi2'].append(numpy.square(
             (observables.n_up - observables.n_down) / vol))
         time_series['n_holes'].append(observables.n_holes / vol)
+        stamps.append(observables.stamp)
         i += 1
         if i >= max_length:
             break
 
-    figure, axes = pyplot.subplots(len(time_series), 2, squeeze=False)
-    figure.set_size_inches(9, 4)
     for i, (key, value) in enumerate(time_series.items()):
-        axes[i, 0].plot(value, marker='o', linestyle='None', markersize=1)
+        if use_stamp:
+            abscissae = stamps
+        else:
+            abscissae = range(len(stamps))
+        axes[i, 0].plot(abscissae, value, marker='o', linestyle='None', markersize=1)
         axes[i, 0].set_title(key)
-        axes[i, 1].hist(value, bins=round(len(value) / 64))
+        axes[i, 1].hist(value, bins=32, alpha=0.5)
+
+
+def plot_time_series(file_names, max_length=8192, use_stamp=False):
+    figure, axes = pyplot.subplots(2, 2, squeeze=False)
+    figure.set_size_inches(9, 4)
+    for file_name in file_names:
+        plot_time_series_single(file_name, max_length, use_stamp, axes)
     figure.tight_layout()
     return figure, axes
-

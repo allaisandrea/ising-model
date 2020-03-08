@@ -53,7 +53,7 @@ def print_table(name, fields, stream):
         print_data(fields["data"], "{:4}, {:4}", stream)
     elif name == "reweight_args":
         print_data(fields["data"],
-                   "{:4}, {:9.6f}, {:9.6f}, {:9.6f}, {:4}", stream)
+                "{:4}, {:9.6f}, {:9.7f}, {:9.7f}, {:4}, {:4}", stream)
     stream.write("    ]\n")
     stream.write("  }")
 
