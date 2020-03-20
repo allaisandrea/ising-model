@@ -229,9 +229,10 @@ mode from the other modes in the action yields:
     &\frac{u_0}{6V^2} \bar{\phi} 
         \sum_{n_1, n_2} \phi_{n_1} \phi_{n_2} \phi_{-n_1 -n_2} + \\
     &\frac{u_0}{24V^3} \sum_{n_1, n_2, n_3} \phi_{n_1} \phi_{n_2} 
-        \phi_{n_3} \phi_{-n_1 -n_2 -n_3}\,.
+        \phi_{n_3} \phi_{-n_1 -n_2 -n_3}\,,
 \end{split}
 \end{equation}
+where all summations now exclude $n = (0, 0, 0, 0)$.
 
 We also introduce renormalized couplings
 \begin{equation}
@@ -240,7 +241,7 @@ We also introduce renormalized couplings
 and we obtain the following edges and vertices in the diagrammatic expansion:
 \begin{displaymath}
 \begin{tikzpicture}[scale=0.5, baseline=(current bounding box.center)]
-    \draw[dashed, thick] (-1, -1) -- (0, 0) -- (-1, 1);
+    \draw[densely dashed, thick] (-1, -1) -- (0, 0) -- (-1, 1);
     \draw[thick] (+1, -1) -- (0, 0) -- (+1, 1);
     \node[above right] at (1, 1) {$n_1$};
     \node[below right] at (1, -1) {$n_2$};
@@ -248,7 +249,7 @@ and we obtain the following edges and vertices in the diagrammatic expansion:
     -\frac{u\bar{\phi}^2}{4V}\delta_{n_1 + n_2}
     \quad\quad
 \begin{tikzpicture}[scale=0.5, baseline=(current bounding box.center)]
-    \draw[dashed, thick] (-1, -1) -- (0, 0);
+    \draw[densely dashed, thick] (-1, -1) -- (0, 0);
     \draw[thick] (0, 0) -- (-1, 1);
     \draw[thick] (+1, -1) -- (0, 0) -- (+1, 1);
     \node[above left] at (-1, 1) {$n_1$};
@@ -279,7 +280,8 @@ and we obtain the following edges and vertices in the diagrammatic expansion:
 plus additional vertices associated with the counterterms $\delta r$, $\delta
 u$ which we do not list for brevity.
 
-The logarithm of the probability distribution $p(\bar{\phi}$ is the sum of all connected diagrams:
+The logarithm of the probability distribution of $\bar{\phi}$ is the sum of all
+connected diagrams:
 \begin{displaymath}
 \begin{split}
     \log p(\bar{\phi}) = &\,
@@ -287,49 +289,122 @@ The logarithm of the probability distribution $p(\bar{\phi}$ is the sum of all c
     \frac{u}{24} \bar{\phi}^4\right)\\
 &+\ 
 \begin{tikzpicture}[scale=0.5, baseline={([yshift=-.5ex]current bounding box.center)}]
-    \draw[thick, dashed] (-1, -0.5) -- (0, 0) -- (1, -0.5);
-    \draw[thick] (0, 0) .. controls (-1.5, 1.3) and (1.5, 1.3) .. (0, 0);
+    \draw[thick, densely dashed] (-1.75, -0.75) -- (-1, 0) -- (-1.75, 0.75);
+    \draw[thick] (-1, 0) .. controls (-0.2, 0.8) and (0.5, 0.8) .. (0.5, 0) .. 
+    controls (0.5, -0.8) and (-0.2, -0.8) .. (-1, 0);
 \end{tikzpicture}
 \ + \ 
 \begin{tikzpicture}[scale=0.5, baseline={([yshift=-.5ex]current bounding box.center)}]
-    \draw[thick, dashed] (-1.75, 0) -- (-0.75, 0);
+    \draw[thick, densely dashed] (-1.75, 0) -- (-0.75, 0);
     \draw[thick] (-0.75, 0) -- (0.75, 0);
-    \draw[thick, dashed] (1.75, 0) -- (0.75, 0);
+    \draw[thick, densely dashed] (1.75, 0) -- (0.75, 0);
     \draw[thick] (0, 0) circle (0.75cm);
 \end{tikzpicture}
 \ + \ 
 \begin{tikzpicture}[scale=0.5, baseline={([yshift=-.5ex]current bounding box.center)}]
-    \draw[thick, dashed] (-1, -0.5) -- (0, 0) -- (1, -0.5);
-    \draw[thick] (0, 0) .. controls (0.6, 0.5).. (0, 1) .. 
-    controls (-1.5, 2.3) and (1.5, 2.3) .. (0, 1) .. 
-    controls (-0.6, 0.5) .. (0, 0) ;
+    \draw[thick, densely dashed] (-2.75, -0.75) -- (-2, 0) -- (-2.75, 0.75);
+    \draw[thick] (-2, 0) .. controls (-1.2, 0.8) and (-0.8, 0.8) .. (0, 0) .. 
+    controls (-0.8, -0.8) and (-1.2, -0.8) .. (-2, 0);
+    \draw[thick] (1.6, 0) .. controls (1.6, 0.8) and (0.8, 0.8) .. (0, 0) .. 
+    controls (0.8, -0.8) and (1.6, -0.8) .. (1.6, 0);
 \end{tikzpicture}
  \ + \ \cdots \\
 &+\ 
 \begin{tikzpicture}[scale=0.5, baseline={([yshift=-.5ex]current bounding box.center)}]
-    \draw[thick, dashed] (-1.75, -0.75) -- (-1, 0) -- (-1.75, 0.75);
-    \draw[thick, dashed] (1.75, -0.75) -- (1, 0) -- (1.75, 0.75);
+    \draw[thick, densely dashed] (-1.75, -0.75) -- (-1, 0) -- (-1.75, 0.75);
+    \draw[thick, densely dashed] (1.75, -0.75) -- (1, 0) -- (1.75, 0.75);
     \draw[thick] (-1, 0) .. controls (-0.2, 0.8) and (0.2, 0.8) .. (1, 0) .. 
     controls (0.2, -0.8) and (-0.2, -0.8) .. (-1, 0);
 \end{tikzpicture}
 \ + \ 
 \begin{tikzpicture}[scale=0.5, baseline={([yshift=-.5ex]current bounding box.center)}]
-    \draw[thick, dashed] (-1.5, 0.75) -- (-0.75, 0) -- (-1.5, -0.75) ;
+    \draw[thick, densely dashed] (-1.5, 0.75) -- (-0.75, 0) -- (-1.5, -0.75) ;
     \draw[thick] (0, 0) circle (0.75cm);
-    \draw[thick, dashed] (0.53, 0.53) -- (1.25, 1.25);
-    \draw[thick, dashed] (0.53, -0.53) -- (1.25, -1.25);
+    \draw[thick, densely dashed] (0.53, 0.53) -- (1.25, 1.25);
+    \draw[thick, densely dashed] (0.53, -0.53) -- (1.25, -1.25);
     \draw[thick] (0.53, -0.53) .. controls (0.2, -0.2) 
     and (0.2, 0.2) .. (0.53, 0.53);
 \end{tikzpicture}
 \ + \ 
 \begin{tikzpicture}[scale=0.5, baseline={([yshift=-.5ex]current bounding box.center)}]
-    \draw[thick, dashed] (-1.75, -0.75) -- (-1, 0) -- (-1.75, 0.75);
-    \draw[thick, dashed] (1.75, -0.75) -- (1, 0) -- (1.75, 0.75);
-    \draw[thick] (-1, 0) .. controls (-0.2, 0.8) and (0.2, 0.8) .. (1, 0) .. 
-    controls (0.2, -0.8) and (-0.2, -0.8) .. (-1, 0);
+    \draw[thick, densely dashed] (-2.75, -0.75) -- (-2, 0) -- (-2.75, 0.75);
+    \draw[thick, densely dashed] (2.75, -0.75) -- (2, 0) -- (2.75, 0.75);
+    \draw[thick] (-2, 0) .. controls (-1.2, 0.8) and (-0.8, 0.8) .. (0, 0) .. 
+    controls (-0.8, -0.8) and (-1.2, -0.8) .. (-2, 0);
+    \draw[thick] (2, 0) .. controls (1.2, 0.8) and (0.8, 0.8) .. (0, 0) .. 
+    controls (0.8, -0.8) and (1.2, -0.8) .. (2, 0);
 \end{tikzpicture}
+ \ + \ \cdots \\
+& + \ 
+\begin{tikzpicture}[scale=0.5, baseline={([yshift=-.5ex]current bounding box.center)}]
+    \draw[thick, densely dashed] (-1.5, 0.75) -- (-0.75, 0) -- (-1.5, -0.75) ;
+    \draw[thick] (0, 0) circle (0.75cm);
+    \draw[thick, densely dashed] (1.40, -0.92) -- (0.375, -0.65) -- (0.1, -1.67);
+    \draw[thick, densely dashed] (1.40, 0.92) -- (0.375, 0.65) -- (0.1, 1.67);
+\end{tikzpicture}
+ \ + \ \cdots \,,
 \end{split}
 \end{displaymath}
+where again we left out all diagrams involving the counterterms for brevity. 
+
+Retaining only one-loop diagrams, and employing a heath kernel regulator we have:
+\begin{equation}
+\begin{split}
+    -\log p(\bar{\phi}) = \mathrm{const} + V \Bigg( 
+    &\frac{1}{2} \bar{\phi}^2\left( r + u \left(\delta r + \frac{1}{2} I_1\right) + O(u^2)\right) + \\
+    &\frac{u}{24} \bar{\phi}^4 \left(1 + u \left(\delta u - \frac{3}{2} I_2\right) + O(u^2)\right) + \\
+    &\frac{u^3}{48}\bar{\phi}^6\left(I_3 + O(u)\right) + O(u^4 \bar{\phi}^8) \Bigg)\,,
+\end{split}
+\end{equation}
+where
+\begin{equation}
+    I_k = \frac{1}{V} \sum_{n\in\mathbb{Z}^4\setminus\{0\}} 
+    \frac{e^{-s(r + n^2 R^{-2})}}{\left(r + n^2 R^{-2}\right)^k} = 
+    \frac{1}{(k - 1)!}\left(-\frac{\partial}{\partial r} - s\right)^k I_1
+\end{equation}
+
+The summation $I_1$ can be simplified substantially using the following trick:
+\begin{equation}
+\begin{split}
+    I_1 &= \frac{1}{V} \int_{s}^{\infty} \dd t \sum_{n\in\mathbb{Z}^4\setminus\{0\}} 
+    e^{-t(r + n^2 R^{-2})}\\
+    & = \frac{1}{V} \int_{s}^{\infty} \dd t\ e^{-t r}
+        \left(\left(\sum_{m = -\infty}^{\infty} e^{-t m^2 R^{-2}}\right)^4 - 1\right) \\
+    & = \frac{1}{V} \int_{s}^{\infty} \dd t\ e^{-t r}
+        \left(\theta\!\left(t R^{-2}\right)^4 - 1\right)\,,
+\end{split}
+\end{equation}
+where:\footnote{The function $\theta$ is in fact a Jacobi theta function, but we
+won't need any of its special properties beyond its asymptotic behavior, which
+can be easily obtained from the definition.}
+\begin{equation}
+    \theta(z) \equiv \sum_{m = -\infty}^{\infty} e^{-m^2 z}\,.
+\end{equation}
+
+We now extract the divergent part of $I_1$ by subtracting under the integral a
+function that has the same asymptotic behavior as the integrand for $t \to 0$,
+but whose integral can be computed in closed form. In order to do that, we need
+the asymptotic behavior of $\theta(z)$ for $z\to0$, which can be obtained from
+its definition using the Euler-Mclaurin formula:
+\begin{equation}
+    \theta(z) \sim \sqrt{\frac{\pi}{z}} + o(z^k) \quad\mathrm{for}\, z\to0\,.
+\end{equation}
+
+Thus we have:
+\begin{equation}
+\begin{split}
+    I_1 &= \frac{1}{16\pi^2}\left(\int_{s}^{\infty}\dd t\, e^{-t \mu^2} t^{-2}\left(1 + t (\mu^2 - r)\right)
+    +\frac{1}{R^2} f(r R^2, \mu R)\right)\\
+    &= \frac{1}{16\pi^2}\left(\frac{1}{s} + r\left(\log s\mu^2 + \gamma_{E}\right) - 
+    \mu^2 +\frac{1}{R^2} f(r R^2, \mu R)\right)\,,
+\end{split}
+\end{equation}
+where $\mu$ is a renormalization scale that can be chosen at will, and:
+\begin{equation}
+    f(rR^2,\mu R) = \int_{0}^{\infty} \dd z\ e^{-z r R^2} \left(\frac{\theta(z)^4 - 1}{\pi^2} - 
+    \frac{1 + z\left(\mu^2 - r\right)R^2}{t^2}e^{-z\left(\mu^2 - r\right)R^2}\right).
+\end{equation}
+
 
 \begin{equation}
 \label{eq:f_functions}
