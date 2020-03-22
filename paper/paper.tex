@@ -46,7 +46,15 @@ form vanish very slowly with increasing system size, like $1/\log L$.
 \begin{center}
 \includegraphics[scale=0.75]{binder_cumulant.png}
 \end{center}
-\caption{\label{fig:binder_cumulant} Blah Blah}
+    \caption{\label{fig:binder_cumulant} Binder cumulant of the total
+    magnetization of the 4D Ising model. The left plot gives a broad picture,
+    the right plot shows the critical region close-up.  The shaded regions
+    display the one-sigma confidence intervals obtained from Monte Carlo
+    simulation. The center lines are obtained from a 3-parameter fit of the
+    perturbative result (\ref{eq:log_pdf}). The horizontal dashed line
+    indicates the critical value (\ref{eq:critical_binder_cumulant}). The fit
+    has $J_c = 0.1496938$, $J - J_c = -0.027\cdot r$, $g = 0.43$, with $r$, $g$
+    defined at the renormalization scale $L = 2\pi R = 8$. }
 \end{figure}
 
 
@@ -182,7 +190,7 @@ with subleading terms vanishing like $1 / \log(R)$.
 
 In Monte Carlo simulations, the qualitative behavior of the distribution of the
 magnetization is often characterized by measuring the so-called Binder
-cumulant:
+cumulant \cite{Binder1981}:
 \begin{equation}
     U = 1 - \frac{\left\langle \bar \phi^4 \right \rangle}
     {3\left\langle \bar \phi^2 \right \rangle^2},
@@ -191,10 +199,11 @@ which is constructed to be independent of the overall scale of $\bar{\phi}$,
 and to be zero if $\bar{\phi}$ is normally distributed. From
 (\ref{eq:log_pdf_critical_point}) we conclude that, on a 4-Torus, at the
 critical point\footnote{ Incidentally, we note that this result is not in
-contraddiction with the claim in the original paper that the critical Binder
-cumulant in 4 dimensions is zero, because in the original paper the cumulant is
-not computed from the total magnetization, but rather from the average
-magnetization of blocks of spins much smaller than the overall system size.}:
+contraddiction with the claim in the original paper \cite{Binder1981} that the
+critical Binder cumulant in 4 dimensions is zero, because in the original paper
+the cumulant is not computed from the total magnetization, but rather from the
+average magnetization of blocks of spins much smaller than the overall system
+size.}:
 \begin{equation}
     \label{eq:critical_binder_cumulant}
     U = 1 - \frac{4\,\Gamma\left(\frac{5}{4}\right)^2}
@@ -205,13 +214,22 @@ magnetization of blocks of spins much smaller than the overall system size.}:
 
 In fig.~\ref{fig:binder_cumulant}, we show a comparison of the Binder cumulant
 computed from (\ref{eq:log_pdf}) near the critical point, and the results of
-Monte Carlo simulation of the Ising model.
+Monte Carlo simulation of the $4D$ Ising model. The agreement is excellent except
+for the smallest system size $L = 8$, probably because of contributions from
+irrelevant operators. Notice how slowly the finite size Binder cumulant
+approaches the asymptotic value (\ref{eq:critical_binder_cumulant}).
 
 \section{Derivation}
 
-We now describe briefly how the result (\ref{eq:log_pdf}) is obtained. First of
-all we observe that the average magnetization $\bar{\phi}$ is proportional to
-the zero momentum mode of the field $\phi$:
+We now describe briefly how the result (\ref{eq:log_pdf}) is obtained. The
+perturbative approach is very similar to the computation of the effective
+action, as in \textit{e.g.} \cite{WeinbergEffectiveAction}, except that we are
+interested in the whole probability distribution of $\bar{\phi}$, instead of
+just the expected value. The main difficulty lies in evaluating the loop
+integrals at finite size.
+
+First of all we observe that the average magnetization
+$\bar{\phi}$ is proportional to the zero momentum mode of the field $\phi$:
 \begin{equation}
     \phi(x) = \frac{1}{V} \sum_{n \in \mathbb{Z}^4} \phi_{n} 
     e^{i \frac{n\cdot x}{R}}\,;\quad \bar{\phi} = \frac{\phi_{0}}{V}\,.
@@ -378,14 +396,16 @@ where:\footnote{The function $\theta$ is in fact a Jacobi theta function, but we
 won't need any of its special properties beyond its asymptotic behavior, which
 can be easily obtained from the definition.}
 \begin{equation}
+    \label{eq:theta}
     \theta(z) \equiv \sum_{m = -\infty}^{\infty} e^{-m^2 z}\,.
 \end{equation}
 
-We now extract the divergent part of $I_1$ by subtracting under the integral a
-function that has the same asymptotic behavior as the integrand for $t \to 0$,
-but whose integral can be computed in closed form. In order to do that, we need
-the asymptotic behavior of $\theta(z)$ for $z\to0$, which can be obtained from
-its definition using the Euler-Mclaurin formula:
+We now extract the divergent and finite parts of $I_1$ as $s\to 0$ by
+subtracting under the integral a function that has the same asymptotic behavior
+as the integrand for $t \to 0$, but whose integral can be computed in closed
+form. In order to do that, we need the asymptotic behavior of $\theta(z)$ for
+$z\to0$, which can be obtained from its definition using the Euler-Mclaurin
+formula:
 \begin{equation}
     \theta(z) \sim \sqrt{\frac{\pi}{z}} + o(z^k) \quad\mathrm{for}\, z\to0\,.
 \end{equation}
@@ -394,22 +414,72 @@ Thus we have:
 \begin{equation}
 \begin{split}
     I_1 &= \frac{1}{16\pi^2}\left(\int_{s}^{\infty}\dd t\, e^{-t \mu^2} t^{-2}\left(1 + t (\mu^2 - r)\right)
-    +\frac{1}{R^2} f(r R^2, \mu R)\right)\\
+    +\frac{1}{R^2} f(r R^2, \mu R) + O(s)\right)\\
     &= \frac{1}{16\pi^2}\left(\frac{1}{s} + r\left(\log s\mu^2 + \gamma_{E}\right) - 
-    \mu^2 +\frac{1}{R^2} f(r R^2, \mu R)\right)\,,
+    \mu^2 +\frac{1}{R^2} f(r R^2, \mu R) + O(s)\right)\,,
 \end{split}
 \end{equation}
 where $\mu$ is a renormalization scale that can be chosen at will, and:
 \begin{equation}
-    f(rR^2,\mu R) = \int_{0}^{\infty} \dd z\ e^{-z r R^2} \left(\frac{\theta(z)^4 - 1}{\pi^2} - 
-    \frac{1 + z\left(\mu^2 - r\right)R^2}{t^2}e^{-z\left(\mu^2 - r\right)R^2}\right).
+    \label{eq:f_definition}
+    f(\bar{r},\bar{\mu}) = \int_{0}^{\infty} \dd z\ e^{-z \bar{r}} \left(\frac{\theta(z)^4 - 1}{\pi^2} - 
+    \frac{1 + z\left(\bar{\mu}^2 - \bar{r}\right)}{z^2}e^{-z\left(\bar{\mu}^2 - \bar{r}\right)}\right).
 \end{equation}
 
-
+We set the counterterms to:
+\begin{align}
+    &\delta r = -\frac{1}{32\pi^2}\left(\frac{1}{s} + r\left(\log s \mu^2 + \gamma_E - 1\right)\right)\,,\\
+    &\delta u = -\frac{3}{32\pi^2}\left(\log s\mu^2 +\gamma_E + 1\right)\,,
+\end{align}
+from which the renormalization group equations (\ref{eq:renormalization_group})
+can be obtained, and we have:
 \begin{equation}
-\label{eq:f_functions}
-f_1 = 
+\begin{split}
+    -\log p(\bar{\phi}) =& \mathrm{const}+ V \Bigg( \\
+    &\frac{1}{2} \bar{\phi}^2\left( r + \frac{u}{32\pi^2}  \left(\left(\frac{1}{R^2} f(rR^2, \mu R) + r - \mu^2\right)\right) + O(u^2)\right) + \\
+    &\frac{u}{24} \bar{\phi}^4 \left(1 + \frac{3u}{32\pi^2} f^{(1, 0)}(rR^2, \mu R) + O(u^2)\right) + \\
+    &\frac{u^3}{48}\bar{\phi}^6\left(\frac{R^2}{32\pi^2}f^{(2, 0)}(rR^2, \mu R) + O(u)\right) + O(u^4 \bar{\phi}^8) \Bigg)\,,
+\end{split}
 \end{equation}
+from which (\ref{eq:log_pdf}) is obtained by setting $g = \frac{3 u}{16
+\pi^2}$ and $\mu^2 = r + R^{-2}$. This last choice is motivated as follows. The
+subtraction in (\ref{eq:f_definition}) is similar to:
+\begin{equation}
+    \int_0^{\infty} \dd z\, \frac{e^{-a z} - e^{-b z}}{z} = \log \frac{b}{a}\,;
+\end{equation}
+when the asymptotic behavior of the two terms for large $z$ is not well
+matched, the integral becomes large in magnitude, making the perturbative
+expansion less reliable. With the choice $\mu^2 = r + R^{-2}$, both terms in
+(\ref{eq:f_definition}) have the same asymptotic behavior $\sim e^{-z(\bar{r} +
+1)}$, thus avoiding the large log problem over the widest possible range of
+parameters.
+
+For completeness, let us display explicitly the functions $f_i$ that
+parametrize (\ref{eq:log_pdf}):
+\begin{align}
+\label{eq:f_functions}
+    &f_1(\bar r) = f(\bar r, \sqrt{\bar r + 1}) = 
+    \int_{0}^{\infty} \dd z\ e^{-z \bar{r}} \left(\frac{\theta(z)^4 - 1}{\pi^2} - 
+    \frac{(1 + z) e^{-z}}{z^2}\right)\,,\\
+    &f_2(\bar r) = f^{(1, 0)}(\bar r, \sqrt{\bar r + 1}) = 
+    \int_{0}^{\infty} \dd z\ e^{-z \bar{r}} z \left(\frac{\theta(z)^4 - 1}{\pi^2} - 
+    \frac{e^{-z}}{z^2}\right)\,,\\
+    &f_3(\bar r) = f^{(2, 0)}(\bar r, \sqrt{\bar r + 1}) = 
+    \int_{0}^{\infty} \dd z\ e^{-z \bar{r}} z^2 \frac{\theta(z)^4 - 1}{\pi^2}\,,
+\end{align}
+and $\theta$ is given by (\ref{eq:theta}).
+
+
+\begin{thebibliography}{9}
+\bibitem{Binder1981}
+K. Binder,
+\textit{Critical Properties from Monte Carlo Coarse Graining and Renormalization},
+\href{https://doi.org/10.1103/PhysRevLett.47.693}{Phys. Rev. Lett. \textbf{47} (1981) 693}.
+
+\bibitem{WeinbergEffectiveAction}
+S. Weinberg,
+\textit{The quantum theory of fields, Vol. 2}, Cambridge University Press, (1996) pg. 63.
+\end{thebibliography}
 
 
 
