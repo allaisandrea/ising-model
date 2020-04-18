@@ -8,16 +8,19 @@
 \newcommand{\dd}{\mathrm{d}}
 \renewcommand{\vec}[1]{\boldsymbol{#1}}
 
-\title{One-loop PDF of the average Ising magnetization in 4 dimensions.}
+\title{Perturbative probability distribution of the average Ising magnetization
+in 4 dimensions.}
+
 \author[a]{Andrea Allais}
 \affiliation[a]{Independent scholar}
 \emailAdd{allais.andrea@gmail.com}
-\abstract{We compute at one loop in perturbation theory the probability density
-function of the average magnetization $\bar{\phi}$ of the Ising model on both
+
+\abstract{We compute, at one loop in perturbation theory, the probability density
+function of the average magnetization $\bar{\phi}$ of the Ising model, on both
 the 4-torus and the 4-sphere. The perturbative expansion covers the entire
 symmetric phase and a neighborhood of the critical point. We find that, at the
 critical point, the PDF has the asymptotic behavior $p(\bar{\phi})\sim
-\exp(-f(R) \bar{\phi}^4)$, and hence the critical value of the Binder cumulant
+\exp(-c \bar{\phi}^4)$, and hence the critical value of the Binder cumulant
 is $U = 1 - \frac{4\,\Gamma(5/4)^2}{ 3\,\Gamma(3/4)^2}$. We validate our
 results by comparison with Monte Carlo simulation.}
 \begin{document}
@@ -27,28 +30,28 @@ results by comparison with Monte Carlo simulation.}
 \section{Main results}
 
 The average magnetization $\bar{\phi} = \frac{1}{V} \sum_{i} \sigma_i$ of the
-Ising model is the simplest observable in Monte Carlo simulations. For large
-system size, the probability distribution of $\bar{\phi}$ changes qualitatively
-between the two phases of the model. In the symmetric phase, if the correlation
-length $\xi$ is large in lattice units, but small compared to the system size
-$L$, the distribution is well approximated by a normal distribution centered at
-0. In the broken symmetry phase, still for $1 \ll \xi \ll L$, the distribution
-is well approximated by a bimodal superposition of two normals centered at
-non-zero values $\pm \bar{\phi}_0$. 
+Ising model is the simplest observable in Monte Carlo simulations. When the
+system size $L$ is large, the probability distribution of $\bar{\phi}$ changes
+qualitatively between the two phases of the model. In the symmetric phase,
+\textit{i. e.} when the correlation length $\xi$ is large in lattice units, but
+small compared to the system size, the distribution is well approximated by a
+zero-mean normal. In the broken symmetry phase, still for $1 \ll \xi \ll L$,
+the distribution is well approximated by a mixture of two normals centered at
+non-zero values $\pm \bar{\phi}_0$.
 
-Near the critical point $1 \ll L \ll \xi$ the probability distribution of
-$\bar{\phi}$ is a non-trivial function of $\bar{\phi}$, at least in two and
-three dimensions.  It is not immediately clear if the same is true in four
-dimensions as well.  Since the $\phi^4$ field theory that describes the Ising
-critical point in four dimensions becomes weakly coupled in the infrared, one
-may expect the probability distribution to be a single zero-centered normal at
-the critical point as well.
+Near the critical point, \textit{ie.} $1 \ll L \ll \xi$, the probability
+distribution of $\bar{\phi}$ is a non-trivial function of $\bar{\phi}$, at
+least in two and three dimensions.  It is not immediately clear if the same is
+also true in four dimensions. Since the field theory that describes the Ising
+critical point in four dimensions becomes weakly coupled at low energy, one may
+expect the probability distribution of $\bar{\phi}$ to remain a zero-centered
+normal at the critical point as well as in the symmetric phase.
 
-To clarify this issue, we compute the log pdf of $\bar{\phi}$ at one-loop in
-$4$ dimensions, and show that for very large system size, the critical
-probability distribution is not normal, but rather of the form
-$-\log p(\bar{\phi})\sim f(L) \bar{\phi}^4$. We find that corrections to this
-form vanish very slowly with increasing system size, like $1/\log L$.
+To clarify this issue, we compute the logarithm of the PDF of $\bar{\phi}$ at
+one-loop in $4$ dimensions, and show that, for very large system size, the
+critical probability distribution is not normal, but rather of the form $-\log
+p(\bar{\phi})\sim f(L) \bar{\phi}^4$. We find that corrections to this form
+vanish very slowly with increasing system size, like $1/\log L$.
 
 \begin{figure}
 \begin{center}
@@ -69,15 +72,15 @@ form vanish very slowly with increasing system size, like $1/\log L$.
 Thus we consider the $\phi^4$ field theory with action:
 \begin{equation}
   S[\phi] \equiv \int \dd^4 x\ \left(
-    \frac{1}{2} \phi\left(\Delta + r_0\right)\phi +
-    \frac{1}{24} u_0 \phi^4\right)
+    \frac{1}{2} \phi(x)\left(\Delta + r_0\right)\phi(x) +
+    \frac{1}{24} u_0 \phi(x)^4\right)
 \end{equation}
 defined on a 4-torus of radius $R$, i.e. $x_i\sim x_i + 2\pi R$. In this field
-theory context, the pdf of the average magnetization is defined as:
+theory context, the PDF of the average magnetization is defined as:
 \begin{equation}
     \label{eq:pdf_definition}
     p(\bar\phi) \equiv \frac{1}{Z} \int \left[\mathcal{D}\phi\right]
-    \delta\left(\bar{\phi} - \frac{1}{V}\int\dd^4 x\ \phi\right)
+    \delta\left(\bar{\phi} - \frac{1}{V}\int\dd^4 x\ \phi(x)\right)
     e^{-S[\phi]}\,,
 \end{equation}
 and at one loop it evaluates to:
@@ -98,7 +101,8 @@ and at one loop it evaluates to:
 \end{equation}
 where the coefficients $r$ and $g$ are the renormalized counterparts to $r_0$
 and $u_0$. An explicit expression for the functions $f_1$, $f_2$ and $f_3$ is
-reported in the appendix (\ref{eq:f_functions}), and they are plotted in
+reported in section \ref{sect:derivation} (\ref{eq:f_functions}), and they are
+plotted in
 fig.~\ref{fig:f_functions}.
 
 \begin{figure}
@@ -112,19 +116,19 @@ fig.~\ref{fig:f_functions}.
 \end{figure}
 
 Eq. (\ref{eq:log_pdf}) is our central result, and we now describe it
-at lenght. We first illustrate its domain of validity and its dependence on the
+at length. We first illustrate its domain of validity and its dependence on the
 renormalized couplings $r$, $g$ on a torus of fixed radius $R$, then describe
 its dependence on $R$ at fixed bare couplings $r_0$, $u_0$.
 
 The dimension-2 coupling $r$ controls the cross-over between the symmetric and
-broken-symmetry phases. The expression (\ref{eq:log_pdf}) is valid for
-all positive values of $r$, and also for negative values, provided that $rR^2
-\gtrsim -1/2$.  For lower values of $r$, additional modes of the laplacian
+broken-symmetry phases. The expression (\ref{eq:log_pdf}) is valid for all
+positive values of $r$, and also for negative values, provided that $rR^2
+\gtrsim -1/2$.  For lower values of $r$, additional modes of the Laplacian
 condense beside the zero-mode, and this invalidates the perturbative expansion.
-. This becomes manifest in a divergence of the functions $f_i$ as their
-argument approaches -1.  On the other hand, $f_1$, $f_2$, $f_3$ all go to zero
-as their argument approaches positive infinity, and hence for large $r$ the
-probability distribution of $\bar{\phi}$ is a zero-centered normal:
+This becomes manifest in a divergence of the functions $f_i$ as their argument
+approaches -1.  On the other hand, $f_1$, $f_2$, $f_3$ all go to zero as their
+argument approaches positive infinity, and hence for large $r$ the probability
+distribution of $\bar{\phi}$ is a zero-centered normal:
 \begin{equation}
     p(\bar{\phi}) \sim N e^{- \frac{1}{2} V r \bar{\phi}^2}
   \quad \text{for} \quad
@@ -154,7 +158,7 @@ The renormalization group equations for $r$ and $g$ are:
 
 These can be integrated and combined with the condition $\mu^2 = r + R^{-2}$ to
 obtain a system of equations\footnote{There are of course many alternative,
-arguably simpler, solutions that differ by subleading orders in an expansion in
+arguably simpler, solutions that differ by sub-leading orders in an expansion in
 $g(R_1)$. The one displayed here is the exact solution to
 (\ref{eq:renormalization_group}).} connecting the renormalized couplings at two
 different values of $R$:
@@ -170,9 +174,9 @@ different values of $R$:
     \caption{\label{fig:renormalization_group} A few solutions to
     (\ref{eq:renormalization_group}) with $g(R_1) = 0.45$.  In the left plot,
     the shaded region shows where the perturbative expansion becomes invalid.
-    Similarly in the right plot, the lines become dotted oustside of the
+    Similarly in the right plot, the lines become dotted outside of the
     perturbative region. Note how the sign of $r$ is preserved, $r = 0$ is a
-    solution, and $g$ goes to $0$ for $R_2 \gg R_1$.}
+    solution, and $g$ vanishes for $R_2 \gg R_1$.}
 \end{figure}
 
 A few solutions to these equations are shown in
@@ -192,12 +196,13 @@ others. This is perhaps most evident if the PDF is expressed in terms of the
 rescaled quantity $\bar{\varphi} = g^{\frac{1}{4}} \bar{\phi}$, whose
 variance remains finite as $g\to0$.
 
-Thus we conclude that, for sufficiently large system size: 
+Thus we conclude that, at the critical point, for sufficiently large system
+size:
 \begin{equation}
     \label{eq:log_pdf_critical_point}
-    -\log p(\phi) \sim \mathrm{const} + \frac{2\pi^2}{9} V g\bar{\phi}^4\,,
+    -\log p(\bar{\phi}) \sim \mathrm{const} + \frac{2\pi^2}{9} V g\bar{\phi}^4\,,
 \end{equation}
-with subleading terms vanishing like $1 / \log(R)$.
+with sub-leading terms vanishing like $1 / \log(R)$.
 
 In Monte Carlo simulations, the qualitative behavior of the distribution of the
 magnetization is often characterized by measuring the so-called Binder
@@ -210,7 +215,7 @@ which is constructed to be independent of the overall scale of $\bar{\phi}$,
 and to be zero if $\bar{\phi}$ is normally distributed. From
 (\ref{eq:log_pdf_critical_point}) we conclude that, on a 4-Torus, at the
 critical point\footnote{ Incidentally, we note that this result is not in
-contraddiction with the claim in the original paper \cite{Binder1981} that the
+contradiction with the claim in the original paper \cite{Binder1981} that the
 critical Binder cumulant in 4 dimensions is zero, because in the original paper
 the cumulant is not computed from the total magnetization, but rather from the
 average magnetization of blocks of spins much smaller than the overall system
@@ -231,6 +236,7 @@ irrelevant operators. Notice how slowly the finite size Binder cumulant
 approaches the asymptotic value (\ref{eq:critical_binder_cumulant}).
 
 \section{Derivation on the 4-torus}
+\label{sect:derivation}
 
 We now describe briefly how the result (\ref{eq:log_pdf}) is obtained. The
 perturbative approach is very similar to the computation of the effective
@@ -243,25 +249,26 @@ First of all we observe that the average magnetization
 $\bar{\phi}$ is proportional to the zero momentum mode of the field $\phi$:
 \begin{equation}
     \phi(x) = \frac{1}{V} \sum_{n \in \mathbb{Z}^4} \phi_{n} 
-    e^{i \frac{n\cdot x}{R}}\,;\quad \bar{\phi} = \frac{\phi_{0}}{V}\,.
+    e^{i \frac{n\cdot x}{R}}\,;\quad \bar{\phi} = \frac{1}{V}\int\dd^4 x\ \phi(x) = \frac{1}{V}\phi_{n = 0}\,.
 \end{equation}
 
 Thus, because of the delta function in (\ref{eq:pdf_definition}), the component
 $\phi_{0}$ becomes an external field, whereas the other components $\phi_{n}$
-with are still part of the functional integral. Separating the zero momentum
-mode from the other modes in the action yields:
+are still part of the functional integral. Separating the zero momentum mode
+from the other modes in the action yields:
 \begin{equation}
 \begin{split}
     S(\bar{\phi}, \phi) =& 
     V \left(\frac{1}{2} r_0 \bar{\phi}^2 + \frac{u_0}{24} \bar{\phi}^4\right) +
-    \frac{u_0}{4V} \bar{\phi}^2 \sum_{n} \phi_{n} \phi_{-n} + \\
+    \frac{1}{2V} \sum_{n} \left(\frac{n^2}{R^2} + r_0 +
+      \frac{1}{2} u_0\bar{\phi}^2 \right)\phi_{n} \phi_{-n} +\\
     &\frac{u_0}{6V^2} \bar{\phi} 
-        \sum_{n_1, n_2} \phi_{n_1} \phi_{n_2} \phi_{-n_1 -n_2} + \\
-    &\frac{u_0}{24V^3} \sum_{n_1, n_2, n_3} \phi_{n_1} \phi_{n_2} 
+        \sum_{n_1, n_2} \phi_{n_1} \phi_{n_2} \phi_{-n_1 -n_2} +
+    \frac{u_0}{24V^3} \sum_{n_1, n_2, n_3} \phi_{n_1} \phi_{n_2}
         \phi_{n_3} \phi_{-n_1 -n_2 -n_3}\,,
 \end{split}
 \end{equation}
-where all summations now exclude $n = (0, 0, 0, 0)$.
+where all summations now are over $\mathbb{Z}^4 \setminus \{0\}$.
 
 We also introduce renormalized couplings
 \begin{equation}
@@ -270,13 +277,22 @@ We also introduce renormalized couplings
 and we obtain the following edges and vertices in the diagrammatic expansion:
 \begin{displaymath}
 \begin{tikzpicture}[scale=0.5, baseline=(current bounding box.center)]
+    \draw[thick] (-1, 0) -- (1, 0);
+    \node[left] at (-1, 0) {$n_1$};
+    \node[right] at (1, 0) {$n_2$};
+\end{tikzpicture}
+    \quad
+    \frac{V}{n_1^2R^{-2} + r}\delta_{n_1 + n_2}
+\quad\quad
+\begin{tikzpicture}[scale=0.5, baseline=(current bounding box.center)]
     \draw[densely dashed, thick] (-1, -1) -- (0, 0) -- (-1, 1);
     \draw[thick] (+1, -1) -- (0, 0) -- (+1, 1);
     \node[above right] at (1, 1) {$n_1$};
     \node[below right] at (1, -1) {$n_2$};
 \end{tikzpicture}
     -\frac{u\bar{\phi}^2}{4V}\delta_{n_1 + n_2}
-    \quad\quad
+\end{displaymath}
+\begin{displaymath}
 \begin{tikzpicture}[scale=0.5, baseline=(current bounding box.center)]
     \draw[densely dashed, thick] (-1, -1) -- (0, 0);
     \draw[thick] (0, 0) -- (-1, 1);
@@ -286,8 +302,7 @@ and we obtain the following edges and vertices in the diagrammatic expansion:
     \node[below right] at (1, -1) {$n_3$};
 \end{tikzpicture}
     -\frac{u\bar{\phi}}{6V^2}\delta_{n_1 + n_2 + n_3}
-\end{displaymath}
-\begin{displaymath}
+\quad\quad
 \begin{tikzpicture}[scale=0.5, baseline=(current bounding box.center)]
     \draw[thick] (-1, -1) -- (1, 1);
     \draw[thick] (-1, 1) -- ( 1, -1);
@@ -297,14 +312,6 @@ and we obtain the following edges and vertices in the diagrammatic expansion:
     \node[below left] at (-1, -1) {$n_4$};
 \end{tikzpicture}
     -\frac{u}{24V^3}\delta_{n_1 + n_2 + n_3 + n_4}
-\quad\quad
-\begin{tikzpicture}[scale=0.5, baseline=(current bounding box.center)]
-    \draw[thick] (-1, 0) -- (1, 0);
-    \node[left] at (-1, 0) {$n_1$};
-    \node[right] at (1, 0) {$n_2$};
-\end{tikzpicture}
-    \quad
-    \frac{V}{n_1^2R^{-2} + r}\delta_{n_1 + n_2}
 \end{displaymath}
 plus additional vertices associated with the counterterms $\delta r$, $\delta
 u$ which we do not list for brevity.
@@ -388,15 +395,15 @@ Retaining only one-loop diagrams, and employing a heath kernel regulator we have
 where
 \begin{equation}
     I_k = \frac{1}{V} \sum_{n\in\mathbb{Z}^4\setminus\{0\}} 
-    \frac{e^{-s(r + n^2 R^{-2})}}{\left(r + n^2 R^{-2}\right)^k} = 
-    \frac{1}{(k - 1)!}\left(-\frac{\partial}{\partial r} - s\right)^k I_1
+    \frac{e^{-s(n^2 R^{-2} + r)}}{\left(n^2 R^{-2} + r\right)^k} = 
+    \frac{1}{(k - 1)!}\left(-\frac{\partial}{\partial r} - s\right)^{k-1} I_1
 \end{equation}
 
 The summation $I_1$ can be simplified substantially using the following trick:
 \begin{equation}
 \begin{split}
     I_1 &= \frac{1}{V} \int_{s}^{\infty} \dd t \sum_{n\in\mathbb{Z}^4\setminus\{0\}} 
-    e^{-t(r + n^2 R^{-2})}\\
+    e^{-t(n^2 R^{-2} + r)}\\
     & = \frac{1}{V} \int_{s}^{\infty} \dd t\ e^{-t r}
         \left(\left(\sum_{m = -\infty}^{\infty} e^{-t m^2 R^{-2}}\right)^4 - 1\right) \\
     & = \frac{1}{V} \int_{s}^{\infty} \dd t\ e^{-t r}
@@ -406,7 +413,7 @@ The summation $I_1$ can be simplified substantially using the following trick:
 where:
 \begin{equation}
     \label{eq:theta}
-    \theta(z) = \theta_3(0, e^{-z}) = \sum_{m = -\infty}^{\infty} e^{-m^2 z}\,.
+    \theta(z) = \theta_3(0; e^{-z}) = \sum_{m = -\infty}^{\infty} e^{-m^2 z}\,.
 \end{equation}
 Here $\theta_3$ is a Jacobi theta function, but we will not need any of
 its special properties beyond its asymptotic behavior, which can be easily
@@ -416,7 +423,7 @@ We now extract the divergent and finite parts of $I_1$ as $s\to 0$ by
 subtracting under the integral a function that has the same asymptotic behavior
 as the integrand for $t \to 0$, but whose integral can be computed in closed
 form. In order to do that, we need the asymptotic behavior of $\theta(z)$ for
-$z\to0$, which can be obtained from its definition using the Euler-Mclaurin
+$z\to0$, which can be obtained from its definition using the Euler-Maclaurin
 formula:
 \begin{equation}
     \theta(z) \sim \sqrt{\frac{\pi}{z}} + o(z^k) \quad\mathrm{for}\, z\to0\,.
@@ -447,8 +454,8 @@ from which the renormalization group equations (\ref{eq:renormalization_group})
 can be obtained, and we have:
 \begin{equation}
 \begin{split}
-    -\log p(\bar{\phi}) =& \mathrm{const}+ V \Bigg( \\
-    &\frac{1}{2} \bar{\phi}^2\left( r + \frac{u}{32\pi^2}  \left(\left(\frac{1}{R^2} f(rR^2, \mu R) + r - \mu^2\right)\right) + O(u^2)\right) + \\
+    -\log p(\bar{\phi}) =& \mathrm{const}+ V \Bigg(
+    \frac{1}{2} \bar{\phi}^2\left( r + \frac{u}{32\pi^2R^2}  \left(f(rR^2, \mu R) + (r - \mu^2)R^2\right) + O(u^2)\right) + \\
     &\frac{u}{24} \bar{\phi}^4 \left(1 + \frac{3u}{32\pi^2} f^{(1, 0)}(rR^2, \mu R) + O(u^2)\right) + \\
     &\frac{u^3}{48}\bar{\phi}^6\left(\frac{R^2}{32\pi^2}f^{(2, 0)}(rR^2, \mu R) + O(u)\right) + O(u^4 \bar{\phi}^8) \Bigg)\,,
 \end{split}
@@ -488,19 +495,18 @@ very similar methods. Here we highlight the main differences from the 4 torus.
 
 Curved manifolds allow for an additional renormalizable coupling: 
 \begin{equation}
-    S += \int \dd^4 x\ \frac{1}{2}\xi_0 \phi^2 \mathcal{R}\,,
+    \Delta S = \int_{\mathcal{M}} \frac{1}{2}\xi_0 \phi^2 \mathcal{R}\,,
 \end{equation}
 where $\mathcal{R}$ is the scalar curvature and $\xi_0$ is a dimensionless bare
-coupling. On a static manifold, this coupling is equivalent to a mass term.
-The free theory is Weyl invariant if $\xi_0 = \frac{1}{6}$. In the
-presence of interactions, the coupling needs to be renormalized as well, and
-its renormalized counterpart $\xi$ becomes a running coupling. At one loop, the
+coupling.  The free theory is Weyl invariant if $\xi_0 = \frac{1}{6}$. In the
+presence of interactions, the coupling needs to be renormalized, and its
+renormalized counterpart $\xi$ becomes a running coupling. At one loop, the
 renormalization group equation for $\xi$ is:
 \begin{equation}
     \mu \frac{\dd \xi}{\dd \mu} =  \frac{1}{3} g \left(\xi - \frac{1}{6}\right)\,.
 \end{equation}
 
-From this experssion it seems that $\xi$ can be set to the critical value
+From this expression it seems that $\xi$ can be set to the critical value
 $\frac{1}{6}$ at all energy scales. However, this turns out to be an illusion:
 at higher orders in perturbation theory the renormalization group equation
 becomes inhomogeneous \cite{Brown1980}. Therefore, on a curved manifold, $\xi$
@@ -509,20 +515,20 @@ is simply another free parameter of the scalar field theory.
 The probability distribution of the total magnetization on the 4-sphere is
 still given by (\ref{eq:log_pdf}), with the substitution:
 \begin{equation}
-    rR^2 \to \frac{\xi}{12} + r R^2\,
+    rR^2 \to \frac{\xi}{12} + r R^2\,,
 \end{equation}
 where $R$ is now the radius of the sphere, and with the functions $f_i$ defined
 as:
 \begin{align}
-    &f_1(\bar{r}) = (2 - \bar{r})\int \dd z\ e^{-z(\bar{r} + 4)} \left(H(z) - \frac{1}{z}\right) + \frac{7}{3}\,,\\
-    &f_2(\bar{r}) = \int \dd z\ e^{-z(\bar{r} + 4)} 
-    \left(1 + z (2 - \bar{r})\right) \left(H(z) - \frac{1}{z}\right)+ \frac{6}{\bar{r} + 4}\,,\\
-    &f_3(\bar{r}) = \int \dd z\ e^{-z(\bar{r} + 4)} 
-    \left(2 + z (2 - \bar{r})\right)z \left(H(z) - \frac{1}{z}\right) + \frac{\bar{r} + 10 }{(\bar{r} + 4)^2}\,,\\
+    &f_1(\bar{r}) = (2 - \bar{r})\int_{0}^{\infty} \dd z\ e^{-z(\bar{r} + 4)} H(z) + \frac{7}{3}\,,\\
+    &f_2(\bar{r}) = \int_{0}^{\infty} \dd z\ e^{-z(\bar{r} + 4)} 
+    \left(1 + z (2 - \bar{r})\right) H(z) + \frac{6}{\bar{r} + 4}\,,\\
+    &f_3(\bar{r}) = \int_{0}^{\infty} \dd z\ e^{-z(\bar{r} + 4)} 
+    \left(2 + z (2 - \bar{r})\right)z H(z) + \frac{\bar{r} + 10 }{(\bar{r} + 4)^2}\,,\\
 \end{align}
 where:
 \begin{equation}
-    H(z) = \sum_{\ell = 1}^{\infty} (2\ell + 3)e^{-z (\ell(\ell + 3) - 4)}\,.
+    H(z) = \sum_{\ell = 1}^{\infty} (2\ell + 3)e^{-z (\ell(\ell + 3) - 4)} - \frac{1}{z}\,.
 \end{equation}
 
 The functions $f_i$ for the sphere are also displayed in
@@ -547,16 +553,4 @@ Lowell S. Brown, John C. Collins,
 \href{https://doi.org/10.1016/0003-4916(80)90232-8}{Ann. Phys. \textbf{130} (1980) 215}.
 \end{thebibliography}
 
-
-
 \end{document}
-
-
-The coupling $\eta$ is related to the coupling between the scalar and
-the curvature, and hence it is exactly zero on the tourus. On the sphere, it
-may seem that it can be set to a constant value $\eta = 2$ at all energy
-scales, however this ceases to be true at higher orders in perturbation theory,
-where the renormalization group equation becomes inhomogeneous.
-
-
-
