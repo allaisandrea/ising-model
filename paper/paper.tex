@@ -12,17 +12,17 @@
 
 \author[a]{Andrea Allais}
 \affiliation[a]{Independent scholar}
-\emailAdd{allais.andrea@gmail.com}
+\emailAdd{a\_allais@alum.mit.edu}
 
 \abstract{We compute, at one loop in perturbation theory, the probability
-density function of the total magnetization $M$ of the Ising model, on both the
+density function of the total magnetization $M$ of the Ising model on the
 4-torus and the 4-sphere. We develop a single perturbative expansion that is
 valid both in the symmetric phase, as long as the correlation length $\xi$ is
 large in lattice units, and in the broken symmetry phase, as long as the
-correlation length is large compared to the system size $L$. We find that, at
-the critical point, for very large system size in lattice units, the PDF
-approaches $p(M)\sim \exp(-f(L) M^4)$, and hence the critical value of the
-Binder cumulant of the total magnetization is $U = 1 -
+correlation length is large both in lattice units and compared to the system
+size $L$. We find that, at the critical point, for large system size in lattice
+units, the PDF approaches $p(M)\sim \exp(-f(L) M^4)$. Consequently, the
+critical value of the Binder cumulant of the total magnetization is $U = 1 -
 \frac{4\,\Gamma(5/4)^2}{3\,\Gamma(3/4)^2}$. We validate our results by
 comparison with Monte Carlo simulation.}
 \begin{document}
@@ -33,27 +33,26 @@ comparison with Monte Carlo simulation.}
 
 When the system size $L$ is large, the probability distribution of the total
 magnetization $M$ of the Ising model changes qualitatively between the two
-phases of the model. In the symmetric phase, \textit{i.e.} when the correlation
+phases of the model. In the symmetric phase, if the correlation
 length $\xi$ is large in lattice units, but small compared to the system size,
 the distribution is well approximated by a zero-mean normal.  In the broken
 symmetry phase, still for $1 \ll \xi \ll L$, the distribution is well
 approximated by a mixture of two normals centered at non-zero values $\pm
 M_0$.
 
-Near the critical point $1 \ll L \ll \xi$, in two and three dimensions, the
+In the opposite regime, $1 \ll L \ll \xi$, in two and three dimensions, the
 probability distribution of $M$ is a non-trivial function of $M$.  It is not
 immediately clear if the same is also true in four dimensions. Since the field
 theory that describes the Ising critical point in four dimensions becomes
 weakly coupled at low energy, one may expect the probability distribution of
-$M$ to remain a zero-centered normal even at the critical point. This is in
-fact the case for the total magnetization of a subsystem of intermediate size:
-large in lattice units, but small compared to $L$ \cite{Binder1981}. Here we
-show that the same is not true for the total magnetization of the entire
-system. We compute the logarithm of the PDF of $M$ at one-loop in $4$
-dimensions, and show that, for very large system size, the critical probability
-distribution is not normal, but rather of the form $-\log p(M)\sim f(L) M^4$.
-We find that corrections to this form vanish very slowly with increasing system
-size, like $1/\log L$.
+$M$ to remain a zero-centered normal even in this regime. This is in fact the
+case for the total magnetization of a subsystem of intermediate size: large in
+lattice units, but small compared to $L$ \cite{Binder1981}. Here we show that
+the same is not true for the total magnetization of the entire system. We
+compute the logarithm of the PDF of $M$ at one-loop in $4$ dimensions, and show
+that, for $1 \ll L \ll \xi$, the distribution is not normal, but rather of the
+form $-\log p(M)\sim f(L) M^4$.  We find that corrections to this form vanish
+very slowly with increasing system size, like $1/\log L$.
 
 \begin{figure}
 \begin{center}
@@ -85,7 +84,7 @@ the PDF of the average magnetization $m = M / V$ as:
 \begin{equation}
     \label{eq:pdf_definition}
     p(m) \equiv \frac{1}{Z} \int \left[\mathcal{D}\phi\right]
-    \delta\left(m - \frac{1}{V}\int\dd^4 x\ \phi(x)\right)
+    \delta\left(m - \frac{1}{V}\int_{\mathcal{M}} \phi\right)
     e^{-S[\phi]}\,,
 \end{equation}
 and we evaluate it at one loop in perturbation theory, obtaining:
@@ -119,10 +118,10 @@ is given below.
     perturbative vacuum.}
 \end{figure}
 
-This is our central result, and we now discuss it at length. We first
-illustrate its domain of validity and its dependence on the renormalized
-couplings $r$, $g$ on a torus of fixed radius $R$, then describe its dependence
-on $R$ at fixed bare couplings $r_0$, $u_0$.
+%This is our central result, and we now discuss it at length. We first
+%illustrate its domain of validity and its dependence on the renormalized
+%couplings $r$, $g$ on a torus of fixed radius $R$, then describe its dependence
+%on $R$ at fixed bare couplings $r_0$, $u_0$.
 
 The dimension-2 coupling $r$ controls the cross-over between the symmetric and
 broken-symmetry phases. The expression (\ref{eq:log_pdf}) is valid for  $rR^2
@@ -189,8 +188,8 @@ $R$, and, as is clear from the differential form (\ref{eq:callan_symanzik}),
 the sign of $r$ is always preserved. Thus we conclude that the critical point
 is at $r = 0$, and the symmetric phase is realized for $r > 0$.
 
-At the critical point, the renormalized coupling $g$ follows the simplified
-Callan-Symanzik equation
+At the critical point, the renormalized coupling $g$ follows the simpler
+Callan-Symanzik equation:
 \begin{equation}
     \frac{1}{g(R_2)} - \frac{1}{g(R_1)} = \log\frac{R_2}{R_1}\,,
 \end{equation}
@@ -381,7 +380,7 @@ connected diagrams:
 \end{displaymath}
 where again we left out all diagrams involving the counterterms for brevity. 
 
-Retaining only one-loop diagrams, and employing a heath kernel regulator we have:
+Retaining only one-loop diagrams, and employing a heat kernel regulator we have:
 \begin{equation}
 \begin{split}
     -\log p(m) = \mathrm{const} + V \Bigg( 
